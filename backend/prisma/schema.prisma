@@ -1,0 +1,300 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String @id @default(uuid())
+  username     String @unique
+  email        String @unique
+  passwordHash String
+  role         Role   @default(USER)
+
+  // Profile fields
+  fullName       String?
+  bio            String? @db.Text
+  profilePicture String?
+  location       String?
+
+  // Social media links
+  linkedinUrl String?
+  githubUrl   String?
+  twitterUrl  String?
+  websiteUrl  String?
+
+  // Statistics
+  rating              Int @default(0)
+  rank                Int @default(0)
+  problemsSolved      Int @default(0)
+  totalSubmissions    Int @default(0)
+  acceptedSubmissions Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  submissions         Submission[]
+  problemsCreated     Problem[]
+  contestsCreated     Contest[]
+  contestParticipants ContestParticipant[]
+
+  @@index([username])
+  @@index([email])
+  @@index([fullName])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Problem {
+  id           String     @id @default(uuid())
+  title        String
+  slug         String     @unique
+  description  String     @db.Text
+  inputFormat  String     @db.Text
+  outputFormat String     @db.Text
+  constraints  String     @db.Text
+  difficulty   Difficulty
+  topics       String[]
+
+  // Enhanced fields
+  problemType          ProblemType        @default(STANDARD)
+  validationStrategy   ValidationStrategy @default(EXACT_MATCH)
+  floatingPointEpsilon Float?
+  enablePartialScoring Boolean            @default(false)
+  maxSourceSize        Int                @default(65536) // bytes
+  allowedLanguages     String[] // empty = all allowed
+  hints                Json? // Array of hint objects
+  examples             Json? // Array of example objects with explanations
+
+  // Performance constraints
+  timeLimit            Int   @default(2000)
+  memoryLimit          Int   @default(256)
+  languageTimeLimits   Json? // Language-specific time limits
+  languageMemoryLimits Json? // Language-specific memory limits
+
+  // Status and metadata
+  status              ProblemStatus @default(DRAFT)
+  acceptanceRate      Float         @default(0)
+  totalSubmissions    Int           @default(0)
+  acceptedSubmissions Int           @default(0)
+  createdBy           String
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  creator        User            @relation(fields: [createdBy], references: [id])
+  testCases      TestCase[]
+  testCaseGroups TestCaseGroup[]
+  customChecker  CustomChecker?
+  submissions    Submission[]
+  contests       Contest[]       @relation("ContestProblems")
+
+  @@index([slug])
+  @@index([difficulty])
+  @@index([status])
+  @@index([createdBy])
+}
+
+enum Difficulty {
+  Easy
+  Medium
+  Hard
+}
+
+enum ProblemType {
+  STANDARD // Normal input/output
+  INTERACTIVE // Interactive with interactor program
+  OUTPUT_ONLY // Users upload output files
+}
+
+enum ValidationStrategy {
+  EXACT_MATCH // Exact string comparison
+  IGNORE_WHITESPACE // Trim and normalize whitespace
+  TOKEN_BASED // Compare tokens, ignore whitespace
+  FLOATING_POINT // Compare with epsilon tolerance
+  CUSTOM_CHECKER // Use custom checker program
+}
+
+enum ProblemStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum TestCaseVisibility {
+  SAMPLE // Visible to all users
+  HIDDEN // Hidden, only verdict shown
+  STRESS // For stress testing, not counted in score
+}
+
+model TestCase {
+  id             String  @id @default(uuid())
+  problemId      String
+  groupId        String?
+  input          String  @db.Text
+  expectedOutput String  @db.Text
+
+  // Enhanced fields
+  visibility  TestCaseVisibility @default(HIDDEN)
+  points      Int                @default(10)
+  orderIndex  Int
+  timeLimit   Int? // Override problem time limit
+  memoryLimit Int? // Override problem memory limit
+  description String? // Internal description for admins
+
+  // Legacy field for backward compatibility
+  isPublic Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  problem Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  group   TestCaseGroup?   @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  results TestCaseResult[]
+
+  @@index([problemId])
+  @@index([groupId])
+  @@index([visibility])
+  @@index([isPublic])
+}
+
+model Submission {
+  id        String  @id @default(uuid())
+  userId    String
+  problemId String
+  contestId String?
+  code      String  @db.Text
+  language  String
+
+  // Enhanced fields
+  verdict         Verdict @default(Pending)
+  score           Float   @default(0) // For partial scoring
+  maxScore        Float   @default(100)
+  executionTime   Int     @default(0)
+  memoryUsed      Int     @default(0)
+  testCasesPassed Int     @default(0)
+  totalTestCases  Int     @default(0)
+  points          Int     @default(0)
+
+  submittedAt DateTime  @default(now())
+  evaluatedAt DateTime?
+
+  user            User             @relation(fields: [userId], references: [id])
+  problem         Problem          @relation(fields: [problemId], references: [id])
+  contest         Contest?         @relation(fields: [contestId], references: [id])
+  testCaseResults TestCaseResult[]
+
+  @@index([userId])
+  @@index([problemId])
+  @@index([contestId])
+  @@index([verdict])
+  @@index([submittedAt])
+}
+
+enum Verdict {
+  Accepted
+  WrongAnswer
+  TimeLimitExceeded
+  RuntimeError
+  CompilationError
+  Pending
+}
+
+model Contest {
+  id          String        @id @default(uuid())
+  title       String
+  description String        @db.Text
+  startTime   DateTime
+  endTime     DateTime
+  duration    Int
+  status      ContestStatus @default(Upcoming)
+  createdBy   String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  creator      User                 @relation(fields: [createdBy], references: [id])
+  problems     Problem[]            @relation("ContestProblems")
+  participants ContestParticipant[]
+  submissions  Submission[]
+
+  @@index([status])
+  @@index([startTime])
+  @@index([createdBy])
+}
+
+enum ContestStatus {
+  Upcoming
+  Active
+  Ended
+}
+
+model ContestParticipant {
+  id                 String    @id @default(uuid())
+  contestId          String
+  userId             String
+  rank               Int       @default(0)
+  totalPoints        Int       @default(0)
+  problemsSolved     Int       @default(0)
+  penalty            Int       @default(0)
+  lastSubmissionTime DateTime?
+  registeredAt       DateTime  @default(now())
+
+  contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([contestId, userId])
+  @@index([contestId])
+  @@index([userId])
+  @@index([rank])
+}
+
+model TestCaseGroup {
+  id             String  @id @default(uuid())
+  problemId      String
+  name           String
+  description    String? @db.Text
+  points         Int     @default(0) // Total points for group
+  orderIndex     Int
+  dependsOnGroup String? // ID of group that must pass first
+
+  problem   Problem    @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  testCases TestCase[]
+
+  @@index([problemId])
+}
+
+model CustomChecker {
+  id           String    @id @default(uuid())
+  problemId    String    @unique
+  language     String // cpp, python, etc.
+  code         String    @db.Text
+  compiledPath String? // Path to compiled checker
+  isCompiled   Boolean   @default(false)
+  lastCompiled DateTime?
+
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([problemId])
+}
+
+model TestCaseResult {
+  id            String  @id @default(uuid())
+  submissionId  String
+  testCaseId    String
+  verdict       Verdict
+  executionTime Int     @default(0)
+  memoryUsed    Int     @default(0)
+  output        String? @db.Text // Actual output (for visible tests)
+  errorMessage  String? @db.Text
+  points        Float   @default(0)
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+  testCase   TestCase   @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+
+  @@index([submissionId])
+  @@index([testCaseId])
+}

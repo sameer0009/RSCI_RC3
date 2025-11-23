@@ -19,6 +19,12 @@ router.get('/slug/:slug', optionalAuth, problemController.getProblemBySlug);
 // Test case routes
 router.get('/:id/testcases', optionalAuth, testCaseController.getTestCases);
 
+// Test case group routes
+router.get('/:id/groups', authenticate, problemController.getTestCaseGroups);
+router.post('/:id/groups', authenticate, authorize('ADMIN'), problemController.createTestCaseGroup);
+router.put('/groups/:groupId', authenticate, authorize('ADMIN'), problemController.updateTestCaseGroup);
+router.delete('/groups/:groupId', authenticate, authorize('ADMIN'), problemController.deleteTestCaseGroup);
+
 // Admin only routes
 router.post(
   '/',

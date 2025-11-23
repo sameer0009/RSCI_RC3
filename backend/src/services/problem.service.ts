@@ -268,6 +268,48 @@ export class ProblemService {
 
     return Array.from(topicsSet).sort();
   }
+
+  async getTestCaseGroups(problemId: string) {
+    return prisma.testCaseGroup.findMany({
+      where: { problemId },
+      include: {
+        testCases: {
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
+      orderBy: { orderIndex: 'asc' },
+    });
+  }
+
+  async createTestCaseGroup(problemId: string, data: any) {
+    return prisma.testCaseGroup.create({
+      data: {
+        problemId,
+        name: data.name,
+        description: data.description,
+        points: data.points || 0,
+        orderIndex: data.orderIndex || 1,
+      },
+    });
+  }
+
+  async updateTestCaseGroup(groupId: string, data: any) {
+    return prisma.testCaseGroup.update({
+      where: { id: groupId },
+      data: {
+        name: data.name,
+        description: data.description,
+        points: data.points,
+        orderIndex: data.orderIndex,
+      },
+    });
+  }
+
+  async deleteTestCaseGroup(groupId: string) {
+    return prisma.testCaseGroup.delete({
+      where: { id: groupId },
+    });
+  }
 }
 
 export default new ProblemService();

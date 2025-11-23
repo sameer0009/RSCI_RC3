@@ -4,14 +4,25 @@ A full-stack LeetCode-style coding competition and practice platform with automa
 
 ## Features
 
+### Core Features
 - 🧩 Practice coding problems with multiple difficulty levels
 - 🏆 Participate in timed contests and competitions
-- 📝 Take programming exams with automatic evaluation
-- 💻 Multi-language support (Python, C, C++, Java, JavaScript, C#, Go, PHP)
-- 🔒 Secure sandbox code execution
-- 📊 Real-time leaderboards and rankings
+- � Talke programming exams with automatic evaluation
+- � Multi- language support (Python, C, C++, Java, JavaScript, C#, Go, PHP)
+- � Seecure sandbox code execution
+- � Real-ptime leaderboards and rankings
 - 👤 User profiles with statistics and achievements
 - 🎨 Modern dark mode UI
+
+### ⭐ Enhanced Scoring System (NEW!)
+- 📊 **Point-Based Scoring**: Each test case has weighted points
+- 🎯 **Partial Credit**: Get points for passing individual test cases
+- 👀 **Practice Mode**: Test against sample cases before submitting
+- 📁 **Test Case Groups**: Organized categories (Basic, Edge Cases, Performance)
+- 🔍 **Detailed Feedback**: See exactly which test categories you passed
+- 🎓 **Better Learning**: Understand your solution's strengths and weaknesses
+
+[Learn more about Enhanced Scoring →](./docs/ENHANCED_SCORING_SYSTEM.md)
 
 ## Tech Stack
 
@@ -33,7 +44,7 @@ A full-stack LeetCode-style coding competition and practice platform with automa
 
 ## Quick Start
 
-**See [docs/QUICKSTART.md](docs/QUICKSTART.md) for detailed setup instructions.**
+### ⚡ One-Click Setup (Recommended)
 
 ### TL;DR
 

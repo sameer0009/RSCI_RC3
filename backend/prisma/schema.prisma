@@ -68,7 +68,7 @@ model Problem {
   floatingPointEpsilon Float?
   enablePartialScoring Boolean            @default(false)
   maxSourceSize        Int                @default(65536) // bytes
-  allowedLanguages     String[] // empty = all allowed
+  allowedLanguages     String[]           @default([]) // empty = all allowed
   hints                Json? // Array of hint objects
   examples             Json? // Array of example objects with explanations
 
@@ -87,7 +87,7 @@ model Problem {
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
 
-  creator        User            @relation(fields: [createdBy], references: [id])
+  creator        User            @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   testCases      TestCase[]
   testCaseGroups TestCaseGroup[]
   customChecker  CustomChecker?
@@ -183,9 +183,9 @@ model Submission {
   submittedAt DateTime  @default(now())
   evaluatedAt DateTime?
 
-  user            User             @relation(fields: [userId], references: [id])
-  problem         Problem          @relation(fields: [problemId], references: [id])
-  contest         Contest?         @relation(fields: [contestId], references: [id])
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem         Problem          @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  contest         Contest?         @relation(fields: [contestId], references: [id], onDelete: Cascade)
   testCaseResults TestCaseResult[]
 
   @@index([userId])
@@ -216,7 +216,7 @@ model Contest {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
 
-  creator      User                 @relation(fields: [createdBy], references: [id])
+  creator      User                 @relation(fields: [createdBy], references: [id], onDelete: Cascade)
   problems     Problem[]            @relation("ContestProblems")
   participants ContestParticipant[]
   submissions  Submission[]
@@ -244,7 +244,7 @@ model ContestParticipant {
   registeredAt       DateTime  @default(now())
 
   contest Contest @relation(fields: [contestId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([contestId, userId])
   @@index([contestId])

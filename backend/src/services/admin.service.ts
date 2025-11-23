@@ -86,6 +86,8 @@ class AdminService {
         timeLimit: data.timeLimit || 2000,
         memoryLimit: data.memoryLimit || 256,
         createdBy: data.createdBy,
+        allowedLanguages: [],
+        status: 'PUBLISHED',
         testCases: data.testCases ? {
           create: data.testCases.map((tc, index) => ({
             input: tc.input,

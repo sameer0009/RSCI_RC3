@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import judgeService from './judge.service';
+import enhancedJudgeService from './enhancedJudge.service';
 import problemService from './problem.service';
 import { Submission, Verdict } from '@prisma/client';
 
@@ -32,73 +33,19 @@ export class SubmissionService {
     try {
       const submission = await prisma.submission.findUnique({
         where: { id: submissionId },
-        include: {
-          problem: {
-            include: {
-              testCases: true,
-            },
-          },
-        },
       });
 
       if (!submission) {
         throw new Error('Submission not found');
       }
 
-      const testCases = submission.problem.testCases;
-      let passedCount = 0;
-      let totalTime = 0;
-      let maxMemory = 0;
-      let verdict: Verdict = 'Accepted';
-
-      for (const testCase of testCases) {
-        try {
-          const result = await judgeService.executeCode(
-            submission.code,
-            submission.language,
-            testCase.input,
-            submission.problem.timeLimit,
-            submission.problem.memoryLimit * 1024
-          );
-
-          const statusVerdict = judgeService.getVerdictFromStatus(result.status.id);
-
-          if (statusVerdict !== 'Accepted') {
-            verdict = statusVerdict as Verdict;
-            break;
-          }
-
-          const isCorrect = judgeService.compareOutput(result.stdout, testCase.expectedOutput);
-
-          if (isCorrect) {
-            passedCount++;
-          } else {
-            verdict = 'WrongAnswer';
-            break;
-          }
-
-          totalTime += parseFloat(result.time || '0') * 1000;
-          maxMemory = Math.max(maxMemory, result.memory || 0);
-        } catch (error) {
-          verdict = 'RuntimeError';
-          break;
-        }
-      }
-
-      const points = verdict === 'Accepted' ? 100 : 0;
-
-      await prisma.submission.update({
-        where: { id: submissionId },
-        data: {
-          verdict,
-          testCasesPassed: passedCount,
-          totalTestCases: testCases.length,
-          executionTime: Math.round(totalTime),
-          memoryUsed: Math.round(maxMemory),
-          points,
-          evaluatedAt: new Date(),
-        },
-      });
+      // Use enhanced judge service for point-based evaluation
+      await enhancedJudgeService.evaluateSubmission(
+        submissionId,
+        submission.code,
+        submission.language,
+        submission.problemId
+      );
 
       // Update problem stats
       await problemService.updateProblemStats(submission.problemId);
@@ -179,6 +126,15 @@ export class SubmissionService {
       };
     } catch (error: any) {
       throw new Error(error.message || 'Code execution failed');
+    }
+  }
+
+  async runSampleTests(problemId: string, code: string, language: string): Promise<any> {
+    try {
+      const results = await enhancedJudgeService.runSampleTests(code, language, problemId);
+      return results;
+    } catch (error: any) {
+      throw new Error(error.message || 'Failed to run sample tests');
     }
   }
 }

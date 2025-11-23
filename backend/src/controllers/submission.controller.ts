@@ -82,6 +82,38 @@ export class SubmissionController {
     }
   }
 
+  async runSampleTests(req: Request, res: Response) {
+    try {
+      const { problemId, code, language } = req.body;
+
+      if (!problemId || !code || !language) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Problem ID, code, and language are required',
+          },
+        });
+      }
+
+      const results = await submissionService.runSampleTests(problemId, code, language);
+
+      res.json({
+        success: true,
+        data: { results },
+        message: 'Sample tests executed successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'SAMPLE_TEST_FAILED',
+          message: error.message || 'Failed to run sample tests',
+        },
+      });
+    }
+  }
+
   async getSubmission(req: Request, res: Response) {
     try {
       const { id } = req.params;

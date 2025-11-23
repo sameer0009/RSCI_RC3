@@ -235,6 +235,88 @@ export class ProblemController {
       });
     }
   }
+
+  async getTestCaseGroups(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const groups = await problemService.getTestCaseGroups(id);
+
+      res.json({
+        success: true,
+        data: { groups },
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'GET_GROUPS_FAILED',
+          message: error.message || 'Failed to fetch test case groups',
+        },
+      });
+    }
+  }
+
+  async createTestCaseGroup(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const group = await problemService.createTestCaseGroup(id, req.body);
+
+      res.status(201).json({
+        success: true,
+        data: { group },
+        message: 'Test case group created successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'CREATE_GROUP_FAILED',
+          message: error.message || 'Failed to create test case group',
+        },
+      });
+    }
+  }
+
+  async updateTestCaseGroup(req: Request, res: Response) {
+    try {
+      const { groupId } = req.params;
+      const group = await problemService.updateTestCaseGroup(groupId, req.body);
+
+      res.json({
+        success: true,
+        data: { group },
+        message: 'Test case group updated successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'UPDATE_GROUP_FAILED',
+          message: error.message || 'Failed to update test case group',
+        },
+      });
+    }
+  }
+
+  async deleteTestCaseGroup(req: Request, res: Response) {
+    try {
+      const { groupId } = req.params;
+      await problemService.deleteTestCaseGroup(groupId);
+
+      res.json({
+        success: true,
+        message: 'Test case group deleted successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'DELETE_GROUP_FAILED',
+          message: error.message || 'Failed to delete test case group',
+        },
+      });
+    }
+  }
 }
 
 export default new ProblemController();

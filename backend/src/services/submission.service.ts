@@ -53,6 +53,11 @@ export class SubmissionService {
       // Update user stats
       const leaderboardService = require('./leaderboard.service').default;
       await leaderboardService.updateUserStats(submission.userId);
+
+      // CONTEST HANDLING
+      if (submission.contestId && submission.verdict === 'Accepted') {
+        await this.handleContestSubmission(submission);
+      }
     } catch (error) {
       console.error('Evaluation failed:', error);
       await prisma.submission.update({
@@ -63,6 +68,68 @@ export class SubmissionService {
         },
       });
     }
+  }
+
+  private async handleContestSubmission(submission: Submission) {
+    const contest = await prisma.contest.findUnique({
+      where: { id: submission.contestId! },
+    });
+
+    if (!contest || contest.status !== 'Active') return;
+
+    // Calculate time penalty (minutes since start)
+    const minutesSinceStart = Math.floor(
+      (submission.submittedAt.getTime() - contest.startTime.getTime()) / 60000
+    );
+
+    // Count previous wrong attempts for this problem in this contest
+    const previousAttempts = await prisma.submission.count({
+      where: {
+        contestId: submission.contestId,
+        userId: submission.userId,
+        problemId: submission.problemId,
+        submittedAt: { lt: submission.submittedAt },
+        verdict: { notIn: ['Accepted', 'Pending', 'CompilationError'] },
+      },
+    });
+
+    const penalty = minutesSinceStart + previousAttempts * 20;
+
+    // Check if user already has an AC for this problem
+    const existingAC = await prisma.submission.findFirst({
+      where: {
+        contestId: submission.contestId,
+        userId: submission.userId,
+        problemId: submission.problemId,
+        submittedAt: { lt: submission.submittedAt },
+        verdict: 'Accepted',
+      },
+    });
+
+    if (existingAC) return; // Only count first AC
+
+    // Get problem points
+    const problem = await prisma.problem.findUnique({
+      where: { id: submission.problemId },
+    });
+
+    const points = (problem as any)?.points || 100;
+
+    // Update contest participant
+    await prisma.contestParticipant.update({
+      where: {
+        contestId_userId: {
+          contestId: submission.contestId!,
+          userId: submission.userId,
+        },
+      },
+      data: {
+        totalPoints: { increment: points },
+        penalty: { increment: penalty },
+        problemsSolved: { increment: 1 },
+        lastSubmissionTime: submission.submittedAt,
+      },
+    });
   }
 
   async getSubmission(id: string): Promise<Submission | null> {

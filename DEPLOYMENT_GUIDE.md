@@ -68,20 +68,24 @@ NODE_ENV="production"
 JUDGE0_API_URL="https://judge0-ce.p.rapidapi.com"
 JUDGE0_API_KEY="your-rapidapi-key"
 
-# CORS - Set to your frontend domain
+# CORS & Auth
 CORS_ORIGIN="https://yourdomain.com"
+FRONTEND_URL="https://yourdomain.com"
+JWT_SECRET="your-super-secure-jwt-secret"
+JWT_REFRESH_SECRET="your-super-secure-refresh-secret"
 
-# Optional: Email Service (for notifications)
-SMTP_HOST="smtp.gmail.com"
+# Email Service (REQUIRED for Verification/Resets)
+SMTP_HOST="smtp.resend.com"
 SMTP_PORT=587
-SMTP_USER="your-email@gmail.com"
-SMTP_PASS="your-app-password"
+SMTP_USER="resend"
+SMTP_PASS="your-api-key"
+EMAIL_FROM='"RSCI-RC3" <noreply@yourdomain.com>'
 
-# Optional: File Storage (AWS S3, Cloudinary, etc.)
-AWS_ACCESS_KEY_ID="your-access-key"
-AWS_SECRET_ACCESS_KEY="your-secret-key"
-AWS_REGION="us-east-1"
-AWS_BUCKET_NAME="your-bucket"
+# Social Login (OAuth)
+GOOGLE_CLIENT_ID="your-google-id"
+GOOGLE_CLIENT_SECRET="your-google-secret"
+GITHUB_CLIENT_ID="your-github-id"
+GITHUB_CLIENT_SECRET="your-github-secret"
 ```
 
 ### Frontend Environment (`frontend/.env.production`)
@@ -110,6 +114,32 @@ openssl rand -base64 32
 node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 ```
 
+
+---
+
+## 🐋 Option 0: Docker Compose (Easiest & Production Ready)
+
+**Best for**: Self-hosting, VPS deployments, and ensuring environment parity.
+
+1. **Install Docker & Docker Compose** on your server.
+2. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/rsci-rc3.git && cd rsci-rc3
+   ```
+3. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   nano .env # Fill in your production secrets
+   ```
+4. **Deploy**:
+   ```bash
+   docker-compose up -d --build
+   ```
+5. **Database Initialization**:
+   ```bash
+   docker exec -it coding-platform-backend npx prisma db push
+   docker exec -it coding-platform-backend npx prisma db seed
+   ```
 
 ---
 

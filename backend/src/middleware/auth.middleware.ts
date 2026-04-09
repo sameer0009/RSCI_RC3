@@ -1,15 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import authService from '../services/auth.service';
 
-// Extend Express Request type to include user
+// Extend Express User type
 declare global {
   namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        email: string;
-        role: string;
-      };
+    interface User {
+      id: string;
+      email: string;
+      role: string;
     }
   }
 }

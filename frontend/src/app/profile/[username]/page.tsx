@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { ActivityCalendar } from 'react-activity-calendar';
 
 interface UserProfile {
   id: string;
@@ -53,6 +54,33 @@ export default function ProfilePage() {
     websiteUrl: ''
   });
   const [uploadingPicture, setUploadingPicture] = useState(false);
+
+  // Generate mock data for the ActivityCalendar
+  const [activityData, setActivityData] = useState<Array<{date: string; count: number; level: number}>>([]);
+  
+  useEffect(() => {
+    // Generate past 365 days of mock activity
+    const data = [];
+    const today = new Date();
+    for (let i = 365; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      const dateString = date.toISOString().split('T')[0];
+      
+      // Random activity
+      const isActive = Math.random() > 0.6;
+      const count = isActive ? Math.floor(Math.random() * 10) + 1 : 0;
+      let level = 0;
+      if (count > 0) level = 1;
+      if (count > 3) level = 2;
+      if (count > 6) level = 3;
+      if (count > 8) level = 4;
+      
+      data.push({ date: dateString, count, level });
+    }
+    setActivityData(data);
+  }, []);
+
 
   useEffect(() => {
     fetchProfile();
@@ -288,6 +316,36 @@ export default function ProfilePage() {
             <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center">
               <div className="text-3xl font-bold text-purple-600">#{profile.rank}</div>
               <div className="text-gray-600 dark:text-gray-400">Global Rank</div>
+            </div>
+          </div>
+
+{/* Submission Heatmap */}
+          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6 overflow-hidden">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+              Submission Activity
+            </h2>
+            <div className="flex justify-center w-full overflow-x-auto pb-4 custom-scrollbar">
+              {activityData.length > 0 && (
+                <ActivityCalendar 
+                  data={activityData} 
+                  theme={{
+                    light: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
+                    dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
+                  }}
+                  colorScheme="dark"
+                  labels={{
+                    legend: {
+                      less: 'Less',
+                      more: 'More'
+                    },
+                    months: [
+                      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+                    ],
+                    weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+                  }}
+                />
+              )}
             </div>
           </div>
 

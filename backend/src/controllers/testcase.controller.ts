@@ -4,7 +4,7 @@ import testCaseService from '../services/testcase.service';
 import problemService from '../services/problem.service';
 
 export class TestCaseController {
-  async uploadTestCases(req: Request, res: Response) {
+  uploadTestCases = async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -60,7 +60,7 @@ export class TestCaseController {
     }
   }
 
-  async getTestCases(req: Request, res: Response) {
+  getTestCases = async (req: Request, res: Response) => {
     try {
       const { id: problemId } = req.params;
       const isAdmin = req.user?.role === 'ADMIN';
@@ -82,7 +82,7 @@ export class TestCaseController {
     }
   }
 
-  async updateTestCase(req: Request, res: Response) {
+  updateTestCase = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
 
@@ -104,7 +104,7 @@ export class TestCaseController {
     }
   }
 
-  async deleteTestCase(req: Request, res: Response) {
+  deleteTestCase = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
 

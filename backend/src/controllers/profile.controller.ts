@@ -6,7 +6,7 @@ class ProfileController {
    * Get public profile
    * GET /api/users/:username/profile
    */
-  async getProfile(req: Request, res: Response) {
+  getProfile = async (req: Request, res: Response) => {
     try {
       const { username } = req.params;
       const profile = await profileService.getProfile(username);
@@ -32,7 +32,7 @@ class ProfileController {
    * Update own profile
    * PUT /api/users/profile
    */
-  async updateProfile(req: Request, res: Response) {
+  updateProfile = async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
       const { fullName, bio, location } = req.body;
@@ -64,7 +64,7 @@ class ProfileController {
    * Upload profile picture
    * POST /api/users/profile/picture
    */
-  async uploadProfilePicture(req: Request, res: Response) {
+  uploadProfilePicture = async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
       const file = req.file;
@@ -103,7 +103,7 @@ class ProfileController {
    * Delete profile picture
    * DELETE /api/users/profile/picture
    */
-  async deleteProfilePicture(req: Request, res: Response) {
+  deleteProfilePicture = async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
       const result = await profileService.deleteProfilePicture(userId);
@@ -129,7 +129,7 @@ class ProfileController {
    * Update social links
    * PUT /api/users/profile/social
    */
-  async updateSocialLinks(req: Request, res: Response) {
+  updateSocialLinks = async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
       const { linkedinUrl, githubUrl, twitterUrl, websiteUrl } = req.body;

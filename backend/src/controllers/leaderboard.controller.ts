@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import leaderboardService from '../services/leaderboard.service';
 
 export class LeaderboardController {
-  async getGlobalLeaderboard(req: Request, res: Response) {
+  getGlobalLeaderboard = async (req: Request, res: Response) => {
     try {
       const { page = '1', limit = '50' } = req.query;
 
@@ -26,7 +26,7 @@ export class LeaderboardController {
     }
   }
 
-  async getUserRank(req: Request, res: Response) {
+  getUserRank = async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
 

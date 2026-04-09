@@ -1,152 +1,116 @@
-# Online Coding Platform
+# 🚀 RSCI-RC3: Production-Ready Coding Platform
 
-A full-stack LeetCode-style coding competition and practice platform with automatic code evaluation.
+RSCI-RC3 is a high-performance, industry-level competitive coding platform built for scale. It combines the seamless user experience of LeetCode with advanced academic management, asynchronous communication, and hardened competitive mechanics.
 
-## Features
+[![Production Ready](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)]()
+[![Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20Node.js%20%7C%20Prisma%20%7C%20Redis-blue.svg)]()
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 
-### Core Features
-- 🧩 Practice coding problems with multiple difficulty levels
-- 🏆 Participate in timed contests and competitions
-- � Talke programming exams with automatic evaluation
-- � Multi- language support (Python, C, C++, Java, JavaScript, C#, Go, PHP)
-- � Seecure sandbox code execution
-- � Real-ptime leaderboards and rankings
-- 👤 User profiles with statistics and achievements
-- 🎨 Modern dark mode UI
+---
 
-### ⭐ Enhanced Scoring System (NEW!)
-- 📊 **Point-Based Scoring**: Each test case has weighted points
-- 🎯 **Partial Credit**: Get points for passing individual test cases
-- 👀 **Practice Mode**: Test against sample cases before submitting
-- 📁 **Test Case Groups**: Organized categories (Basic, Edge Cases, Performance)
-- 🔍 **Detailed Feedback**: See exactly which test categories you passed
-- 🎓 **Better Learning**: Understand your solution's strengths and weaknesses
+## ✨ Key Features
 
-[Learn more about Enhanced Scoring →](./docs/ENHANCED_SCORING_SYSTEM.md)
+### 🛡️ Enterprise-Grade Identity
+- **OAuth 2.0**: One-click social login via **Google** and **GitHub**.
+- **Secure Sessions**: JWT-based authentication with **Refresh Token Rotation** and HTTP-only cookies.
+- **RBAC**: Granular Role-Based Access Control (`STUDENT`, `ADMIN`, `PROBLEM_SETTER`, `CONTEST_MANAGER`).
+- **Account Security**: Email verification and secure password reset flows.
 
-## Tech Stack
+### 🏆 Competitive Engine Hardening
+- **LeetCode-Style Penalties**: Automatic **+20 minute penalty** per Wrong Answer before an Accepted solution.
+- **Frozen Leaderboards**: Logic to "freeze" public rankings during the final hour of high-stakes contests.
+- **Virtual practiced**: Practice past contests with relative timers and a real-time competitive feel.
+- **Point-Based Evaluation**: Partial credit and weighted test case groups (Basic, Edge, Performance).
+
+### 📧 Asynchronous Infrastructure
+- **High-Performance Queues**: Built on **BullMQ** and Redis to handle non-blocking email and notifications.
+- **Real-Time Notifications**: Instant in-app alerts via **Socket.IO** for grading results, contest starts, and announcements.
+- **Template-Engine**: Professional HTML emails powered by **Handlebars**.
+
+### 🎓 Academic & Domain Panels
+- **Classroom Management**: Create cohorts, generate **Invite Codes**, and track student progress.
+- **Instructor Dashboard**: Detailed analytics on assignment completion and classroom leaderboards.
+- **Problem CMS**: Advanced markdown editor with boilerplate generation and bulk test-case uploads.
+
+---
+
+## 🛠️ Tech Stack
 
 ### Frontend
-- Next.js 14 with TypeScript
-- React 18
-- Tailwind CSS
-- Monaco Editor
-- React Query
-- Socket.io Client
+- **Framework**: [Next.js 14](https://nextjs.org/) (App Router, TypeScript)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Editor**: [Monaco Editor](https://microsoft.github.io/monaco-editor/)
+- **State/Data**: React Query & Socket.io-client
 
 ### Backend
-- Node.js with Express
-- TypeScript
-- PostgreSQL with Prisma ORM
-- Redis for caching
-- Bull for job queues
-- Judge0 API for code execution
+- **Runtime**: [Node.js](https://nodejs.org/) & Express
+- **Database**: [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
+- **Caching/Queues**: [Redis](https://redis.io/) & BullMQ
+- **Real-time**: [Socket.IO](https://socket.io/)
+- **Judge**: [Judge0](https://judge0.com/) API Integration
 
-## Quick Start
+---
 
-### ⚡ One-Click Setup (Recommended)
+## 🚀 Quick Start (Production Setup)
 
-### TL;DR
+The platform is fully containerized for a smooth one-click deployment.
 
+### 1. Pre-requisites
+- **Docker & Docker Compose**
+- **Node.js 20+** (for local development)
+
+### 2. Environment Setup
+Copy the production template and fill in your secrets.
 ```bash
-# 1. Install dependencies
-npm install
-
-# 2. Start Docker services
-docker-compose up -d
-
-# 3. Setup environment
-cp backend/.env.example backend/.env
-cp frontend/.env.example frontend/.env
-
-# 4. Setup database
-cd backend && npm run prisma:generate && npm run prisma:migrate && npm run prisma:seed && cd ..
-
-# 5. Start servers
-npm run dev
+cp .env.example .env
 ```
+> [!IMPORTANT]
+> You must provide your own `GOOGLE_CLIENT_ID`, `SMTP_HOST`, and `JUDGE0_API_KEY` for full functionality.
 
-**Access:** http://localhost:3000
-
-**Login:** admin@example.com / admin123
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- Docker Desktop (running)
-- npm or yarn
-
-### Installation
-
-Follow the [docs/QUICKSTART.md](docs/QUICKSTART.md) guide for step-by-step instructions.
-
-The application will be available at:
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
-- Prisma Studio: http://localhost:5555 (run `npm run prisma:studio` in backend/)
-
-## Project Structure
-
-```
-online-coding-platform/
-├── frontend/               # Next.js frontend application
-│   ├── src/
-│   │   ├── app/           # Next.js app directory
-│   │   ├── components/    # React components
-│   │   ├── lib/           # Utility functions
-│   │   └── types/         # TypeScript types
-│   └── public/            # Static assets
-├── backend/               # Express backend application
-│   ├── src/
-│   │   ├── config/        # Configuration files
-│   │   ├── controllers/   # Route controllers
-│   │   ├── services/      # Business logic
-│   │   ├── middleware/    # Express middleware
-│   │   ├── routes/        # API routes
-│   │   └── types/         # TypeScript types
-│   └── prisma/            # Database schema and migrations
-└── docker-compose.yml     # Docker services configuration
-```
-
-## Development
-
-### Running Tests
+### 3. Launch with Docker
 ```bash
-npm run test
+docker-compose up -d --build
 ```
+This command starts:
+- **Postgres** (Port 5432)
+- **Redis** (Port 6379)
+- **Backend API** (Port 5000)
+- **Next.js Frontend** (Port 3000)
 
-### Building for Production
+### 4. Initialize Database
 ```bash
-npm run build
-```
-
-### Database Commands
-```bash
-# Create a new migration
 cd backend
-npm run prisma:migrate
-
-# Generate Prisma Client
-npm run prisma:generate
-
-# Seed database
-npm run prisma:seed
+npx prisma db push
+npx prisma db seed
 ```
 
-## Documentation
+---
 
-All documentation has been organized in the `docs/` folder:
+## 📂 Project Structure
 
-- **[docs/INDEX.md](docs/INDEX.md)** - Complete documentation index
-- **[docs/QUICKSTART.md](docs/QUICKSTART.md)** - Quick start guide
-- **[docs/SETUP_INSTRUCTIONS.md](docs/SETUP_INSTRUCTIONS.md)** - Detailed setup
-- **[docs/IMPLEMENTATION_COMPLETE.md](docs/IMPLEMENTATION_COMPLETE.md)** - Advanced features
-- **[docs/PLATFORM_READY.md](docs/PLATFORM_READY.md)** - Platform overview
+```text
+RSCI-RC3/
+├── backend/               # Express API & Background Workers
+│   ├── src/
+│   │   ├── services/      # Enhanced Judge, Auth, Notification, Contest logic
+│   │   ├── workers/       # BullMQ Job Processors
+│   │   └── templates/     # Handlebars Email Templates
+│   └── prisma/            # Schema & Migration definitions
+├── frontend/              # Next.js Application
+└── docker-compose.yml     # Full-stack Orchestration
+```
 
-See [docs/INDEX.md](docs/INDEX.md) for a complete list of all documentation.
+---
 
-## License
+## 🧪 Development & Testing
 
-MIT
+- **Backend Logs**: `docker logs coding-platform-backend -f`
+- **Unit Tests**: `npm run test` in respective directories.
+- **Health Check**: `GET /api/health`
+
+## 📄 License
+Distributed under the MIT License. See `LICENSE` for more information.
+
+---
+
+**Built for the next generation of competitive programmers.**

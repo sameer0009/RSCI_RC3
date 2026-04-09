@@ -8,7 +8,7 @@ class AdminController {
    * Create problem
    * POST /api/admin/problems
    */
-  async createProblem(req: Request, res: Response) {
+  createProblem = async (req: Request, res: Response) => {
     try {
       const userId = (req as any).user.id;
       const problem = await adminService.createProblem({
@@ -37,7 +37,7 @@ class AdminController {
    * List problems
    * GET /api/admin/problems
    */
-  async listProblems(req: Request, res: Response) {
+  listProblems = async (req: Request, res: Response) => {
     try {
       const { page, limit, difficulty, search } = req.query;
       const result = await adminService.listProblems({
@@ -68,7 +68,7 @@ class AdminController {
    * Get problem details
    * GET /api/admin/problems/:id
    */
-  async getProblem(req: Request, res: Response) {
+  getProblem = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const problem = await adminService.listProblems({ search: id });
@@ -94,7 +94,7 @@ class AdminController {
    * Update problem
    * PUT /api/admin/problems/:id
    */
-  async updateProblem(req: Request, res: Response) {
+  updateProblem = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const problem = await adminService.updateProblem(id, req.body);
@@ -120,7 +120,7 @@ class AdminController {
    * Delete problem
    * DELETE /api/admin/problems/:id
    */
-  async deleteProblem(req: Request, res: Response) {
+  deleteProblem = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const result = await adminService.deleteProblem(id);
@@ -146,7 +146,7 @@ class AdminController {
    * Bulk upload test cases
    * POST /api/admin/problems/:id/testcases/bulk
    */
-  async bulkUploadTestCases(req: Request, res: Response) {
+  bulkUploadTestCases = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const { testCases } = req.body;
@@ -187,7 +187,7 @@ class AdminController {
    * List users
    * GET /api/admin/users
    */
-  async listUsers(req: Request, res: Response) {
+  listUsers = async (req: Request, res: Response) => {
     try {
       const { page, limit, role, search } = req.query;
       const result = await adminService.listUsers({
@@ -218,7 +218,7 @@ class AdminController {
    * Get user details
    * GET /api/admin/users/:id
    */
-  async getUser(req: Request, res: Response) {
+  getUser = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       // Use search to find by ID
@@ -256,7 +256,7 @@ class AdminController {
    * Update user
    * PUT /api/admin/users/:id
    */
-  async updateUser(req: Request, res: Response) {
+  updateUser = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const user = await adminService.updateUser(id, req.body);
@@ -282,7 +282,7 @@ class AdminController {
    * Delete user
    * DELETE /api/admin/users/:id
    */
-  async deleteUser(req: Request, res: Response) {
+  deleteUser = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const result = await adminService.deleteUser(id);
@@ -308,7 +308,7 @@ class AdminController {
    * Search users
    * GET /api/admin/users/search
    */
-  async searchUsers(req: Request, res: Response) {
+  searchUsers = async (req: Request, res: Response) => {
     try {
       const { q } = req.query;
       

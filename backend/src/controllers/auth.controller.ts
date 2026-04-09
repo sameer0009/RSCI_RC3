@@ -1,11 +1,11 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import authService from '../services/auth.service';
+import { emailQueue } from '../queues/email.queue';
 
 export class AuthController {
-  async register(req: Request, res: Response) {
+  register = async (req: Request, res: Response) => {
     try {
-      // Validate request
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -18,37 +18,34 @@ export class AuthController {
         });
       }
 
-      const { username, email, password } = req.body;
+      const { username, email, password, role } = req.body;
 
-      // Register user
       const { user, tokens } = await authService.register({
         username,
         email,
         password,
+        role: role as any
       });
 
-      // Set tokens in HTTP-only cookies
-      res.cookie('accessToken', tokens.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 minutes
+      const verificationToken = await authService.createVerificationToken(user.id);
+      
+      // Queue verification email
+      await emailQueue.add('welcome', {
+        to: user.email,
+        subject: 'Welcome to RSCI-RC3!',
+        templateName: 'welcome',
+        context: {
+          username: user.username,
+          verificationUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verificationToken}`
+        }
       });
 
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+      this.setAuthCookies(res, tokens);
 
       res.status(201).json({
         success: true,
-        data: {
-          user,
-          tokens,
-        },
-        message: 'User registered successfully',
+        data: { user, tokens },
+        message: 'Registration successful. Please verify your email.',
       });
     } catch (error: any) {
       res.status(400).json({
@@ -61,9 +58,8 @@ export class AuthController {
     }
   }
 
-  async login(req: Request, res: Response) {
+  login = async (req: Request, res: Response) => {
     try {
-      // Validate request
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
         return res.status(400).json({
@@ -78,30 +74,13 @@ export class AuthController {
 
       const { email, password } = req.body;
 
-      // Login user
       const { user, tokens } = await authService.login({ email, password });
 
-      // Set tokens in HTTP-only cookies
-      res.cookie('accessToken', tokens.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 15 * 60 * 1000, // 15 minutes
-      });
-
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
+      this.setAuthCookies(res, tokens);
 
       res.json({
         success: true,
-        data: {
-          user,
-          tokens,
-        },
+        data: { user, tokens },
         message: 'Login successful',
       });
     } catch (error: any) {
@@ -115,7 +94,23 @@ export class AuthController {
     }
   }
 
-  async refresh(req: Request, res: Response) {
+  private setAuthCookies = (res: Response, tokens: { accessToken: string; refreshToken: string }) => {
+    res.cookie('accessToken', tokens.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 15 * 60 * 1000, // 15 minutes
+    });
+
+    res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+  }
+
+  refresh = async (req: Request, res: Response) => {
     try {
       const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
@@ -129,23 +124,8 @@ export class AuthController {
         });
       }
 
-      // Refresh tokens
       const tokens = await authService.refreshTokens(refreshToken);
-
-      // Set new tokens in cookies
-      res.cookie('accessToken', tokens.accessToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 15 * 60 * 1000,
-      });
-
-      res.cookie('refreshToken', tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
-      });
+      this.setAuthCookies(res, tokens);
 
       res.json({
         success: true,
@@ -163,20 +143,82 @@ export class AuthController {
     }
   }
 
-  async getMe(req: Request, res: Response) {
+  verifyEmail = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user?.userId;
+      const { token } = req.params;
+      await authService.verifyEmail(token);
 
-      if (!userId) {
-        return res.status(401).json({
-          success: false,
-          error: {
-            code: 'UNAUTHORIZED',
-            message: 'User not authenticated',
-          },
+      res.json({
+        success: true,
+        message: 'Email verified successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'VERIFICATION_FAILED',
+          message: error.message || 'Email verification failed',
+        },
+      });
+    }
+  }
+
+  forgotPassword = async (req: Request, res: Response) => {
+    try {
+      const { email } = req.body;
+      const token = await authService.createPasswordResetToken(email);
+
+      if (token) {
+        await emailQueue.add('forgotPassword', {
+          to: email,
+          subject: 'Password Reset Request',
+          templateName: 'resetPassword', // Need to create this template
+          context: {
+            resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`
+          }
         });
+        console.log(`Password reset token for ${email}: ${token}`);
       }
 
+      // Always return success for security
+      res.json({
+        success: true,
+        message: 'If an account exists, a password reset email has been sent.',
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'FORGOT_PASSWORD_FAILED',
+          message: 'An error occurred while processing your request',
+        },
+      });
+    }
+  }
+
+  resetPassword = async (req: Request, res: Response) => {
+    try {
+      const { token, password } = req.body;
+      await authService.resetPassword(token, password);
+
+      res.json({
+        success: true,
+        message: 'Password reset successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'RESET_PASSWORD_FAILED',
+          message: error.message || 'Password reset failed',
+        },
+      });
+    }
+  }
+
+  getMe = async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
       const user = await authService.getUserById(userId);
 
       if (!user) {
@@ -198,15 +240,19 @@ export class AuthController {
         success: false,
         error: {
           code: 'INTERNAL_ERROR',
-          message: error.message || 'Failed to fetch user',
+          message: 'Failed to fetch user',
         },
       });
     }
   }
 
-  async logout(req: Request, res: Response) {
+  logout = async (req: Request, res: Response) => {
     try {
-      // Clear cookies
+      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
+      if (refreshToken) {
+        await authService.logout(refreshToken);
+      }
+
       res.clearCookie('accessToken');
       res.clearCookie('refreshToken');
 
@@ -219,9 +265,40 @@ export class AuthController {
         success: false,
         error: {
           code: 'LOGOUT_FAILED',
-          message: error.message || 'Logout failed',
+          message: 'Logout failed',
         },
       });
+    }
+  }
+
+  // OAuth Placeholders - will be implemented with Passport or specific providers
+  googleAuth(req: Request, res: Response) {
+    // Redirect to Google
+  }
+
+  googleCallback(req: Request, res: Response) {
+    // Handle Google callback
+  }
+
+  githubAuth(req: Request, res: Response) {
+    // Redirect to GitHub
+  }
+
+  oauthCallback = async (req: Request, res: Response) => {
+    try {
+      const user = (req as any).user;
+      if (!user) {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_failed`);
+      }
+
+      const tokens = await authService.issueTokens(user);
+      this.setAuthCookies(res, tokens);
+
+      // Redirect to frontend dashboard or home
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`);
+    } catch (error: any) {
+      console.error('OAuth callback error:', error);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=internal_error`);
     }
   }
 }

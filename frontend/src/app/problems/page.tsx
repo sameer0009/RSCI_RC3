@@ -23,7 +23,10 @@ export default function ProblemsPage() {
   const [filters, setFilters] = useState({
     difficulty: '',
     search: '',
+    topic: '',
   });
+
+  const [availableTopics, setAvailableTopics] = useState<string[]>([]);
 
   useEffect(() => {
     fetchProblems();
@@ -36,8 +39,20 @@ export default function ProblemsPage() {
       if (filters.difficulty) params.append('difficulty', filters.difficulty);
       if (filters.search) params.append('search', filters.search);
 
+      if (filters.topic) params.append('topic', filters.topic);
       const { data } = await api.get(`/problems?${params.toString()}`);
-      setProblems(data.data.problems);
+      
+      const loadedProblems = data.data.problems;
+      setProblems(loadedProblems);
+      
+      // Extract unique topics from problems
+      const topics = new Set<string>();
+      loadedProblems.forEach((p: any) => {
+        p.topics?.forEach((t: string) => topics.add(t));
+      });
+      if (availableTopics.length === 0) {
+          setAvailableTopics(Array.from(topics));
+      }
     } catch (error) {
       console.error('Failed to fetch problems:', error);
     } finally {
@@ -63,6 +78,28 @@ export default function ProblemsPage() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div className="mb-8 p-6 bg-gradient-to-r from-primary-600 to-purple-600 rounded-2xl shadow-xl text-white relative overflow-hidden group">
+          <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform group-hover:scale-110 transition-transform duration-700"></div>
+          <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center">
+            <div className="flex items-center gap-4 mb-4 sm:mb-0">
+              <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-3xl shadow-inner">
+                🔥
+              </div>
+              <div>
+                <span className="text-white/80 text-sm font-bold uppercase tracking-wider block mb-1">Daily Challenge</span>
+                <h2 className="text-2xl font-black text-white">Two Sum IV - Input is a BST</h2>
+                <div className="flex gap-3 mt-2 text-sm font-medium">
+                  <span className="text-green-300">● Easy</span>
+                  <span className="text-white/70">Tree, Depth-First Search</span>
+                </div>
+              </div>
+            </div>
+            <Link href="/problems/two-sum-iv" className="px-6 py-3 bg-white text-primary-700 font-bold rounded-xl hover:bg-gray-50 hover:shadow-lg transition-all transform hover:-translate-y-1">
+              Solve Now
+            </Link>
+          </div>
+        </div>
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             Problems
@@ -86,7 +123,27 @@ export default function ProblemsPage() {
               <option value="Medium">Medium</option>
               <option value="Hard">Hard</option>
             </select>
+            
+            {availableTopics.length > 0 && (
+                <select
+                  value={filters.topic}
+                  onChange={(e) => setFilters({ ...filters, topic: e.target.value })}
+                  className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value="">All Topics</option>
+                  {availableTopics.map(t => <option key={t} value={t}>{t}</option>)}
+                </select>
+            )}
           </div>
+          
+          {filters.topic && (
+              <div className="mt-3 flex gap-2">
+                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-sm font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-300">
+                    Topic: {filters.topic}
+                    <button onClick={() => setFilters({...filters, topic: ''})} className="hover:text-primary-900 dark:hover:text-primary-100">×</button>
+                 </span>
+              </div>
+          )}
         </div>
 
         {loading ? (

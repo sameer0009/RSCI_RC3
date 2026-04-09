@@ -3,7 +3,7 @@ import { validationResult } from 'express-validator';
 import problemService from '../services/problem.service';
 
 export class ProblemController {
-  async createProblem(req: Request, res: Response) {
+  createProblem = async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -17,7 +17,7 @@ export class ProblemController {
         });
       }
 
-      const userId = req.user?.userId;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({
           success: false,
@@ -49,7 +49,7 @@ export class ProblemController {
     }
   }
 
-  async getProblems(req: Request, res: Response) {
+  getProblems = async (req: Request, res: Response) => {
     try {
       const {
         difficulty,
@@ -73,8 +73,8 @@ export class ProblemController {
         filters.search = search as string;
       }
 
-      if (req.user?.userId) {
-        filters.userId = req.user.userId;
+      if (req.user?.id) {
+        filters.userId = req.user.id;
       }
 
       const result = await problemService.getProblems(
@@ -98,7 +98,7 @@ export class ProblemController {
     }
   }
 
-  async getProblemById(req: Request, res: Response) {
+  getProblemById = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const isAdmin = req.user?.role === 'ADMIN';
@@ -130,7 +130,7 @@ export class ProblemController {
     }
   }
 
-  async getProblemBySlug(req: Request, res: Response) {
+  getProblemBySlug = async (req: Request, res: Response) => {
     try {
       const { slug } = req.params;
       const isAdmin = req.user?.role === 'ADMIN';
@@ -162,7 +162,7 @@ export class ProblemController {
     }
   }
 
-  async updateProblem(req: Request, res: Response) {
+  updateProblem = async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -196,7 +196,7 @@ export class ProblemController {
     }
   }
 
-  async deleteProblem(req: Request, res: Response) {
+  deleteProblem = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
 
@@ -217,7 +217,7 @@ export class ProblemController {
     }
   }
 
-  async getTopics(req: Request, res: Response) {
+  getTopics = async (req: Request, res: Response) => {
     try {
       const topics = await problemService.getAllTopics();
 
@@ -236,7 +236,7 @@ export class ProblemController {
     }
   }
 
-  async getTestCaseGroups(req: Request, res: Response) {
+  getTestCaseGroups = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const groups = await problemService.getTestCaseGroups(id);
@@ -256,7 +256,7 @@ export class ProblemController {
     }
   }
 
-  async createTestCaseGroup(req: Request, res: Response) {
+  createTestCaseGroup = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const group = await problemService.createTestCaseGroup(id, req.body);
@@ -277,7 +277,7 @@ export class ProblemController {
     }
   }
 
-  async updateTestCaseGroup(req: Request, res: Response) {
+  updateTestCaseGroup = async (req: Request, res: Response) => {
     try {
       const { groupId } = req.params;
       const group = await problemService.updateTestCaseGroup(groupId, req.body);
@@ -298,7 +298,7 @@ export class ProblemController {
     }
   }
 
-  async deleteTestCaseGroup(req: Request, res: Response) {
+  deleteTestCaseGroup = async (req: Request, res: Response) => {
     try {
       const { groupId } = req.params;
       await problemService.deleteTestCaseGroup(groupId);

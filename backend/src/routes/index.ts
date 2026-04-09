@@ -6,6 +6,8 @@ import leaderboardRoutes from './leaderboard.routes';
 import analyticsRoutes from './analytics.routes';
 import profileRoutes from './profile.routes';
 import adminRoutes from './admin.routes';
+import notificationRoutes from './notification.routes';
+import classroomRoutes from './classroom.routes';
 
 const router = Router();
 
@@ -17,6 +19,8 @@ router.use('/leaderboard', leaderboardRoutes);
 router.use('/analytics', analyticsRoutes);
 router.use('/users', profileRoutes);
 router.use('/admin', adminRoutes);
+router.use('/notifications', notificationRoutes);
+router.use('/classrooms', classroomRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

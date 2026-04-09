@@ -2,9 +2,9 @@ import { Request, Response } from 'express';
 import submissionService from '../services/submission.service';
 
 export class SubmissionController {
-  async submitCode(req: Request, res: Response) {
+  submitCode = async (req: Request, res: Response) => {
     try {
-      const userId = req.user?.userId;
+      const userId = req.user?.id;
       if (!userId) {
         return res.status(401).json({
           success: false,
@@ -51,7 +51,7 @@ export class SubmissionController {
     }
   }
 
-  async runCode(req: Request, res: Response) {
+  runCode = async (req: Request, res: Response) => {
     try {
       const { code, language, input } = req.body;
 
@@ -82,7 +82,7 @@ export class SubmissionController {
     }
   }
 
-  async runSampleTests(req: Request, res: Response) {
+  runSampleTests = async (req: Request, res: Response) => {
     try {
       const { problemId, code, language } = req.body;
 
@@ -114,7 +114,7 @@ export class SubmissionController {
     }
   }
 
-  async getSubmission(req: Request, res: Response) {
+  getSubmission = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
 
@@ -145,7 +145,7 @@ export class SubmissionController {
     }
   }
 
-  async getUserSubmissions(req: Request, res: Response) {
+  getUserSubmissions = async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
       const { page = '1', limit = '20' } = req.query;

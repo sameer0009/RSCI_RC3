@@ -157,3 +157,23 @@ export const uploadTestCasesValidation: ValidationChain[] = [
     .isInt({ min: 1 })
     .withMessage('Order index must be a positive integer'),
 ];
+
+export const forgotPasswordValidation: ValidationChain[] = [
+  body('email')
+    .trim()
+    .isEmail()
+    .withMessage('Must be a valid email address')
+    .normalizeEmail(),
+];
+
+export const resetPasswordValidation: ValidationChain[] = [
+  body('token')
+    .notEmpty()
+    .withMessage('Reset token is required'),
+  
+  body('password')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters long')
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+];

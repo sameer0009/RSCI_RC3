@@ -1,4 +1,4 @@
-import { PrismaClient, Difficulty } from '@prisma/client';
+import { PrismaClient, Difficulty, Role } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -19,6 +19,7 @@ interface CreateProblemDto {
     isPublic: boolean;
     points: number;
   }>;
+  points?: number;
 }
 
 interface UpdateProblemDto {
@@ -31,6 +32,7 @@ interface UpdateProblemDto {
   topics?: string[];
   timeLimit?: number;
   memoryLimit?: number;
+  points?: number;
 }
 
 interface ProblemFilters {
@@ -41,7 +43,7 @@ interface ProblemFilters {
 }
 
 interface UpdateUserDto {
-  role?: 'USER' | 'ADMIN';
+  role?: Role;
   fullName?: string;
   email?: string;
 }
@@ -49,7 +51,7 @@ interface UpdateUserDto {
 interface UserFilters {
   page?: number;
   limit?: number;
-  role?: 'USER' | 'ADMIN';
+  role?: Role;
   search?: string;
 }
 
@@ -86,6 +88,7 @@ class AdminService {
         timeLimit: data.timeLimit || 2000,
         memoryLimit: data.memoryLimit || 256,
         createdBy: data.createdBy,
+        points: data.points || 100,
         allowedLanguages: [],
         status: 'PUBLISHED',
         testCases: data.testCases ? {
@@ -307,7 +310,7 @@ class AdminService {
     }
 
     // Prevent deleting last admin
-    if (data.role === 'USER' && existing.role === 'ADMIN') {
+    if (data.role === 'STUDENT' && existing.role === 'ADMIN') {
       const adminCount = await prisma.user.count({ where: { role: 'ADMIN' } });
       if (adminCount <= 1) {
         throw new Error('Cannot remove the last admin');

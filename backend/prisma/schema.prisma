@@ -12,7 +12,7 @@ model User {
   username     String @unique
   email        String @unique
   passwordHash String
-  role         Role   @default(USER)
+  role         Role   @default(STUDENT)
 
   // Profile fields
   fullName       String?
@@ -25,6 +25,12 @@ model User {
   githubUrl   String?
   twitterUrl  String?
   websiteUrl  String?
+
+  // Auth additions
+  isEmailVerified Boolean @default(false)
+  provider        String  @default("local") // local, google, github
+  providerId      String? // ID from provider if oauth
+
 
   // Statistics
   rating              Int @default(0)
@@ -41,14 +47,28 @@ model User {
   contestsCreated     Contest[]
   contestParticipants ContestParticipant[]
 
+  solutions           Solution[]
+  comments            Comment[]
+  votes               Vote[]
+
+  authTokens          AuthToken[]
+  notifications       Notification[]
+  notificationSetting NotificationSetting?
+  instructorClasses   Classroom[]       @relation("InstructorClassrooms")
+  studentClasses      ClassroomMember[] @relation("StudentClassrooms")
+
+
   @@index([username])
   @@index([email])
   @@index([fullName])
 }
 
 enum Role {
-  USER
+  STUDENT
   ADMIN
+  INSTRUCTOR
+  PROBLEM_SETTER
+  CONTEST_MANAGER
 }
 
 model Problem {
@@ -79,6 +99,7 @@ model Problem {
   languageMemoryLimits Json? // Language-specific memory limits
 
   // Status and metadata
+  points              Int           @default(100)
   status              ProblemStatus @default(DRAFT)
   acceptanceRate      Float         @default(0)
   totalSubmissions    Int           @default(0)
@@ -93,6 +114,9 @@ model Problem {
   customChecker  CustomChecker?
   submissions    Submission[]
   contests       Contest[]       @relation("ContestProblems")
+  problemTags    ProblemTag[]
+  solutions      Solution[]
+  assignments    Assignment[]    @relation("AssignmentProblems")
 
   @@index([slug])
   @@index([difficulty])
@@ -210,7 +234,8 @@ model Contest {
   description String        @db.Text
   startTime   DateTime
   endTime     DateTime
-  duration    Int
+  duration       Int
+  frozenDuration Int @default(60)
   status      ContestStatus @default(Upcoming)
   createdBy   String
   createdAt   DateTime      @default(now())
@@ -297,4 +322,174 @@ model TestCaseResult {
 
   @@index([submissionId])
   @@index([testCaseId])
+}
+
+model Tag {
+  id          String       @id @default(uuid())
+  name        String       @unique
+  description String?
+  problems    ProblemTag[]
+}
+
+model ProblemTag {
+  problemId String
+  tagId     String
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  tag       Tag     @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([problemId, tagId])
+}
+
+model Solution {
+  id          String   @id @default(uuid())
+  problemId   String
+  authorId    String
+  title       String
+  content     String   @db.Text
+  language    String
+  upvotes     Int      @default(0)
+  downvotes   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  problem  Problem   @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+  votes    Vote[]
+
+  @@index([problemId])
+  @@index([authorId])
+}
+
+model Comment {
+  id         String   @id @default(uuid())
+  solutionId String
+  authorId   String
+  content    String   @db.Text
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([solutionId])
+  @@index([authorId])
+}
+
+model Vote {
+  id         String   @id @default(uuid())
+  userId     String
+  solutionId String
+  value      Int      // 1 for upvote, -1 for downvote
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  solution Solution @relation(fields: [solutionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, solutionId])
+}
+
+
+// --- NEW AUTH & SYSTEM MODELS ---
+
+model AuthToken {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  type      TokenType
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+}
+
+enum TokenType {
+  REFRESH
+  VERIFICATION
+  PASSWORD_RESET
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      NotificationType
+  title     String
+  message   String   @db.Text
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isRead])
+  @@index([createdAt])
+}
+
+enum NotificationType {
+  SYSTEM
+  CONTEST
+  SUBMISSION
+  COMMUNITY
+  ACADEMIC
+}
+
+model NotificationSetting {
+  userId               String  @id
+  emailNotifications   Boolean @default(true)
+  pushNotifications    Boolean @default(true)
+  contestReminders     Boolean @default(true)
+  marketingEmails      Boolean @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// --- NEW ACADEMIC MODELS ---
+
+model Classroom {
+  id          String   @id @default(uuid())
+  name        String
+  description String?  @db.Text
+  code        String   @unique // For students to join
+  instructorId String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  instructor  User              @relation("InstructorClassrooms", fields: [instructorId], references: [id], onDelete: Cascade)
+  members     ClassroomMember[]
+  assignments Assignment[]
+
+  @@index([instructorId])
+  @@index([code])
+}
+
+model ClassroomMember {
+  id          String   @id @default(uuid())
+  classroomId String
+  userId      String
+  joinedAt    DateTime @default(now())
+
+  classroom Classroom @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  user      User      @relation("StudentClassrooms", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classroomId, userId])
+  @@index([classroomId])
+  @@index([userId])
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  classroomId String
+  title       String
+  description String?  @db.Text
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  classroom   Classroom    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
+  problems    Problem[]    @relation("AssignmentProblems")
+
+  @@index([classroomId])
 }

@@ -13,7 +13,7 @@ export class AnalyticsService {
       submissionsByVerdict,
     ] = await Promise.all([
       // Total users
-      prisma.user.count({ where: { role: 'USER' } }),
+      prisma.user.count({ where: { role: 'STUDENT' } }),
       
       // Total problems
       prisma.problem.count(),
@@ -27,7 +27,7 @@ export class AnalyticsService {
       // Active users (submitted in last 7 days)
       prisma.user.count({
         where: {
-          role: 'USER',
+          role: 'STUDENT',
           submissions: {
             some: {
               submittedAt: {
@@ -80,7 +80,7 @@ export class AnalyticsService {
 
     // Get top performers
     const topPerformers = await prisma.user.findMany({
-      where: { role: 'USER' },
+      where: { role: 'STUDENT' },
       select: {
         id: true,
         username: true,
@@ -165,7 +165,7 @@ export class AnalyticsService {
   async getUserActivity(days: number = 30) {
     const users = await prisma.user.findMany({
       where: {
-        role: 'USER',
+        role: 'STUDENT',
         submissions: {
           some: {
             submittedAt: {
@@ -197,9 +197,9 @@ export class AnalyticsService {
       take: 10,
     });
 
-    return users.map((user) => ({
+    return users.map((user: any) => ({
       username: user.username,
-      submissions: user._count.submissions,
+      submissions: (user as any)._count.submissions,
     }));
   }
 

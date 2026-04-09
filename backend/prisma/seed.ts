@@ -37,6 +37,36 @@ async function main() {
   });
 
   console.log('✅ Created admin user:', admin.username);
+  
+  // Create Instructor user
+  const instructorPassword = await bcrypt.hash('instructor123', 10);
+  const instructor = await prisma.user.create({
+    data: {
+      email: 'instructor@example.com',
+      username: 'instructor',
+      passwordHash: instructorPassword,
+      role: 'INSTRUCTOR',
+      fullName: 'Dr. Sarah Smith',
+      bio: 'Computer Science Professor specializing in Algorithms.',
+      location: 'Boston, MA',
+    },
+  });
+  console.log('✅ Created instructor user:', instructor.username);
+
+  // Create Problem Setter user
+  const setterPassword = await bcrypt.hash('setter123', 10);
+  const setter = await prisma.user.create({
+    data: {
+      email: 'setter@example.com',
+      username: 'setter',
+      passwordHash: setterPassword,
+      role: 'PROBLEM_SETTER',
+      fullName: 'Alex Chen',
+      bio: 'Competitive programmer and problem author.',
+      location: 'Toronto, Canada',
+    },
+  });
+  console.log('✅ Created problem setter user:', setter.username);
 
   // Create test users
   const testPassword = await bcrypt.hash('test123', 10);
@@ -60,7 +90,7 @@ async function main() {
         email: `user${i}@example.com`,
         username: `user${i}`,
         passwordHash: testPassword,
-        role: 'USER',
+        role: i <= 5 ? 'STUDENT' : 'PROBLEM_SETTER',
         rating: 1500 - i * 50,
         rank: i + 1,
         problemsSolved,

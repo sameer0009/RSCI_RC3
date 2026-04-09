@@ -91,8 +91,10 @@ export class EnhancedJudgeService {
         {
           headers: {
             'Content-Type': 'application/json',
-            'X-RapidAPI-Key': this.apiKey,
-            'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+            ...(this.apiKey ? {
+              'X-RapidAPI-Key': this.apiKey,
+              'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+            } : {}),
           },
         }
       );

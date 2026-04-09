@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import analyticsService from '../services/analytics.service';
 
 export class AnalyticsController {
-  async getDashboardStats(req: Request, res: Response) {
+  getDashboardStats = async (req: Request, res: Response) => {
     try {
       const stats = await analyticsService.getDashboardStats();
 
@@ -21,7 +21,7 @@ export class AnalyticsController {
     }
   }
 
-  async getUserActivity(req: Request, res: Response) {
+  getUserActivity = async (req: Request, res: Response) => {
     try {
       const { days = '30' } = req.query;
       const activity = await analyticsService.getUserActivity(parseInt(days as string));
@@ -41,7 +41,7 @@ export class AnalyticsController {
     }
   }
 
-  async getSubmissionTrend(req: Request, res: Response) {
+  getSubmissionTrend = async (req: Request, res: Response) => {
     try {
       const { days = '30' } = req.query;
       const trend = await analyticsService.getSubmissionTrend(parseInt(days as string));
@@ -61,7 +61,7 @@ export class AnalyticsController {
     }
   }
 
-  async getDifficultyDistribution(req: Request, res: Response) {
+  getDifficultyDistribution = async (req: Request, res: Response) => {
     try {
       const distribution = await analyticsService.getDifficultyDistribution();
 
@@ -80,7 +80,7 @@ export class AnalyticsController {
     }
   }
 
-  async getLanguageStats(req: Request, res: Response) {
+  getLanguageStats = async (req: Request, res: Response) => {
     try {
       const stats = await analyticsService.getLanguageStats();
 
@@ -99,7 +99,7 @@ export class AnalyticsController {
     }
   }
 
-  async getActiveUsers(req: Request, res: Response) {
+  getActiveUsers = async (req: Request, res: Response) => {
     try {
       const { days = '30' } = req.query;
       const activeUsers = await analyticsService.getActiveUsers(parseInt(days as string));
@@ -119,7 +119,7 @@ export class AnalyticsController {
     }
   }
 
-  async exportAnalytics(req: Request, res: Response) {
+  exportAnalytics = async (req: Request, res: Response) => {
     try {
       const csv = await analyticsService.exportAnalytics();
 

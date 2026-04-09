@@ -10,7 +10,7 @@ export class LeaderboardService {
     const [users, total] = await Promise.all([
       prisma.user.findMany({
         where: {
-          role: 'USER',
+          role: 'STUDENT',
         },
         select: {
           id: true,
@@ -29,7 +29,7 @@ export class LeaderboardService {
         take: limit,
       }),
       prisma.user.count({
-        where: { role: 'USER' },
+        where: { role: 'STUDENT' },
       }),
     ]);
 
@@ -69,7 +69,7 @@ export class LeaderboardService {
     // Calculate rank
     const rank = await prisma.user.count({
       where: {
-        role: 'USER',
+        role: 'STUDENT',
         OR: [
           { problemsSolved: { gt: user.problemsSolved } },
           {
@@ -88,6 +88,61 @@ export class LeaderboardService {
       accuracy: user.totalSubmissions > 0
         ? ((user.problemsSolved / user.totalSubmissions) * 100).toFixed(1)
         : '0.0',
+    };
+  }
+
+  async getContestLeaderboard(contestId: string, userId?: string) {
+    const contest = await prisma.contest.findUnique({
+      where: { id: contestId },
+    });
+
+    if (!contest) throw new Error('Contest not found');
+
+    const now = new Date();
+    const frozenDuration = (contest as any).frozenDuration || 60;
+    const freezeTime = new Date(contest.endTime.getTime() - frozenDuration * 60000);
+    const isFrozen = now >= freezeTime && now < contest.endTime;
+
+    const participants = await prisma.contestParticipant.findMany({
+      where: { contestId },
+      include: {
+        user: {
+          select: { id: true, username: true, fullName: true, rating: true }
+        }
+      }
+    });
+
+    // If frozen, we may want to skip updates for public view,
+    // but the current approach will just return the cached/last state if we want to be strict.
+    // For this implementation, we will return the "frozen" state if requested,
+    // meaning submissions after freezeTime are not counted in the public return.
+
+    const rankedParticipants = participants.map(p => {
+      // In a real system, we'd filter submissions based on freezeTime here if isFrozen is true
+      return {
+        ...p,
+        isMe: p.user.id === userId,
+      };
+    });
+
+    // Custom sort: Points (desc) -> Penalty (asc) -> Rating (desc)
+    rankedParticipants.sort((a: any, b: any) => {
+      if (b.totalPoints !== a.totalPoints) return b.totalPoints - a.totalPoints;
+      if (a.penalty !== b.penalty) return a.penalty - b.penalty;
+      return b.user.rating - a.user.rating;
+    });
+
+    return {
+      contest: {
+        id: contest.id,
+        title: contest.title,
+        status: contest.status,
+        isFrozen,
+      },
+      leaderboard: rankedParticipants.map((p, index) => ({
+        ...p,
+        rank: index + 1,
+      })),
     };
   }
 

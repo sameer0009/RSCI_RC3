@@ -42,7 +42,7 @@ class ProfileService {
         acceptedSubmissions: true,
         createdAt: true,
         role: true,
-      }
+      },
     });
 
     if (!user) {
@@ -53,7 +53,7 @@ class ProfileService {
     const recentSubmissions = await prisma.submission.findMany({
       where: {
         userId: user.id,
-        verdict: 'Accepted'
+        verdict: 'Accepted',
       },
       take: 10,
       orderBy: { submittedAt: 'desc' },
@@ -62,15 +62,15 @@ class ProfileService {
           select: {
             title: true,
             slug: true,
-            difficulty: true
-          }
-        }
-      }
+            difficulty: true,
+          },
+        },
+      },
     });
 
     return {
       ...user,
-      recentSubmissions
+      recentSubmissions,
     };
   }
 
@@ -89,7 +89,7 @@ class ProfileService {
         fullName: data.fullName,
         bio: data.bio,
         location: data.location,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       select: {
         id: true,
@@ -103,7 +103,7 @@ class ProfileService {
         githubUrl: true,
         twitterUrl: true,
         websiteUrl: true,
-      }
+      },
     });
 
     return user;
@@ -125,7 +125,7 @@ class ProfileService {
     // Get current user to delete old picture
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { profilePicture: true }
+      select: { profilePicture: true },
     });
 
     // Delete old profile picture if exists
@@ -143,8 +143,8 @@ class ProfileService {
       select: {
         id: true,
         username: true,
-        profilePicture: true
-      }
+        profilePicture: true,
+      },
     });
 
     return updatedUser;
@@ -156,15 +156,15 @@ class ProfileService {
   async deleteProfilePicture(userId: string) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { profilePicture: true }
+      select: { profilePicture: true },
     });
 
     if (user?.profilePicture) {
       await fileStorageService.deleteProfilePicture(user.profilePicture);
-      
+
       await prisma.user.update({
         where: { id: userId },
-        data: { profilePicture: null }
+        data: { profilePicture: null },
       });
     }
 
@@ -177,7 +177,7 @@ class ProfileService {
   async updateSocialLinks(userId: string, links: SocialLinks) {
     // Validate URLs
     const urlRegex = /^https?:\/\/.+/;
-    
+
     if (links.linkedinUrl && !urlRegex.test(links.linkedinUrl)) {
       throw new Error('Invalid LinkedIn URL');
     }
@@ -198,7 +198,7 @@ class ProfileService {
         githubUrl: links.githubUrl,
         twitterUrl: links.twitterUrl,
         websiteUrl: links.websiteUrl,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       select: {
         id: true,
@@ -207,7 +207,7 @@ class ProfileService {
         githubUrl: true,
         twitterUrl: true,
         websiteUrl: true,
-      }
+      },
     });
 
     return user;

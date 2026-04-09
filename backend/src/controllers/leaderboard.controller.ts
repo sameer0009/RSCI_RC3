@@ -24,7 +24,7 @@ export class LeaderboardController {
         },
       });
     }
-  }
+  };
 
   getUserRank = async (req: Request, res: Response) => {
     try {
@@ -45,7 +45,7 @@ export class LeaderboardController {
         },
       });
     }
-  }
+  };
 }
 
 export default new LeaderboardController();

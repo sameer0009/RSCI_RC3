@@ -7,30 +7,22 @@ export const registerValidation: ValidationChain[] = [
     .withMessage('Username must be between 3 and 30 characters')
     .matches(/^[a-zA-Z0-9_-]+$/)
     .withMessage('Username can only contain letters, numbers, underscores, and hyphens'),
-  
-  body('email')
-    .trim()
-    .isEmail()
-    .withMessage('Must be a valid email address')
-    .normalizeEmail(),
-  
+
+  body('email').trim().isEmail().withMessage('Must be a valid email address').normalizeEmail(),
+
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage(
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
 ];
 
 export const loginValidation: ValidationChain[] = [
-  body('email')
-    .trim()
-    .isEmail()
-    .withMessage('Must be a valid email address')
-    .normalizeEmail(),
-  
-  body('password')
-    .notEmpty()
-    .withMessage('Password is required'),
+  body('email').trim().isEmail().withMessage('Must be a valid email address').normalizeEmail(),
+
+  body('password').notEmpty().withMessage('Password is required'),
 ];
 
 export const createProblemValidation: ValidationChain[] = [
@@ -38,40 +30,29 @@ export const createProblemValidation: ValidationChain[] = [
     .trim()
     .isLength({ min: 3, max: 200 })
     .withMessage('Title must be between 3 and 200 characters'),
-  
+
   body('description')
     .trim()
     .isLength({ min: 10 })
     .withMessage('Description must be at least 10 characters'),
-  
-  body('inputFormat')
-    .trim()
-    .notEmpty()
-    .withMessage('Input format is required'),
-  
-  body('outputFormat')
-    .trim()
-    .notEmpty()
-    .withMessage('Output format is required'),
-  
-  body('constraints')
-    .trim()
-    .notEmpty()
-    .withMessage('Constraints are required'),
-  
+
+  body('inputFormat').trim().notEmpty().withMessage('Input format is required'),
+
+  body('outputFormat').trim().notEmpty().withMessage('Output format is required'),
+
+  body('constraints').trim().notEmpty().withMessage('Constraints are required'),
+
   body('difficulty')
     .isIn(['Easy', 'Medium', 'Hard'])
     .withMessage('Difficulty must be Easy, Medium, or Hard'),
-  
-  body('topics')
-    .isArray({ min: 1 })
-    .withMessage('At least one topic is required'),
-  
+
+  body('topics').isArray({ min: 1 }).withMessage('At least one topic is required'),
+
   body('timeLimit')
     .optional()
     .isInt({ min: 100, max: 10000 })
     .withMessage('Time limit must be between 100 and 10000 milliseconds'),
-  
+
   body('memoryLimit')
     .optional()
     .isInt({ min: 16, max: 1024 })
@@ -84,46 +65,31 @@ export const updateProblemValidation: ValidationChain[] = [
     .trim()
     .isLength({ min: 3, max: 200 })
     .withMessage('Title must be between 3 and 200 characters'),
-  
+
   body('description')
     .optional()
     .trim()
     .isLength({ min: 10 })
     .withMessage('Description must be at least 10 characters'),
-  
-  body('inputFormat')
-    .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('Input format cannot be empty'),
-  
-  body('outputFormat')
-    .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('Output format cannot be empty'),
-  
-  body('constraints')
-    .optional()
-    .trim()
-    .notEmpty()
-    .withMessage('Constraints cannot be empty'),
-  
+
+  body('inputFormat').optional().trim().notEmpty().withMessage('Input format cannot be empty'),
+
+  body('outputFormat').optional().trim().notEmpty().withMessage('Output format cannot be empty'),
+
+  body('constraints').optional().trim().notEmpty().withMessage('Constraints cannot be empty'),
+
   body('difficulty')
     .optional()
     .isIn(['Easy', 'Medium', 'Hard'])
     .withMessage('Difficulty must be Easy, Medium, or Hard'),
-  
-  body('topics')
-    .optional()
-    .isArray({ min: 1 })
-    .withMessage('At least one topic is required'),
-  
+
+  body('topics').optional().isArray({ min: 1 }).withMessage('At least one topic is required'),
+
   body('timeLimit')
     .optional()
     .isInt({ min: 100, max: 10000 })
     .withMessage('Time limit must be between 100 and 10000 milliseconds'),
-  
+
   body('memoryLimit')
     .optional()
     .isInt({ min: 16, max: 1024 })
@@ -131,27 +97,21 @@ export const updateProblemValidation: ValidationChain[] = [
 ];
 
 export const uploadTestCasesValidation: ValidationChain[] = [
-  body('testCases')
-    .isArray({ min: 1 })
-    .withMessage('At least one test case is required'),
-  
-  body('testCases.*.input')
-    .notEmpty()
-    .withMessage('Test case input is required'),
-  
+  body('testCases').isArray({ min: 1 }).withMessage('At least one test case is required'),
+
+  body('testCases.*.input').notEmpty().withMessage('Test case input is required'),
+
   body('testCases.*.expectedOutput')
     .notEmpty()
     .withMessage('Test case expected output is required'),
-  
-  body('testCases.*.isPublic')
-    .isBoolean()
-    .withMessage('isPublic must be a boolean'),
-  
+
+  body('testCases.*.isPublic').isBoolean().withMessage('isPublic must be a boolean'),
+
   body('testCases.*.points')
     .optional()
     .isInt({ min: 1, max: 100 })
     .withMessage('Points must be between 1 and 100'),
-  
+
   body('testCases.*.orderIndex')
     .optional()
     .isInt({ min: 1 })
@@ -159,21 +119,17 @@ export const uploadTestCasesValidation: ValidationChain[] = [
 ];
 
 export const forgotPasswordValidation: ValidationChain[] = [
-  body('email')
-    .trim()
-    .isEmail()
-    .withMessage('Must be a valid email address')
-    .normalizeEmail(),
+  body('email').trim().isEmail().withMessage('Must be a valid email address').normalizeEmail(),
 ];
 
 export const resetPasswordValidation: ValidationChain[] = [
-  body('token')
-    .notEmpty()
-    .withMessage('Reset token is required'),
-  
+  body('token').notEmpty().withMessage('Reset token is required'),
+
   body('password')
     .isLength({ min: 6 })
     .withMessage('Password must be at least 6 characters long')
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-    .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+    .withMessage(
+      'Password must contain at least one uppercase letter, one lowercase letter, and one number'
+    ),
 ];

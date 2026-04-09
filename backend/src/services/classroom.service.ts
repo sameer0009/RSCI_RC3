@@ -4,7 +4,7 @@ import crypto from 'crypto';
 class ClassroomService {
   async createClassroom(instructorId: string, data: { name: string; description?: string }) {
     const code = crypto.randomBytes(4).toString('hex').toUpperCase(); // 8 char unique code
-    
+
     return prisma.classroom.create({
       data: {
         ...data,
@@ -19,9 +19,9 @@ class ClassroomService {
       where: { code },
       include: {
         instructor: {
-          select: { username: true, fullName: true, profilePicture: true }
-        }
-      }
+          select: { username: true, fullName: true, profilePicture: true },
+        },
+      },
     });
   }
 
@@ -42,9 +42,9 @@ class ClassroomService {
       where: { instructorId },
       include: {
         _count: {
-          select: { members: true, assignments: true }
-        }
-      }
+          select: { members: true, assignments: true },
+        },
+      },
     });
   }
 
@@ -55,25 +55,28 @@ class ClassroomService {
         classroom: {
           include: {
             instructor: {
-              select: { username: true, fullName: true }
-            }
-          }
-        }
-      }
+              select: { username: true, fullName: true },
+            },
+          },
+        },
+      },
     });
   }
 
-  async createAssignment(classroomId: string, data: { title: string; description?: string; dueDate: Date; problemIds: string[] }) {
+  async createAssignment(
+    classroomId: string,
+    data: { title: string; description?: string; dueDate: Date; problemIds: string[] }
+  ) {
     const { problemIds, ...assignmentData } = data;
-    
+
     return prisma.assignment.create({
       data: {
         ...assignmentData,
         classroomId,
         problems: {
-          connect: problemIds.map(id => ({ id }))
-        }
-      }
+          connect: problemIds.map((id) => ({ id })),
+        },
+      },
     });
   }
 
@@ -84,18 +87,18 @@ class ClassroomService {
         members: {
           include: {
             user: {
-              select: { id: true, username: true, fullName: true, rating: true }
-            }
-          }
+              select: { id: true, username: true, fullName: true, rating: true },
+            },
+          },
         },
         assignments: {
           include: {
             problems: {
-              select: { id: true, title: true, difficulty: true }
-            }
-          }
-        }
-      }
+              select: { id: true, title: true, difficulty: true },
+            },
+          },
+        },
+      },
     });
   }
 }

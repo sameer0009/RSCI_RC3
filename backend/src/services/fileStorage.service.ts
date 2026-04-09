@@ -18,7 +18,7 @@ class FileStorageService {
       await sharp(file.path)
         .resize(400, 400, {
           fit: 'cover',
-          position: 'center'
+          position: 'center',
         })
         .jpeg({ quality: 85 })
         .toFile(filepath);
@@ -63,9 +63,7 @@ class FileStorageService {
    * Optimize image buffer
    */
   async optimizeImage(buffer: Buffer): Promise<Buffer> {
-    return await sharp(buffer)
-      .jpeg({ quality: 85 })
-      .toBuffer();
+    return await sharp(buffer).jpeg({ quality: 85 }).toBuffer();
   }
 
   /**
@@ -75,7 +73,7 @@ class FileStorageService {
     return await sharp(buffer)
       .resize(width, height, {
         fit: 'cover',
-        position: 'center'
+        position: 'center',
       })
       .toBuffer();
   }

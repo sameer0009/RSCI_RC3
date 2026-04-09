@@ -58,10 +58,12 @@ export class JudgeService {
         {
           headers: {
             'Content-Type': 'application/json',
-            ...(this.apiKey ? {
-              'X-RapidAPI-Key': this.apiKey,
-              'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-            } : {}),
+            ...(this.apiKey
+              ? {
+                  'X-RapidAPI-Key': this.apiKey,
+                  'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+                }
+              : {}),
           },
         }
       );

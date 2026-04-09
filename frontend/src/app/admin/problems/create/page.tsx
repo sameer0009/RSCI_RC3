@@ -27,7 +27,7 @@ export default function CreateProblemPage() {
     memoryLimit: 256,
   });
   const [testCases, setTestCases] = useState<TestCase[]>([
-    { input: '', expectedOutput: '', isPublic: true, points: 10 }
+    { input: '', expectedOutput: '', isPublic: true, points: 10 },
   ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,12 +35,15 @@ export default function CreateProblemPage() {
     setLoading(true);
 
     try {
-      const topicsArray = formData.topics.split(',').map(t => t.trim()).filter(t => t);
-      
+      const topicsArray = formData.topics
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t);
+
       await api.post('/admin/problems', {
         ...formData,
         topics: topicsArray,
-        testCases: testCases.filter(tc => tc.input && tc.expectedOutput)
+        testCases: testCases.filter((tc) => tc.input && tc.expectedOutput),
       });
 
       alert('Problem created successfully!');
@@ -60,7 +63,11 @@ export default function CreateProblemPage() {
     setTestCases(testCases.filter((_, i) => i !== index));
   };
 
-  const updateTestCase = (index: number, field: keyof TestCase, value: string | boolean | number) => {
+  const updateTestCase = (
+    index: number,
+    field: keyof TestCase,
+    value: string | boolean | number
+  ) => {
     const updated = [...testCases];
     updated[index] = { ...updated[index], [field]: value };
     setTestCases(updated);
@@ -77,8 +84,10 @@ export default function CreateProblemPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Basic Information</h2>
-              
+              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
+                Basic Information
+              </h2>
+
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -113,7 +122,9 @@ export default function CreateProblemPage() {
                     </label>
                     <select
                       value={formData.difficulty}
-                      onChange={(e) => setFormData({ ...formData, difficulty: e.target.value as any })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, difficulty: e.target.value as any })
+                      }
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     >
                       <option value="Easy">Easy</option>
@@ -191,9 +202,14 @@ export default function CreateProblemPage() {
 
               <div className="space-y-4">
                 {testCases.map((tc, index) => (
-                  <div key={index} className="border border-gray-300 dark:border-gray-600 rounded-lg p-4">
+                  <div
+                    key={index}
+                    className="border border-gray-300 dark:border-gray-600 rounded-lg p-4"
+                  >
                     <div className="flex justify-between items-center mb-3">
-                      <h3 className="font-medium text-gray-900 dark:text-white">Test Case {index + 1}</h3>
+                      <h3 className="font-medium text-gray-900 dark:text-white">
+                        Test Case {index + 1}
+                      </h3>
                       {testCases.length > 1 && (
                         <button
                           type="button"
@@ -238,15 +254,21 @@ export default function CreateProblemPage() {
                             onChange={(e) => updateTestCase(index, 'isPublic', e.target.checked)}
                             className="mr-2"
                           />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">Public (visible to users)</span>
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Public (visible to users)
+                          </span>
                         </label>
 
                         <div className="flex items-center gap-2">
-                          <label className="text-sm text-gray-700 dark:text-gray-300">Points:</label>
+                          <label className="text-sm text-gray-700 dark:text-gray-300">
+                            Points:
+                          </label>
                           <input
                             type="number"
                             value={tc.points}
-                            onChange={(e) => updateTestCase(index, 'points', parseInt(e.target.value) || 10)}
+                            onChange={(e) =>
+                              updateTestCase(index, 'points', parseInt(e.target.value) || 10)
+                            }
                             className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                           />
                         </div>

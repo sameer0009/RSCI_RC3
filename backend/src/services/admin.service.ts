@@ -91,19 +91,21 @@ class AdminService {
         points: data.points || 100,
         allowedLanguages: [],
         status: 'PUBLISHED',
-        testCases: data.testCases ? {
-          create: data.testCases.map((tc, index) => ({
-            input: tc.input,
-            expectedOutput: tc.expectedOutput,
-            isPublic: tc.isPublic,
-            points: tc.points,
-            orderIndex: index
-          }))
-        } : undefined
+        testCases: data.testCases
+          ? {
+              create: data.testCases.map((tc, index) => ({
+                input: tc.input,
+                expectedOutput: tc.expectedOutput,
+                isPublic: tc.isPublic,
+                points: tc.points,
+                orderIndex: index,
+              })),
+            }
+          : undefined,
       },
       include: {
-        testCases: true
-      }
+        testCases: true,
+      },
     });
 
     return problem;
@@ -133,11 +135,11 @@ class AdminService {
       data: {
         ...data,
         slug,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       include: {
-        testCases: true
-      }
+        testCases: true,
+      },
     });
 
     return problem;
@@ -176,7 +178,7 @@ class AdminService {
     if (filters.search) {
       where.OR = [
         { title: { contains: filters.search, mode: 'insensitive' } },
-        { topics: { has: filters.search } }
+        { topics: { has: filters.search } },
       ];
     }
 
@@ -190,12 +192,12 @@ class AdminService {
           _count: {
             select: {
               testCases: true,
-              submissions: true
-            }
-          }
-        }
+              submissions: true,
+            },
+          },
+        },
       }),
-      prisma.problem.count({ where })
+      prisma.problem.count({ where }),
     ]);
 
     return {
@@ -204,20 +206,23 @@ class AdminService {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
   /**
    * Bulk upload test cases
    */
-  async bulkUploadTestCases(problemId: string, testCases: Array<{
-    input: string;
-    expectedOutput: string;
-    isPublic: boolean;
-    points: number;
-  }>) {
+  async bulkUploadTestCases(
+    problemId: string,
+    testCases: Array<{
+      input: string;
+      expectedOutput: string;
+      isPublic: boolean;
+      points: number;
+    }>
+  ) {
     // Check if problem exists
     const problem = await prisma.problem.findUnique({ where: { id: problemId } });
     if (!problem) {
@@ -235,8 +240,8 @@ class AdminService {
         expectedOutput: tc.expectedOutput,
         isPublic: tc.isPublic,
         points: tc.points,
-        orderIndex: index
-      }))
+        orderIndex: index,
+      })),
     });
 
     return { success: true, count: created.count };
@@ -262,7 +267,7 @@ class AdminService {
       where.OR = [
         { username: { contains: filters.search, mode: 'insensitive' } },
         { email: { contains: filters.search, mode: 'insensitive' } },
-        { fullName: { contains: filters.search, mode: 'insensitive' } }
+        { fullName: { contains: filters.search, mode: 'insensitive' } },
       ];
     }
 
@@ -282,10 +287,10 @@ class AdminService {
           problemsSolved: true,
           totalSubmissions: true,
           createdAt: true,
-          profilePicture: true
-        }
+          profilePicture: true,
+        },
       }),
-      prisma.user.count({ where })
+      prisma.user.count({ where }),
     ]);
 
     return {
@@ -294,8 +299,8 @@ class AdminService {
         page,
         limit,
         total,
-        totalPages: Math.ceil(total / limit)
-      }
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 
@@ -321,7 +326,7 @@ class AdminService {
       where: { id },
       data: {
         ...data,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       },
       select: {
         id: true,
@@ -330,8 +335,8 @@ class AdminService {
         fullName: true,
         role: true,
         rating: true,
-        problemsSolved: true
-      }
+        problemsSolved: true,
+      },
     });
 
     return user;
@@ -370,8 +375,8 @@ class AdminService {
         OR: [
           { username: { contains: query, mode: 'insensitive' } },
           { email: { contains: query, mode: 'insensitive' } },
-          { fullName: { contains: query, mode: 'insensitive' } }
-        ]
+          { fullName: { contains: query, mode: 'insensitive' } },
+        ],
       },
       take: 10,
       select: {
@@ -380,8 +385,8 @@ class AdminService {
         email: true,
         fullName: true,
         role: true,
-        profilePicture: true
-      }
+        profilePicture: true,
+      },
     });
 
     return users;

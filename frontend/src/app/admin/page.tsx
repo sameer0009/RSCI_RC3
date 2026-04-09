@@ -103,7 +103,7 @@ function AdminDashboardContent() {
                 </p>
               </div>
             </div>
-            
+
             {/* Quick Links */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <Link
@@ -118,7 +118,7 @@ function AdminDashboardContent() {
                   </div>
                 </div>
               </Link>
-              
+
               <Link
                 href="/admin/users"
                 className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-l-4 border-green-500"
@@ -131,7 +131,7 @@ function AdminDashboardContent() {
                   </div>
                 </div>
               </Link>
-              
+
               <Link
                 href="/admin/analytics"
                 className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-l-4 border-purple-500"
@@ -144,7 +144,7 @@ function AdminDashboardContent() {
                   </div>
                 </div>
               </Link>
-              
+
               <Link
                 href="/leaderboard"
                 className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-l-4 border-yellow-500"
@@ -230,9 +230,7 @@ function AdminDashboardContent() {
               <div className="grid grid-cols-2 gap-4">
                 {stats.submissionsByVerdict.map((item) => (
                   <div key={item.verdict} className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                      {item.verdict}
-                    </span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">{item.verdict}</span>
                     <span className="text-lg font-semibold text-gray-900 dark:text-white">
                       {item.count}
                     </span>

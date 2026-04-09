@@ -91,10 +91,12 @@ export class EnhancedJudgeService {
         {
           headers: {
             'Content-Type': 'application/json',
-            ...(this.apiKey ? {
-              'X-RapidAPI-Key': this.apiKey,
-              'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
-            } : {}),
+            ...(this.apiKey
+              ? {
+                  'X-RapidAPI-Key': this.apiKey,
+                  'X-RapidAPI-Host': 'judge0-ce.p.rapidapi.com',
+                }
+              : {}),
           },
         }
       );
@@ -133,8 +135,11 @@ export class EnhancedJudgeService {
     }
 
     const testCaseResults: TestCaseResult[] = [];
-    const groupScores = new Map<string, { score: number; maxScore: number; passed: number; total: number }>();
-    
+    const groupScores = new Map<
+      string,
+      { score: number; maxScore: number; passed: number; total: number }
+    >();
+
     let totalScore = 0;
     let maxScore = 0;
     let testCasesPassed = 0;
@@ -258,10 +263,9 @@ export class EnhancedJudgeService {
         if (compilationError) {
           break;
         }
-
       } catch (error: any) {
         console.error(`Test case ${testCase.id} execution error:`, error.message);
-        
+
         testCaseResults.push({
           testCaseId: testCase.id,
           verdict: 'RuntimeError',
@@ -440,12 +444,14 @@ export class EnhancedJudgeService {
         );
 
         const verdict = this.getVerdictFromStatus(result.status.id);
-        const isCorrect = verdict === 'Accepted' && this.compareOutput(
-          result.stdout,
-          testCase.expectedOutput,
-          problem.validationStrategy,
-          problem.floatingPointEpsilon
-        );
+        const isCorrect =
+          verdict === 'Accepted' &&
+          this.compareOutput(
+            result.stdout,
+            testCase.expectedOutput,
+            problem.validationStrategy,
+            problem.floatingPointEpsilon
+          );
 
         results.push({
           testCaseId: testCase.id,

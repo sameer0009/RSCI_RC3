@@ -19,7 +19,7 @@ export class AnalyticsController {
         },
       });
     }
-  }
+  };
 
   getUserActivity = async (req: Request, res: Response) => {
     try {
@@ -39,7 +39,7 @@ export class AnalyticsController {
         },
       });
     }
-  }
+  };
 
   getSubmissionTrend = async (req: Request, res: Response) => {
     try {
@@ -59,7 +59,7 @@ export class AnalyticsController {
         },
       });
     }
-  }
+  };
 
   getDifficultyDistribution = async (req: Request, res: Response) => {
     try {
@@ -78,7 +78,7 @@ export class AnalyticsController {
         },
       });
     }
-  }
+  };
 
   getLanguageStats = async (req: Request, res: Response) => {
     try {
@@ -97,7 +97,7 @@ export class AnalyticsController {
         },
       });
     }
-  }
+  };
 
   getActiveUsers = async (req: Request, res: Response) => {
     try {
@@ -117,7 +117,7 @@ export class AnalyticsController {
         },
       });
     }
-  }
+  };
 
   exportAnalytics = async (req: Request, res: Response) => {
     try {
@@ -135,7 +135,7 @@ export class AnalyticsController {
         },
       });
     }
-  }
+  };
 }
 
 export default new AnalyticsController();

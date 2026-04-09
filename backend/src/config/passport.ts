@@ -29,7 +29,7 @@ passport.use(
               fullName: profile.displayName,
               isEmailVerified: true, // Google verifies emails
               role: Role.STUDENT,
-              notificationSetting: { create: {} }
+              notificationSetting: { create: {} },
             },
           });
         }
@@ -66,7 +66,7 @@ passport.use(
               fullName: profile.displayName || profile.username,
               isEmailVerified: true,
               role: Role.STUDENT,
-              notificationSetting: { create: {} }
+              notificationSetting: { create: {} },
             },
           });
         }

@@ -5,8 +5,19 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 import {
-  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
 
 function AdminAnalyticsContent() {
@@ -27,7 +38,7 @@ function AdminAnalyticsContent() {
         api.get(`/analytics/submissions-trend?days=${days}`),
         api.get('/analytics/difficulty-dist'),
         api.get('/analytics/language-stats'),
-        api.get(`/analytics/active-users?days=${days}`)
+        api.get(`/analytics/active-users?days=${days}`),
       ]);
 
       setSubmissionTrend(trendRes.data.data);
@@ -44,9 +55,9 @@ function AdminAnalyticsContent() {
   const handleExport = async () => {
     try {
       const response = await api.get('/analytics/export', {
-        responseType: 'blob'
+        responseType: 'blob',
       });
-      
+
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
       link.href = url;
@@ -63,7 +74,7 @@ function AdminAnalyticsContent() {
   const COLORS = {
     Easy: '#10b981',
     Medium: '#f59e0b',
-    Hard: '#ef4444'
+    Hard: '#ef4444',
   };
 
   if (loading) {
@@ -84,9 +95,7 @@ function AdminAnalyticsContent() {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
                 Analytics Dashboard
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">
-                Platform insights and trends
-              </p>
+              <p className="text-gray-600 dark:text-gray-400">Platform insights and trends</p>
             </div>
             <div className="flex gap-4">
               <select
@@ -118,17 +127,29 @@ function AdminAnalyticsContent() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                   <XAxis dataKey="date" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1f2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
                       border: 'none',
                       borderRadius: '8px',
-                      color: '#fff'
+                      color: '#fff',
                     }}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="total" stroke="#3b82f6" name="Total" strokeWidth={2} />
-                  <Line type="monotone" dataKey="accepted" stroke="#10b981" name="Accepted" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#3b82f6"
+                    name="Total"
+                    strokeWidth={2}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="accepted"
+                    stroke="#10b981"
+                    name="Accepted"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>
@@ -151,15 +172,18 @@ function AdminAnalyticsContent() {
                     dataKey="count"
                   >
                     {difficultyDist.map((entry: any, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[entry.difficulty as keyof typeof COLORS]} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={COLORS[entry.difficulty as keyof typeof COLORS]}
+                      />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1f2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
                       border: 'none',
                       borderRadius: '8px',
-                      color: '#fff'
+                      color: '#fff',
                     }}
                   />
                 </PieChart>
@@ -176,12 +200,12 @@ function AdminAnalyticsContent() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                   <XAxis dataKey="language" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1f2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
                       border: 'none',
                       borderRadius: '8px',
-                      color: '#fff'
+                      color: '#fff',
                     }}
                   />
                   <Bar dataKey="count" fill="#8b5cf6" />
@@ -199,15 +223,21 @@ function AdminAnalyticsContent() {
                   <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                   <XAxis dataKey="date" stroke="#9ca3af" />
                   <YAxis stroke="#9ca3af" />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#1f2937', 
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#1f2937',
                       border: 'none',
                       borderRadius: '8px',
-                      color: '#fff'
+                      color: '#fff',
                     }}
                   />
-                  <Line type="monotone" dataKey="activeUsers" stroke="#a855f7" name="Active Users" strokeWidth={2} />
+                  <Line
+                    type="monotone"
+                    dataKey="activeUsers"
+                    stroke="#a855f7"
+                    name="Active Users"
+                    strokeWidth={2}
+                  />
                 </LineChart>
               </ResponsiveContainer>
             </div>

@@ -13,6 +13,10 @@ router.get('/:id', classroomController.getClassroomDetails);
 
 // Instructor routes
 router.post('/', authorize('CONTEST_MANAGER', 'ADMIN'), classroomController.createClassroom);
-router.post('/:id/assignments', authorize('CONTEST_MANAGER', 'ADMIN'), classroomController.createAssignment);
+router.post(
+  '/:id/assignments',
+  authorize('CONTEST_MANAGER', 'ADMIN'),
+  classroomController.createAssignment
+);
 
 export default router;

@@ -29,12 +29,15 @@ interface AuthTokens {
 
 export class AuthService {
   private readonly JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key';
-  private readonly JWT_REFRESH_SECRET: string = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret';
+  private readonly JWT_REFRESH_SECRET: string =
+    process.env.JWT_REFRESH_SECRET || 'your-refresh-secret';
   private readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
   private readonly JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
   private readonly SALT_ROUNDS = 10;
 
-  async register(data: RegisterData): Promise<{ user: Omit<User, 'passwordHash'>; tokens: AuthTokens }> {
+  async register(
+    data: RegisterData
+  ): Promise<{ user: Omit<User, 'passwordHash'>; tokens: AuthTokens }> {
     const { username, email, password, role = Role.STUDENT } = data;
 
     // Check if user already exists
@@ -64,8 +67,8 @@ export class AuthService {
         passwordHash,
         role,
         notificationSetting: {
-          create: {} // Create default settings
-        }
+          create: {}, // Create default settings
+        },
       },
     });
 
@@ -163,10 +166,14 @@ export class AuthService {
     // 2. Check database for valid, non-expired token
     const storedToken = await prisma.authToken.findUnique({
       where: { token: refreshToken },
-      include: { user: true }
+      include: { user: true },
     });
 
-    if (!storedToken || storedToken.type !== TokenType.REFRESH || storedToken.expiresAt < new Date()) {
+    if (
+      !storedToken ||
+      storedToken.type !== TokenType.REFRESH ||
+      storedToken.expiresAt < new Date()
+    ) {
       if (storedToken) {
         await prisma.authToken.delete({ where: { id: storedToken.id } });
       }
@@ -179,7 +186,7 @@ export class AuthService {
 
     // 4. Invalidate old token and issue new ones (Token Rotation)
     await prisma.authToken.delete({ where: { id: storedToken.id } });
-    
+
     return this.issueTokens(user);
   }
 
@@ -193,8 +200,8 @@ export class AuthService {
         userId,
         token,
         type: TokenType.VERIFICATION,
-        expiresAt
-      }
+        expiresAt,
+      },
     });
 
     return token;
@@ -203,16 +210,20 @@ export class AuthService {
   async verifyEmail(token: string): Promise<void> {
     const storedToken = await prisma.authToken.findUnique({
       where: { token },
-      include: { user: true }
+      include: { user: true },
     });
 
-    if (!storedToken || storedToken.type !== TokenType.VERIFICATION || storedToken.expiresAt < new Date()) {
+    if (
+      !storedToken ||
+      storedToken.type !== TokenType.VERIFICATION ||
+      storedToken.expiresAt < new Date()
+    ) {
       throw new Error('Invalid or expired verification token');
     }
 
     await prisma.user.update({
       where: { id: storedToken.userId },
-      data: { isEmailVerified: true }
+      data: { isEmailVerified: true },
     });
 
     await prisma.authToken.delete({ where: { id: storedToken.id } });
@@ -231,8 +242,8 @@ export class AuthService {
         userId: user.id,
         token,
         type: TokenType.PASSWORD_RESET,
-        expiresAt
-      }
+        expiresAt,
+      },
     });
 
     return token;
@@ -241,10 +252,14 @@ export class AuthService {
   async resetPassword(token: string, newPassword: string): Promise<void> {
     const storedToken = await prisma.authToken.findUnique({
       where: { token },
-      include: { user: true }
+      include: { user: true },
     });
 
-    if (!storedToken || storedToken.type !== TokenType.PASSWORD_RESET || storedToken.expiresAt < new Date()) {
+    if (
+      !storedToken ||
+      storedToken.type !== TokenType.PASSWORD_RESET ||
+      storedToken.expiresAt < new Date()
+    ) {
       throw new Error('Invalid or expired reset token');
     }
 
@@ -252,12 +267,12 @@ export class AuthService {
 
     await prisma.user.update({
       where: { id: storedToken.userId },
-      data: { passwordHash }
+      data: { passwordHash },
     });
 
     // Revoke all existing sessions for safety after password reset
     await prisma.authToken.deleteMany({
-      where: { userId: storedToken.userId }
+      where: { userId: storedToken.userId },
     });
   }
 
@@ -276,7 +291,7 @@ export class AuthService {
 
   async logout(refreshToken: string): Promise<void> {
     await prisma.authToken.deleteMany({
-      where: { token: refreshToken, type: TokenType.REFRESH }
+      where: { token: refreshToken, type: TokenType.REFRESH },
     });
   }
 }

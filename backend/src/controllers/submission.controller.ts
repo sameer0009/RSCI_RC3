@@ -49,7 +49,7 @@ export class SubmissionController {
         },
       });
     }
-  }
+  };
 
   runCode = async (req: Request, res: Response) => {
     try {
@@ -80,7 +80,7 @@ export class SubmissionController {
         },
       });
     }
-  }
+  };
 
   runSampleTests = async (req: Request, res: Response) => {
     try {
@@ -112,7 +112,7 @@ export class SubmissionController {
         },
       });
     }
-  }
+  };
 
   getSubmission = async (req: Request, res: Response) => {
     try {
@@ -143,7 +143,7 @@ export class SubmissionController {
         },
       });
     }
-  }
+  };
 
   getUserSubmissions = async (req: Request, res: Response) => {
     try {
@@ -169,7 +169,7 @@ export class SubmissionController {
         },
       });
     }
-  }
+  };
 }
 
 export default new SubmissionController();

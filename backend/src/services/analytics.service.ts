@@ -14,16 +14,16 @@ export class AnalyticsService {
     ] = await Promise.all([
       // Total users
       prisma.user.count({ where: { role: 'STUDENT' } }),
-      
+
       // Total problems
       prisma.problem.count(),
-      
+
       // Total submissions
       prisma.submission.count(),
-      
+
       // Total contests
       prisma.contest.count(),
-      
+
       // Active users (submitted in last 7 days)
       prisma.user.count({
         where: {
@@ -37,7 +37,7 @@ export class AnalyticsService {
           },
         },
       }),
-      
+
       // Recent submissions (last 10)
       prisma.submission.findMany({
         take: 10,
@@ -56,13 +56,13 @@ export class AnalyticsService {
           },
         },
       }),
-      
+
       // Problems by difficulty
       prisma.problem.groupBy({
         by: ['difficulty'],
         _count: true,
       }),
-      
+
       // Submissions by verdict
       prisma.submission.groupBy({
         by: ['verdict'],
@@ -74,9 +74,8 @@ export class AnalyticsService {
     const acceptedSubmissions = await prisma.submission.count({
       where: { verdict: 'Accepted' },
     });
-    const acceptanceRate = totalSubmissions > 0 
-      ? ((acceptedSubmissions / totalSubmissions) * 100).toFixed(1)
-      : '0.0';
+    const acceptanceRate =
+      totalSubmissions > 0 ? ((acceptedSubmissions / totalSubmissions) * 100).toFixed(1) : '0.0';
 
     // Get top performers
     const topPerformers = await prisma.user.findMany({
@@ -87,10 +86,7 @@ export class AnalyticsService {
         problemsSolved: true,
         rating: true,
       },
-      orderBy: [
-        { problemsSolved: 'desc' },
-        { rating: 'desc' },
-      ],
+      orderBy: [{ problemsSolved: 'desc' }, { rating: 'desc' }],
       take: 5,
     });
 
@@ -143,7 +139,7 @@ export class AnalyticsService {
 
     // Group by date
     const grouped: Record<string, { total: number; accepted: number }> = {};
-    
+
     submissions.forEach((sub) => {
       const date = sub.submittedAt.toISOString().split('T')[0];
       if (!grouped[date]) {
@@ -208,15 +204,15 @@ export class AnalyticsService {
    */
   async getSubmissionTrend(days: number = 30) {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-    
+
     const submissions = await prisma.submission.findMany({
       where: {
-        submittedAt: { gte: startDate }
+        submittedAt: { gte: startDate },
       },
       select: {
         submittedAt: true,
-        verdict: true
-      }
+        verdict: true,
+      },
     });
 
     // Create date map for all days
@@ -228,7 +224,7 @@ export class AnalyticsService {
     }
 
     // Fill in actual data
-    submissions.forEach(sub => {
+    submissions.forEach((sub) => {
       const dateStr = sub.submittedAt.toISOString().split('T')[0];
       if (dateMap[dateStr]) {
         dateMap[dateStr].total++;
@@ -247,13 +243,13 @@ export class AnalyticsService {
   async getDifficultyDistribution() {
     const problems = await prisma.problem.groupBy({
       by: ['difficulty'],
-      _count: true
+      _count: true,
     });
 
-    return problems.map(item => ({
+    return problems.map((item) => ({
       difficulty: item.difficulty,
       count: item._count,
-      percentage: 0 // Will be calculated on frontend
+      percentage: 0, // Will be calculated on frontend
     }));
   }
 
@@ -266,18 +262,18 @@ export class AnalyticsService {
       _count: true,
       orderBy: {
         _count: {
-          language: 'desc'
-        }
+          language: 'desc',
+        },
       },
-      take: 10
+      take: 10,
     });
 
     const total = submissions.reduce((sum, item) => sum + item._count, 0);
 
-    return submissions.map(item => ({
+    return submissions.map((item) => ({
       language: item.language,
       count: item._count,
-      percentage: ((item._count / total) * 100).toFixed(1)
+      percentage: ((item._count / total) * 100).toFixed(1),
     }));
   }
 
@@ -286,7 +282,7 @@ export class AnalyticsService {
    */
   async getActiveUsers(days: number = 30) {
     const dateMap: Record<string, Set<string>> = {};
-    
+
     // Initialize date map
     for (let i = 0; i < days; i++) {
       const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
@@ -298,17 +294,17 @@ export class AnalyticsService {
     const submissions = await prisma.submission.findMany({
       where: {
         submittedAt: {
-          gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000)
-        }
+          gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+        },
       },
       select: {
         userId: true,
-        submittedAt: true
-      }
+        submittedAt: true,
+      },
     });
 
     // Count unique users per day
-    submissions.forEach(sub => {
+    submissions.forEach((sub) => {
       const dateStr = sub.submittedAt.toISOString().split('T')[0];
       if (dateMap[dateStr]) {
         dateMap[dateStr].add(sub.userId);
@@ -318,7 +314,7 @@ export class AnalyticsService {
     return Object.entries(dateMap)
       .map(([date, users]) => ({
         date,
-        activeUsers: users.size
+        activeUsers: users.size,
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
   }
@@ -328,7 +324,7 @@ export class AnalyticsService {
    */
   async exportAnalytics() {
     const stats = await this.getDashboardStats();
-    
+
     // Create CSV content
     let csv = 'Analytics Report\n\n';
     csv += 'Overview\n';
@@ -336,16 +332,16 @@ export class AnalyticsService {
     csv += `Total Problems,${stats.overview.totalProblems}\n`;
     csv += `Total Submissions,${stats.overview.totalSubmissions}\n`;
     csv += `Acceptance Rate,${stats.overview.acceptanceRate}%\n\n`;
-    
+
     csv += 'Problems by Difficulty\n';
     csv += 'Difficulty,Count\n';
-    stats.problemsByDifficulty.forEach(item => {
+    stats.problemsByDifficulty.forEach((item) => {
       csv += `${item.difficulty},${item.count}\n`;
     });
-    
+
     csv += '\nSubmissions by Verdict\n';
     csv += 'Verdict,Count\n';
-    stats.submissionsByVerdict.forEach(item => {
+    stats.submissionsByVerdict.forEach((item) => {
       csv += `${item.verdict},${item.count}\n`;
     });
 

@@ -24,11 +24,11 @@ export class AuthController {
         username,
         email,
         password,
-        role: role as any
+        role: role as any,
       });
 
       const verificationToken = await authService.createVerificationToken(user.id);
-      
+
       // Queue verification email
       await emailQueue.add('welcome', {
         to: user.email,
@@ -36,8 +36,8 @@ export class AuthController {
         templateName: 'welcome',
         context: {
           username: user.username,
-          verificationUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verificationToken}`
-        }
+          verificationUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email/${verificationToken}`,
+        },
       });
 
       this.setAuthCookies(res, tokens);
@@ -56,7 +56,7 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
   login = async (req: Request, res: Response) => {
     try {
@@ -92,9 +92,12 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
-  private setAuthCookies = (res: Response, tokens: { accessToken: string; refreshToken: string }) => {
+  private setAuthCookies = (
+    res: Response,
+    tokens: { accessToken: string; refreshToken: string }
+  ) => {
     res.cookie('accessToken', tokens.accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -108,7 +111,7 @@ export class AuthController {
       sameSite: 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
-  }
+  };
 
   refresh = async (req: Request, res: Response) => {
     try {
@@ -141,7 +144,7 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
   verifyEmail = async (req: Request, res: Response) => {
     try {
@@ -161,7 +164,7 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
   forgotPassword = async (req: Request, res: Response) => {
     try {
@@ -174,8 +177,8 @@ export class AuthController {
           subject: 'Password Reset Request',
           templateName: 'resetPassword', // Need to create this template
           context: {
-            resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`
-          }
+            resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`,
+          },
         });
         console.log(`Password reset token for ${email}: ${token}`);
       }
@@ -194,7 +197,7 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
   resetPassword = async (req: Request, res: Response) => {
     try {
@@ -214,7 +217,7 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
   getMe = async (req: Request, res: Response) => {
     try {
@@ -244,7 +247,7 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
   logout = async (req: Request, res: Response) => {
     try {
@@ -269,7 +272,7 @@ export class AuthController {
         },
       });
     }
-  }
+  };
 
   // OAuth Placeholders - will be implemented with Passport or specific providers
   googleAuth(req: Request, res: Response) {
@@ -288,7 +291,9 @@ export class AuthController {
     try {
       const user = (req as any).user;
       if (!user) {
-        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_failed`);
+        return res.redirect(
+          `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_failed`
+        );
       }
 
       const tokens = await authService.issueTokens(user);
@@ -298,9 +303,11 @@ export class AuthController {
       res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`);
     } catch (error: any) {
       console.error('OAuth callback error:', error);
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=internal_error`);
+      res.redirect(
+        `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=internal_error`
+      );
     }
-  }
+  };
 }
 
 export default new AuthController();

@@ -13,12 +13,12 @@ class ContestService {
       where: { id },
       include: {
         problems: {
-          select: { id: true, title: true, difficulty: true }
+          select: { id: true, title: true, difficulty: true },
         },
         _count: {
-          select: { participants: true }
-        }
-      }
+          select: { participants: true },
+        },
+      },
     });
   }
 
@@ -41,8 +41,8 @@ class ContestService {
         status: ContestStatus.Active,
       },
       include: {
-        _count: { select: { participants: true } }
-      }
+        _count: { select: { participants: true } },
+      },
     });
   }
 
@@ -54,7 +54,8 @@ class ContestService {
   async startVirtualContest(contestId: string, userId: string) {
     const originalContest = await prisma.contest.findUnique({ where: { id: contestId } });
     if (!originalContest) throw new Error('Original contest not found');
-    if (originalContest.endTime > new Date()) throw new Error('Contest is still ongoing. Only past contests can be taken virtually.');
+    if (originalContest.endTime > new Date())
+      throw new Error('Contest is still ongoing. Only past contests can be taken virtually.');
 
     // In a full implementation, we'd store the virtual start time for this user.
     // For now, we'll return the metadata.
@@ -68,7 +69,7 @@ class ContestService {
 
   async updateContestStatus() {
     const now = new Date();
-    
+
     // Set upcoming to active
     await prisma.contest.updateMany({
       where: {

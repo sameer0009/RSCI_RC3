@@ -47,17 +47,11 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   getProblems = async (req: Request, res: Response) => {
     try {
-      const {
-        difficulty,
-        topics,
-        search,
-        page = '1',
-        limit = '20',
-      } = req.query;
+      const { difficulty, topics, search, page = '1', limit = '20' } = req.query;
 
       const filters: any = {};
 
@@ -96,7 +90,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   getProblemById = async (req: Request, res: Response) => {
     try {
@@ -128,7 +122,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   getProblemBySlug = async (req: Request, res: Response) => {
     try {
@@ -160,7 +154,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   updateProblem = async (req: Request, res: Response) => {
     try {
@@ -194,7 +188,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   deleteProblem = async (req: Request, res: Response) => {
     try {
@@ -215,7 +209,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   getTopics = async (req: Request, res: Response) => {
     try {
@@ -234,7 +228,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   getTestCaseGroups = async (req: Request, res: Response) => {
     try {
@@ -254,7 +248,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   createTestCaseGroup = async (req: Request, res: Response) => {
     try {
@@ -275,7 +269,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   updateTestCaseGroup = async (req: Request, res: Response) => {
     try {
@@ -296,7 +290,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 
   deleteTestCaseGroup = async (req: Request, res: Response) => {
     try {
@@ -316,7 +310,7 @@ export class ProblemController {
         },
       });
     }
-  }
+  };
 }
 
 export default new ProblemController();

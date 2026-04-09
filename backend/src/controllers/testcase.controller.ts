@@ -40,9 +40,8 @@ export class TestCaseController {
         orderIndex: tc.orderIndex !== undefined ? tc.orderIndex : index + 1,
       }));
 
-      const createdTestCases = await testCaseService.createMultipleTestCases(
-        testCasesWithProblemId
-      );
+      const createdTestCases =
+        await testCaseService.createMultipleTestCases(testCasesWithProblemId);
 
       res.status(201).json({
         success: true,
@@ -58,7 +57,7 @@ export class TestCaseController {
         },
       });
     }
-  }
+  };
 
   getTestCases = async (req: Request, res: Response) => {
     try {
@@ -80,7 +79,7 @@ export class TestCaseController {
         },
       });
     }
-  }
+  };
 
   updateTestCase = async (req: Request, res: Response) => {
     try {
@@ -102,7 +101,7 @@ export class TestCaseController {
         },
       });
     }
-  }
+  };
 
   deleteTestCase = async (req: Request, res: Response) => {
     try {
@@ -123,7 +122,7 @@ export class TestCaseController {
         },
       });
     }
-  }
+  };
 }
 
 export default new TestCaseController();

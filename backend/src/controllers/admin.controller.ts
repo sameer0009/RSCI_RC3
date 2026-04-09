@@ -13,25 +13,25 @@ class AdminController {
       const userId = (req as any).user.id;
       const problem = await adminService.createProblem({
         ...req.body,
-        createdBy: userId
+        createdBy: userId,
       });
 
       res.status(201).json({
         success: true,
         data: problem,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'CREATE_PROBLEM_FAILED',
-          message: error.message || 'Failed to create problem'
+          message: error.message || 'Failed to create problem',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * List problems
@@ -44,25 +44,25 @@ class AdminController {
         page: page ? parseInt(page as string) : undefined,
         limit: limit ? parseInt(limit as string) : undefined,
         difficulty: difficulty as any,
-        search: search as string
+        search: search as string,
       });
 
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(500).json({
         success: false,
         error: {
           code: 'LIST_PROBLEMS_FAILED',
-          message: error.message || 'Failed to list problems'
+          message: error.message || 'Failed to list problems',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Get problem details
@@ -76,19 +76,19 @@ class AdminController {
       res.json({
         success: true,
         data: problem,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(404).json({
         success: false,
         error: {
           code: 'PROBLEM_NOT_FOUND',
-          message: error.message || 'Problem not found'
+          message: error.message || 'Problem not found',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Update problem
@@ -102,19 +102,19 @@ class AdminController {
       res.json({
         success: true,
         data: problem,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'UPDATE_PROBLEM_FAILED',
-          message: error.message || 'Failed to update problem'
+          message: error.message || 'Failed to update problem',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Delete problem
@@ -128,19 +128,19 @@ class AdminController {
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'DELETE_PROBLEM_FAILED',
-          message: error.message || 'Failed to delete problem'
+          message: error.message || 'Failed to delete problem',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Bulk upload test cases
@@ -156,9 +156,9 @@ class AdminController {
           success: false,
           error: {
             code: 'INVALID_INPUT',
-            message: 'testCases must be an array'
+            message: 'testCases must be an array',
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -167,19 +167,19 @@ class AdminController {
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'BULK_UPLOAD_FAILED',
-          message: error.message || 'Failed to upload test cases'
+          message: error.message || 'Failed to upload test cases',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   // ============ USER MANAGEMENT ============
 
@@ -194,25 +194,25 @@ class AdminController {
         page: page ? parseInt(page as string) : undefined,
         limit: limit ? parseInt(limit as string) : undefined,
         role: role as any,
-        search: search as string
+        search: search as string,
       });
 
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(500).json({
         success: false,
         error: {
           code: 'LIST_USERS_FAILED',
-          message: error.message || 'Failed to list users'
+          message: error.message || 'Failed to list users',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Get user details
@@ -229,28 +229,28 @@ class AdminController {
           success: false,
           error: {
             code: 'USER_NOT_FOUND',
-            message: 'User not found'
+            message: 'User not found',
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
       res.json({
         success: true,
         data: result.users[0],
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(404).json({
         success: false,
         error: {
           code: 'USER_NOT_FOUND',
-          message: error.message || 'User not found'
+          message: error.message || 'User not found',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Update user
@@ -264,19 +264,19 @@ class AdminController {
       res.json({
         success: true,
         data: user,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'UPDATE_USER_FAILED',
-          message: error.message || 'Failed to update user'
+          message: error.message || 'Failed to update user',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Delete user
@@ -290,19 +290,19 @@ class AdminController {
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'DELETE_USER_FAILED',
-          message: error.message || 'Failed to delete user'
+          message: error.message || 'Failed to delete user',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Search users
@@ -311,15 +311,15 @@ class AdminController {
   searchUsers = async (req: Request, res: Response) => {
     try {
       const { q } = req.query;
-      
+
       if (!q) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'MISSING_QUERY',
-            message: 'Search query is required'
+            message: 'Search query is required',
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -328,19 +328,19 @@ class AdminController {
       res.json({
         success: true,
         data: users,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(500).json({
         success: false,
         error: {
           code: 'SEARCH_FAILED',
-          message: error.message || 'Failed to search users'
+          message: error.message || 'Failed to search users',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 }
 
 export default new AdminController();

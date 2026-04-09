@@ -51,7 +51,7 @@ export class RatingService {
       });
 
       await Promise.all(updatePromises);
-      
+
       console.log(`Successfully updated ratings for contest ${contestId}`);
     } catch (error) {
       console.error('Error updating contest ratings:', error);
@@ -62,8 +62,10 @@ export class RatingService {
   /**
    * Compare all pairs of participants to adjust Elo based on ranks
    */
-  private static calculateNewRatings(results: ParticipantResult[]): Array<ParticipantResult & { newRating: number }> {
-    const updated = results.map(r => ({ ...r, newRating: r.oldRating }));
+  private static calculateNewRatings(
+    results: ParticipantResult[]
+  ): Array<ParticipantResult & { newRating: number }> {
+    const updated = results.map((r) => ({ ...r, newRating: r.oldRating }));
 
     for (let i = 0; i < updated.length; i++) {
       for (let j = i + 1; j < updated.length; j++) {
@@ -90,7 +92,7 @@ export class RatingService {
         const delta2 = this.K_FACTOR * (s2 - expectedScore2);
 
         // Accumulate increments
-        p1.newRating += delta1 / (updated.length - 1); 
+        p1.newRating += delta1 / (updated.length - 1);
         p2.newRating += delta2 / (updated.length - 1);
       }
     }

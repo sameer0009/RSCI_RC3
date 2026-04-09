@@ -21,7 +21,7 @@ export class NotificationController {
         error: { code: 'NOTIFICATIONS_FETCH_FAILED', message: 'Failed to fetch notifications' },
       });
     }
-  }
+  };
 
   markAsRead = async (req: Request, res: Response) => {
     try {
@@ -38,7 +38,7 @@ export class NotificationController {
         error: { code: 'MARK_READ_FAILED', message: 'Failed to mark notification as read' },
       });
     }
-  }
+  };
 
   markAllAsRead = async (req: Request, res: Response) => {
     try {
@@ -52,10 +52,13 @@ export class NotificationController {
     } catch (error: any) {
       res.status(500).json({
         success: false,
-        error: { code: 'MARK_ALL_READ_FAILED', message: 'Failed to mark all notifications as read' },
+        error: {
+          code: 'MARK_ALL_READ_FAILED',
+          message: 'Failed to mark all notifications as read',
+        },
       });
     }
-  }
+  };
 }
 
 export default new NotificationController();

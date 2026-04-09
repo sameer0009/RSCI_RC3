@@ -5,19 +5,9 @@ import { authenticate, authorize } from '../middleware/auth.middleware';
 const router = Router();
 
 // Admin only routes
-router.get(
-  '/dashboard',
-  authenticate,
-  authorize('ADMIN'),
-  analyticsController.getDashboardStats
-);
+router.get('/dashboard', authenticate, authorize('ADMIN'), analyticsController.getDashboardStats);
 
-router.get(
-  '/activity',
-  authenticate,
-  authorize('ADMIN'),
-  analyticsController.getUserActivity
-);
+router.get('/activity', authenticate, authorize('ADMIN'), analyticsController.getUserActivity);
 
 router.get(
   '/submissions-trend',
@@ -40,18 +30,8 @@ router.get(
   analyticsController.getLanguageStats
 );
 
-router.get(
-  '/active-users',
-  authenticate,
-  authorize('ADMIN'),
-  analyticsController.getActiveUsers
-);
+router.get('/active-users', authenticate, authorize('ADMIN'), analyticsController.getActiveUsers);
 
-router.get(
-  '/export',
-  authenticate,
-  authorize('ADMIN'),
-  analyticsController.exportAnalytics
-);
+router.get('/export', authenticate, authorize('ADMIN'), analyticsController.exportAnalytics);
 
 export default router;

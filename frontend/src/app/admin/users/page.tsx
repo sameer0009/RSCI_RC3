@@ -52,7 +52,7 @@ function AdminUsersContent() {
     setEditForm({
       role: user.role,
       fullName: user.fullName || '',
-      email: user.email
+      email: user.email,
     });
     setShowEditDialog(true);
   };
@@ -76,7 +76,7 @@ function AdminUsersContent() {
 
     try {
       await api.delete(`/admin/users/${selectedUser.id}`);
-      setUsers(users.filter(u => u.id !== selectedUser.id));
+      setUsers(users.filter((u) => u.id !== selectedUser.id));
       setShowDeleteDialog(false);
       setSelectedUser(null);
     } catch (error: any) {
@@ -102,9 +102,7 @@ function AdminUsersContent() {
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
               User Management
             </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Manage user accounts and permissions
-            </p>
+            <p className="text-gray-600 dark:text-gray-400">Manage user accounts and permissions</p>
           </div>
 
           {/* Filters */}
@@ -186,17 +184,21 @@ function AdminUsersContent() {
                       {user.email}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                        user.role === 'ADMIN' 
-                          ? 'text-purple-600 bg-purple-100 dark:bg-purple-900/20'
-                          : 'text-blue-600 bg-blue-100 dark:bg-blue-900/20'
-                      }`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded ${
+                          user.role === 'ADMIN'
+                            ? 'text-purple-600 bg-purple-100 dark:bg-purple-900/20'
+                            : 'text-blue-600 bg-blue-100 dark:bg-blue-900/20'
+                        }`}
+                      >
                         {user.role}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       <div>{user.problemsSolved} solved</div>
-                      <div className="text-xs text-gray-500">{user.totalSubmissions} submissions</div>
+                      <div className="text-xs text-gray-500">
+                        {user.totalSubmissions} submissions
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {new Date(user.createdAt).toLocaleDateString()}
@@ -230,9 +232,7 @@ function AdminUsersContent() {
       {showEditDialog && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-dark-card rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              Edit User
-            </h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Edit User</h3>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -262,7 +262,9 @@ function AdminUsersContent() {
                 </label>
                 <select
                   value={editForm.role}
-                  onChange={(e) => setEditForm({ ...editForm, role: e.target.value as 'USER' | 'ADMIN' })}
+                  onChange={(e) =>
+                    setEditForm({ ...editForm, role: e.target.value as 'USER' | 'ADMIN' })
+                  }
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 >
                   <option value="USER">User</option>
@@ -295,12 +297,10 @@ function AdminUsersContent() {
       {showDeleteDialog && selectedUser && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-dark-card rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              Delete User
-            </h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete User</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete <strong>{selectedUser.username}</strong>? 
-              This will permanently delete all their submissions and data. This action cannot be undone.
+              Are you sure you want to delete <strong>{selectedUser.username}</strong>? This will
+              permanently delete all their submissions and data. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-4">
               <button

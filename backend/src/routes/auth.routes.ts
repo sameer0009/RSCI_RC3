@@ -1,7 +1,12 @@
 import { Router } from 'express';
 import passport from 'passport';
 import authController from '../controllers/auth.controller';
-import { registerValidation, loginValidation, forgotPasswordValidation, resetPasswordValidation } from '../utils/validation';
+import {
+  registerValidation,
+  loginValidation,
+  forgotPasswordValidation,
+  resetPasswordValidation,
+} from '../utils/validation';
 import { authenticate } from '../middleware/auth.middleware';
 
 const router = Router();
@@ -19,10 +24,18 @@ router.post('/reset-password', resetPasswordValidation, authController.resetPass
 
 // OAuth
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
-router.get('/google/callback', passport.authenticate('google', { failureRedirect: '/login', session: false }), authController.oauthCallback);
+router.get(
+  '/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  authController.oauthCallback
+);
 
 router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
-router.get('/github/callback', passport.authenticate('github', { failureRedirect: '/login', session: false }), authController.oauthCallback);
+router.get(
+  '/github/callback',
+  passport.authenticate('github', { failureRedirect: '/login', session: false }),
+  authController.oauthCallback
+);
 
 // Protected routes
 router.get('/me', authenticate, authController.getMe);

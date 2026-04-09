@@ -14,19 +14,19 @@ class ProfileController {
       res.json({
         success: true,
         data: profile,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(404).json({
         success: false,
         error: {
           code: 'PROFILE_NOT_FOUND',
-          message: error.message || 'Profile not found'
+          message: error.message || 'Profile not found',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Update own profile
@@ -40,25 +40,25 @@ class ProfileController {
       const profile = await profileService.updateProfile(userId, {
         fullName,
         bio,
-        location
+        location,
       });
 
       res.json({
         success: true,
         data: profile,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'UPDATE_FAILED',
-          message: error.message || 'Failed to update profile'
+          message: error.message || 'Failed to update profile',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Upload profile picture
@@ -74,9 +74,9 @@ class ProfileController {
           success: false,
           error: {
             code: 'NO_FILE',
-            message: 'No file uploaded'
+            message: 'No file uploaded',
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
 
@@ -85,19 +85,19 @@ class ProfileController {
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'UPLOAD_FAILED',
-          message: error.message || 'Failed to upload profile picture'
+          message: error.message || 'Failed to upload profile picture',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Delete profile picture
@@ -111,19 +111,19 @@ class ProfileController {
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'DELETE_FAILED',
-          message: error.message || 'Failed to delete profile picture'
+          message: error.message || 'Failed to delete profile picture',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 
   /**
    * Update social links
@@ -138,25 +138,25 @@ class ProfileController {
         linkedinUrl,
         githubUrl,
         twitterUrl,
-        websiteUrl
+        websiteUrl,
       });
 
       res.json({
         success: true,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     } catch (error: any) {
       res.status(400).json({
         success: false,
         error: {
           code: 'UPDATE_FAILED',
-          message: error.message || 'Failed to update social links'
+          message: error.message || 'Failed to update social links',
         },
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
     }
-  }
+  };
 }
 
 export default new ProfileController();

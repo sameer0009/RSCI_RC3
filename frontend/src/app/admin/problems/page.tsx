@@ -51,7 +51,7 @@ function AdminProblemsContent() {
 
     try {
       await api.delete(`/admin/problems/${problemToDelete}`);
-      setProblems(problems.filter(p => p.id !== problemToDelete));
+      setProblems(problems.filter((p) => p.id !== problemToDelete));
       setShowDeleteDialog(false);
       setProblemToDelete(null);
     } catch (error) {
@@ -62,10 +62,14 @@ function AdminProblemsContent() {
 
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
-      case 'Easy': return 'text-green-600 bg-green-100 dark:bg-green-900/20';
-      case 'Medium': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
-      case 'Hard': return 'text-red-600 bg-red-100 dark:bg-red-900/20';
-      default: return 'text-gray-600 bg-gray-100';
+      case 'Easy':
+        return 'text-green-600 bg-green-100 dark:bg-green-900/20';
+      case 'Medium':
+        return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
+      case 'Hard':
+        return 'text-red-600 bg-red-100 dark:bg-red-900/20';
+      default:
+        return 'text-gray-600 bg-gray-100';
     }
   };
 
@@ -159,7 +163,9 @@ function AdminProblemsContent() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-semibold rounded ${getDifficultyColor(problem.difficulty)}`}>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded ${getDifficultyColor(problem.difficulty)}`}
+                      >
                         {problem.difficulty}
                       </span>
                     </td>
@@ -201,11 +207,10 @@ function AdminProblemsContent() {
       {showDeleteDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-dark-card rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-              Delete Problem
-            </h3>
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Delete Problem</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete this problem? This will also delete all associated test cases and submissions. This action cannot be undone.
+              Are you sure you want to delete this problem? This will also delete all associated
+              test cases and submissions. This action cannot be undone.
             </p>
             <div className="flex justify-end gap-4">
               <button

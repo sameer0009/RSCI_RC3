@@ -96,12 +96,16 @@ export default function LeaderboardPage() {
                         <tr
                           key={leaderboardUser.id}
                           className={`hover:bg-gray-50 dark:hover:bg-gray-800 ${
-                            user?.id === leaderboardUser.id ? 'bg-primary-50 dark:bg-primary-900/20' : ''
+                            user?.id === leaderboardUser.id
+                              ? 'bg-primary-50 dark:bg-primary-900/20'
+                              : ''
                           }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
-                              <span className="text-2xl mr-2">{getMedalIcon(leaderboardUser.rank)}</span>
+                              <span className="text-2xl mr-2">
+                                {getMedalIcon(leaderboardUser.rank)}
+                              </span>
                               {leaderboardUser.rank > 3 && (
                                 <span className="text-sm font-medium text-gray-900 dark:text-white">
                                   #{leaderboardUser.rank}

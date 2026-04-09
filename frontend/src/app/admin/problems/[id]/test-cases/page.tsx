@@ -171,21 +171,24 @@ export default function TestCaseManagementPage() {
           >
             ← Back to Problems
           </button>
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            Test Case Management
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            {problem?.title}
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Test Case Management</h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-400">{problem?.title}</p>
           <div className="mt-4 flex items-center gap-4 text-sm">
             <span className="text-gray-600 dark:text-gray-400">
-              Total Test Cases: <span className="font-semibold text-gray-900 dark:text-white">{testCases.length}</span>
+              Total Test Cases:{' '}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {testCases.length}
+              </span>
             </span>
             <span className="text-gray-600 dark:text-gray-400">
-              Total Points: <span className="font-semibold text-gray-900 dark:text-white">{calculateTotalPoints()}</span>
+              Total Points:{' '}
+              <span className="font-semibold text-gray-900 dark:text-white">
+                {calculateTotalPoints()}
+              </span>
             </span>
             <span className="text-gray-600 dark:text-gray-400">
-              Groups: <span className="font-semibold text-gray-900 dark:text-white">{groups.length}</span>
+              Groups:{' '}
+              <span className="font-semibold text-gray-900 dark:text-white">{groups.length}</span>
             </span>
           </div>
         </div>
@@ -244,9 +247,7 @@ export default function TestCaseManagementPage() {
 
         {/* Test Cases List */}
         <div>
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            Test Cases
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Test Cases</h2>
           <div className="space-y-4">
             {testCases.map((testCase, index) => (
               <div
@@ -280,7 +281,10 @@ export default function TestCaseManagementPage() {
                           type="number"
                           value={editingTestCase.points}
                           onChange={(e) =>
-                            setEditingTestCase({ ...editingTestCase, points: parseInt(e.target.value) })
+                            setEditingTestCase({
+                              ...editingTestCase,
+                              points: parseInt(e.target.value),
+                            })
                           }
                           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-white"
                         />
@@ -334,7 +338,9 @@ export default function TestCaseManagementPage() {
                         <span className="text-lg font-semibold text-gray-900 dark:text-white">
                           Test Case #{index + 1}
                         </span>
-                        <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getVisibilityBadge(testCase.visibility)}`}>
+                        <span
+                          className={`px-2 py-1 text-xs font-semibold rounded-full ${getVisibilityBadge(testCase.visibility)}`}
+                        >
                           {testCase.visibility}
                         </span>
                         <span className="text-sm font-semibold text-primary-600">
@@ -401,7 +407,9 @@ export default function TestCaseManagementPage() {
                     </label>
                     <select
                       value={newTestCase.visibility}
-                      onChange={(e) => setNewTestCase({ ...newTestCase, visibility: e.target.value })}
+                      onChange={(e) =>
+                        setNewTestCase({ ...newTestCase, visibility: e.target.value })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-white"
                     >
                       <option value="SAMPLE">Sample (Visible)</option>
@@ -416,7 +424,9 @@ export default function TestCaseManagementPage() {
                     <input
                       type="number"
                       value={newTestCase.points}
-                      onChange={(e) => setNewTestCase({ ...newTestCase, points: parseInt(e.target.value) })}
+                      onChange={(e) =>
+                        setNewTestCase({ ...newTestCase, points: parseInt(e.target.value) })
+                      }
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-white"
                     />
                   </div>
@@ -428,7 +438,9 @@ export default function TestCaseManagementPage() {
                   <input
                     type="text"
                     value={newTestCase.description}
-                    onChange={(e) => setNewTestCase({ ...newTestCase, description: e.target.value })}
+                    onChange={(e) =>
+                      setNewTestCase({ ...newTestCase, description: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-white"
                     placeholder="e.g., Edge case: empty array"
                   />
@@ -451,7 +463,9 @@ export default function TestCaseManagementPage() {
                   </label>
                   <textarea
                     value={newTestCase.expectedOutput}
-                    onChange={(e) => setNewTestCase({ ...newTestCase, expectedOutput: e.target.value })}
+                    onChange={(e) =>
+                      setNewTestCase({ ...newTestCase, expectedOutput: e.target.value })
+                    }
                     rows={4}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-white font-mono text-sm"
                     placeholder="Enter expected output..."

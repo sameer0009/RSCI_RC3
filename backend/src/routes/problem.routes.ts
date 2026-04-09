@@ -22,8 +22,18 @@ router.get('/:id/testcases', optionalAuth, testCaseController.getTestCases);
 // Test case group routes
 router.get('/:id/groups', authenticate, problemController.getTestCaseGroups);
 router.post('/:id/groups', authenticate, authorize('ADMIN'), problemController.createTestCaseGroup);
-router.put('/groups/:groupId', authenticate, authorize('ADMIN'), problemController.updateTestCaseGroup);
-router.delete('/groups/:groupId', authenticate, authorize('ADMIN'), problemController.deleteTestCaseGroup);
+router.put(
+  '/groups/:groupId',
+  authenticate,
+  authorize('ADMIN'),
+  problemController.updateTestCaseGroup
+);
+router.delete(
+  '/groups/:groupId',
+  authenticate,
+  authorize('ADMIN'),
+  problemController.deleteTestCaseGroup
+);
 
 // Admin only routes
 router.post(
@@ -42,12 +52,7 @@ router.put(
   problemController.updateProblem
 );
 
-router.delete(
-  '/:id',
-  authenticate,
-  authorize('ADMIN'),
-  problemController.deleteProblem
-);
+router.delete('/:id', authenticate, authorize('ADMIN'), problemController.deleteProblem);
 
 // Test case management (admin only)
 router.post(
@@ -58,12 +63,7 @@ router.post(
   testCaseController.uploadTestCases
 );
 
-router.put(
-  '/testcases/:id',
-  authenticate,
-  authorize('ADMIN'),
-  testCaseController.updateTestCase
-);
+router.put('/testcases/:id', authenticate, authorize('ADMIN'), testCaseController.updateTestCase);
 
 router.delete(
   '/testcases/:id',

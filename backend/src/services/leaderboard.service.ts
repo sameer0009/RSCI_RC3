@@ -21,10 +21,7 @@ export class LeaderboardService {
           problemsSolved: true,
           totalSubmissions: true,
         },
-        orderBy: [
-          { problemsSolved: 'desc' },
-          { rating: 'desc' },
-        ],
+        orderBy: [{ problemsSolved: 'desc' }, { rating: 'desc' }],
         skip,
         take: limit,
       }),
@@ -37,9 +34,10 @@ export class LeaderboardService {
     const rankedUsers = users.map((user, index) => ({
       ...user,
       rank: skip + index + 1,
-      accuracy: user.totalSubmissions > 0 
-        ? ((user.problemsSolved / user.totalSubmissions) * 100).toFixed(1)
-        : '0.0',
+      accuracy:
+        user.totalSubmissions > 0
+          ? ((user.problemsSolved / user.totalSubmissions) * 100).toFixed(1)
+          : '0.0',
     }));
 
     return {
@@ -73,10 +71,7 @@ export class LeaderboardService {
         OR: [
           { problemsSolved: { gt: user.problemsSolved } },
           {
-            AND: [
-              { problemsSolved: user.problemsSolved },
-              { rating: { gt: user.rating } },
-            ],
+            AND: [{ problemsSolved: user.problemsSolved }, { rating: { gt: user.rating } }],
           },
         ],
       },
@@ -85,9 +80,10 @@ export class LeaderboardService {
     return {
       ...user,
       rank: rank + 1,
-      accuracy: user.totalSubmissions > 0
-        ? ((user.problemsSolved / user.totalSubmissions) * 100).toFixed(1)
-        : '0.0',
+      accuracy:
+        user.totalSubmissions > 0
+          ? ((user.problemsSolved / user.totalSubmissions) * 100).toFixed(1)
+          : '0.0',
     };
   }
 
@@ -107,9 +103,9 @@ export class LeaderboardService {
       where: { contestId },
       include: {
         user: {
-          select: { id: true, username: true, fullName: true, rating: true }
-        }
-      }
+          select: { id: true, username: true, fullName: true, rating: true },
+        },
+      },
     });
 
     // If frozen, we may want to skip updates for public view,
@@ -117,7 +113,7 @@ export class LeaderboardService {
     // For this implementation, we will return the "frozen" state if requested,
     // meaning submissions after freezeTime are not counted in the public return.
 
-    const rankedParticipants = participants.map(p => {
+    const rankedParticipants = participants.map((p) => {
       // In a real system, we'd filter submissions based on freezeTime here if isFrozen is true
       return {
         ...p,

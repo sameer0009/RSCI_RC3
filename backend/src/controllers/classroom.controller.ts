@@ -17,7 +17,7 @@ export class ClassroomController {
         error: { code: 'CREATE_CLASSROOM_FAILED', message: error.message },
       });
     }
-  }
+  };
 
   joinClassroom = async (req: Request, res: Response) => {
     try {
@@ -36,7 +36,7 @@ export class ClassroomController {
         error: { code: 'JOIN_CLASSROOM_FAILED', message: error.message },
       });
     }
-  }
+  };
 
   getClassrooms = async (req: Request, res: Response) => {
     try {
@@ -60,7 +60,7 @@ export class ClassroomController {
         error: { code: 'FETCH_CLASSROOMS_FAILED', message: error.message },
       });
     }
-  }
+  };
 
   getClassroomDetails = async (req: Request, res: Response) => {
     try {
@@ -84,7 +84,7 @@ export class ClassroomController {
         error: { code: 'FETCH_CLASSROOM_DETAILS_FAILED', message: error.message },
       });
     }
-  }
+  };
 
   createAssignment = async (req: Request, res: Response) => {
     try {
@@ -101,7 +101,7 @@ export class ClassroomController {
         error: { code: 'CREATE_ASSIGNMENT_FAILED', message: error.message },
       });
     }
-  }
+  };
 }
 
 export default new ClassroomController();

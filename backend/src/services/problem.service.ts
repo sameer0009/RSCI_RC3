@@ -141,7 +141,10 @@ export class ProblemService {
     };
   }
 
-  async getProblemById(id: string, includePrivateTests: boolean = false): Promise<Problem & { testCases: TestCase[] } | null> {
+  async getProblemById(
+    id: string,
+    includePrivateTests: boolean = false
+  ): Promise<(Problem & { testCases: TestCase[] }) | null> {
     const problem = await prisma.problem.findUnique({
       where: { id },
       include: {
@@ -161,7 +164,10 @@ export class ProblemService {
     return problem as any;
   }
 
-  async getProblemBySlug(slug: string, includePrivateTests: boolean = false): Promise<Problem & { testCases: TestCase[] } | null> {
+  async getProblemBySlug(
+    slug: string,
+    includePrivateTests: boolean = false
+  ): Promise<(Problem & { testCases: TestCase[] }) | null> {
     const problem = await prisma.problem.findUnique({
       where: { slug },
       include: {

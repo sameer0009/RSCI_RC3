@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #3b82f6; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+    .content { padding: 20px; border: 1px solid #eee; border-top: none; border-radius: 0 0 8px 8px; }
+    .btn { display: inline-block; padding: 10px 20px; background: #3b82f6; color: white; text-decoration: none; border-radius: 4px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Contest Reminder</h2>
+    </div>
+    <div class="content">
+      <p>Hello {{username}},</p>
+      <p>This is a reminder that the contest <strong>{{contestName}}</strong> is starting soon!</p>
+      <p><strong>Start Time:</strong> {{startTime}}</p>
+      <p>Get ready and make sure you have a stable internet connection.</p>
+      <a href="{{contestUrl}}" class="btn">Go to Contest</a>
+      <p style="margin-top: 30px; font-size: 12px; color: #666;">
+        You are receiving this because you registered for this contest or have contest reminders enabled.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

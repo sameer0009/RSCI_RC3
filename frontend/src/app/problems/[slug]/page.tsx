@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import api from '@/lib/api';
@@ -19,6 +20,8 @@ interface Problem {
   constraints: string;
   testCases: TestCase[];
   enablePartialScoring: boolean;
+  acceptanceRate: number;
+  hints: string[];
 }
 
 interface TestCase {
@@ -47,10 +50,7 @@ export default function ProblemDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
 
-  const [problem, setProblem] = useState<Problem | null>(null);
-  const [code, setCode] = useState('// Write your solution here\n');
   const [language, setLanguage] = useState('javascript');
-  const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [testingSamples, setTestingSamples] = useState(false);
@@ -60,22 +60,92 @@ export default function ProblemDetailPage() {
   const [sampleResults, setSampleResults] = useState<TestCaseResult[]>([]);
   const [submissionResult, setSubmissionResult] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<'custom' | 'samples' | 'submission'>('custom');
-  const [activeLeftTab, setActiveLeftTab] = useState<'description' | 'solutions'>('description');
+  const [activeLeftTab, setActiveLeftTab] = useState<'description' | 'solutions' | 'submissions'>('description');
+  const [theme, setTheme] = useState('vs-dark');
+  const [userSubmissions, setUserSubmissions] = useState<any[]>([]);
+
+  const languageBoilerplates: Record<string, string> = {
+    javascript: 'function solve() {\n  // Write your code here\n}\n',
+    python: 'def solve():\n    # Write your code here\n    pass\n',
+    java: 'public class Solution {\n    public static void main(String[] args) {\n        // Write your code here\n    }\n}\n',
+    cpp: '#include <iostream>\nusing namespace std;\n\nint main() {\n    // Write your code here\n    return 0;\n}\n',
+    c: '#include <stdio.h>\n\nint main() {\n    // Write your code here\n    return 0;\n}\n',
+    csharp: 'using System;\n\npublic class Solution {\n    public static void Main() {\n        // Write your code here\n    }\n}\n',
+    go: 'package main\n\nimport "fmt"\n\nfunc main() {\n    // Write your code here\n}\n',
+    php: '<?php\n\n// Write your code here\n\n?>',
+    rust: 'fn main() {\n    // Write your code here\n}\n',
+    typescript: 'function solve(): void {\n  // Write your code here\n}\n',
+  };
+
+  const [code, setCode] = useState(languageBoilerplates[language]);
 
   useEffect(() => {
-    fetchProblem();
-  }, [slug]);
+    setCode(languageBoilerplates[language] || '// Write your code here\n');
+  }, [language]);
+
+  useEffect(() => {
+    const isDark = document.documentElement.classList.contains('dark') || window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setTheme(isDark ? 'vs-dark' : 'light');
+    
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'class') {
+          const isDark = document.documentElement.classList.contains('dark');
+          setTheme(isDark ? 'vs-dark' : 'light');
+        }
+      });
+    });
+    observer.observe(document.documentElement, { attributes: true });
+    return () => observer.disconnect();
+  }, []);
 
   const fetchProblem = async () => {
+    const { data } = await api.get(`/problems/slug/${slug}`);
+    return data.data.problem as Problem;
+  };
+
+  const fetchUserSubmissions = async (problemId: string) => {
     try {
-      const { data } = await api.get(`/problems/slug/${slug}`);
-      setProblem(data.data.problem);
-    } catch (error) {
-      console.error('Failed to fetch problem:', error);
-    } finally {
-      setLoading(false);
+      const { data } = await api.get(`/problems/${problemId}/submissions`);
+      setUserSubmissions(data.data.submissions);
+    } catch (e) {
+      console.error(e);
     }
   };
+
+  const { data: problem, isLoading: loading, error } = useQuery({
+    queryKey: ['problem', slug],
+    queryFn: fetchProblem,
+  });
+
+  const { data: solutionsResponse, isLoading: loadingSolutions } = useQuery({
+    queryKey: ['solutions', problem?.id],
+    queryFn: async () => {
+      const { data } = await api.get(`/solutions?problemId=${problem?.id}`);
+      return data.data;
+    },
+    enabled: !!problem?.id && activeLeftTab === 'solutions',
+  });
+
+  useEffect(() => {
+    if (problem && activeLeftTab === 'submissions') {
+      fetchUserSubmissions(problem.id);
+    }
+  }, [problem, activeLeftTab]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        e.preventDefault();
+        handleSubmit();
+      } else if ((e.ctrlKey || e.metaKey) && e.key === "'") {
+        e.preventDefault();
+        handleRunCode();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [code, language, customInput, problem]);
 
   const handleRunCode = async () => {
     setRunning(true);
@@ -85,9 +155,9 @@ export default function ProblemDetailPage() {
 
     try {
       const { data } = await api.post('/submissions/run', {
-        code,
-        language,
-        input: customInput,
+        sourceCode: code,
+        languageId: language,
+        stdin: customInput,
       });
       setOutput(data.data.output || 'No output');
     } catch (error: any) {
@@ -107,8 +177,8 @@ export default function ProblemDetailPage() {
     try {
       const { data } = await api.post('/submissions/sample-tests', {
         problemId: problem.id,
-        code,
-        language,
+        sourceCode: code,
+        languageId: language,
       });
       setSampleResults(data.data.results);
     } catch (error: any) {
@@ -128,8 +198,8 @@ export default function ProblemDetailPage() {
     try {
       const { data } = await api.post('/submissions', {
         problemId: problem.id,
-        code,
-        language,
+        sourceCode: code,
+        languageId: language,
       });
       const submissionId = data.data.submission.id;
       await pollSubmissionResult(submissionId);
@@ -200,8 +270,11 @@ export default function ProblemDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="h-screen flex flex-col bg-gray-50 dark:bg-dark-bg p-2 overflow-hidden animate-pulse">
+        <div className="flex-1 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-dark-bg shadow-sm flex gap-2 p-2">
+          <div className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
+          <div className="flex-1 bg-gray-200 dark:bg-gray-800 rounded-lg"></div>
+        </div>
       </div>
     );
   }
@@ -249,6 +322,16 @@ export default function ProblemDetailPage() {
             >
               Editorial & Solutions
             </button>
+            <button
+              onClick={() => setActiveLeftTab('submissions')}
+              className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+                activeLeftTab === 'submissions'
+                  ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                  : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              Submissions
+            </button>
           </div>
 
           <div className="p-6 overflow-y-auto flex-1 custom-scrollbar">
@@ -277,6 +360,9 @@ export default function ProblemDetailPage() {
                       {topic}
                     </span>
                   ))}
+                  <span className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 font-medium rounded-full">
+                    Acceptance: {(problem.acceptanceRate || 0).toFixed(1)}%
+                  </span>
                 </div>
 
                 <div className="prose dark:prose-invert max-w-none">
@@ -304,6 +390,23 @@ export default function ProblemDetailPage() {
                   <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap mb-6">
                     {problem.constraints}
                   </div>
+
+                  {problem.hints && problem.hints.length > 0 && (
+                    <div className="mb-6 space-y-2">
+                      <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Hints</h3>
+                      {problem.hints.map((hint, i) => (
+                        <details key={i} className="group bg-gray-100 dark:bg-gray-800 rounded-lg open:bg-white dark:open:bg-dark-card border border-transparent open:border-gray-200 dark:open:border-gray-700 transition-colors">
+                          <summary className="px-4 py-3 font-medium cursor-pointer text-sm text-gray-700 dark:text-gray-300 group-open:border-b border-gray-200 dark:border-gray-700">
+                            Hint {i + 1}
+                          </summary>
+                          <div className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                            {hint}
+                          </div>
+                        </details>
+                      ))}
+                    </div>
+                  )}
+
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
                     Sample Test Cases
                   </h3>
@@ -327,7 +430,7 @@ export default function ProblemDetailPage() {
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Input:
                           </span>
-                          <pre className="mt-1 p-2 bg-white dark:bg-black/40 rounded text-sm font-mono">
+                          <pre className="mt-1 p-2 bg-white dark:bg-black/40 rounded text-sm font-mono text-gray-800 dark:text-gray-200">
                             {testCase.input}
                           </pre>
                         </div>
@@ -335,7 +438,7 @@ export default function ProblemDetailPage() {
                           <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             Output:
                           </span>
-                          <pre className="mt-1 p-2 bg-white dark:bg-black/40 rounded text-sm font-mono">
+                          <pre className="mt-1 p-2 bg-white dark:bg-black/40 rounded text-sm font-mono text-gray-800 dark:text-gray-200">
                             {testCase.expectedOutput}
                           </pre>
                         </div>
@@ -370,54 +473,54 @@ export default function ProblemDetailPage() {
                     </button>
                   </div>
                   <div className="space-y-4">
-                    {[
-                      {
-                        id: 1,
-                        title: 'O(N) Time and O(1) Space using Two Pointers',
-                        lang: 'C++',
-                        votes: 342,
-                        author: 'algo_master',
-                      },
-                      {
-                        id: 2,
-                        title: 'Clean Python 3 Solution with List Comprehension',
-                        lang: 'Python',
-                        votes: 128,
-                        author: 'py_dev01',
-                      },
-                      {
-                        id: 3,
-                        title: 'Java HashMap approach - Very easy to understand',
-                        lang: 'Java',
-                        votes: 89,
-                        author: 'java_king',
-                      },
-                      {
-                        id: 4,
-                        title: 'Javascript standard map/filter logic',
-                        lang: 'JavaScript',
-                        votes: 45,
-                        author: 'js_ninja',
-                      },
-                    ].map((sol) => (
-                      <div
-                        key={sol.id}
-                        className="p-4 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-primary-500 dark:hover:border-primary-500 transition cursor-pointer group bg-white dark:bg-[#1a1a1a]"
-                      >
-                        <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-2">
-                          {sol.title}
-                        </h4>
-                        <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-                          <span className="flex items-center gap-1 font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs">
-                            {sol.lang}
-                          </span>
-                          <span className="flex items-center gap-1">↑ {sol.votes}</span>
-                          <span className="flex items-center gap-1">👤 {sol.author}</span>
+                    {loadingSolutions ? (
+                      <div className="text-center py-8 text-gray-500">Loading solutions...</div>
+                    ) : solutionsResponse?.solutions?.length > 0 ? (
+                      solutionsResponse.solutions.map((sol: any) => (
+                        <div
+                          key={sol.id}
+                          className="p-4 border border-gray-200 dark:border-gray-800 rounded-xl hover:border-primary-500 dark:hover:border-primary-500 transition cursor-pointer group bg-white dark:bg-[#1a1a1a]"
+                        >
+                          <h4 className="font-semibold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400 mb-2">
+                            {sol.title}
+                          </h4>
+                          <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+                            <span className="flex items-center gap-1 font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs">
+                              {sol.language}
+                            </span>
+                            <span className="flex items-center gap-1">↑ {sol._count?.votes || 0}</span>
+                            <span className="flex items-center gap-1">👤 {sol.author?.username || 'User'}</span>
+                            <span className="flex items-center gap-1">💬 {sol._count?.comments || 0}</span>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <div className="text-center py-8 text-gray-500">No solutions yet. Be the first to share!</div>
+                    )}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeLeftTab === 'submissions' && (
+              <div className="space-y-4">
+                {userSubmissions.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">No submissions yet</div>
+                ) : (
+                  userSubmissions.map((sub: any) => (
+                    <div key={sub.id} className="p-4 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => { setCode(sub.code); setLanguage(sub.language); setActiveTab('submission'); setSubmissionResult(sub); setShowOutput(true); }}>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className={`font-bold ${getVerdictColor(sub.verdict)}`}>{sub.verdict}</span>
+                        <span className="text-xs text-gray-500">{new Date(sub.submittedAt).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400">
+                        <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{sub.language}</span>
+                        <span className="flex items-center gap-1">⏱ {sub.executionTime} ms</span>
+                        <span className="flex items-center gap-1">💾 {(sub.memoryUsed / 1024).toFixed(1)} MB</span>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             )}
           </div>
@@ -450,6 +553,8 @@ export default function ProblemDetailPage() {
                     <option value="csharp">C#</option>
                     <option value="go">Go</option>
                     <option value="php">PHP</option>
+                    <option value="rust">Rust</option>
+                    <option value="typescript">TypeScript</option>
                   </select>
                 </div>
                 <div className="flex gap-2">
@@ -478,13 +583,13 @@ export default function ProblemDetailPage() {
                 </div>
               </div>
 
-              <div className="flex-1 w-full bg-[#1e1e1e]">
+              <div className="flex-1 w-full bg-[#1e1e1e] relative overflow-hidden">
                 <Editor
                   height="100%"
                   language={language}
                   value={code}
                   onChange={(value) => setCode(value || '')}
-                  theme="vs-dark"
+                  theme={theme}
                   loading={
                     <div className="flex h-full items-center justify-center text-gray-400">
                       Loading editor...
@@ -494,12 +599,21 @@ export default function ProblemDetailPage() {
                     minimap: { enabled: false },
                     fontSize: 14,
                     lineNumbers: 'on',
-                    scrollBeyondLastLine: false,
+                    scrollBeyondLastLine: true,
                     automaticLayout: true,
                     padding: { top: 16, bottom: 16 },
                     fontFamily: "'JetBrains Mono', 'Fira Code', 'Consolas', monospace",
                     fontLigatures: true,
                     renderWhitespace: 'selection',
+                    scrollbar: {
+                      vertical: 'visible',
+                      horizontal: 'visible',
+                      useShadows: false,
+                      verticalHasArrows: false,
+                      horizontalHasArrows: false,
+                      verticalScrollbarSize: 10,
+                      horizontalScrollbarSize: 10
+                    }
                   }}
                 />
               </div>
@@ -715,6 +829,19 @@ export default function ProblemDetailPage() {
                                 <pre className="text-xs text-red-700 dark:text-red-300 font-mono break-all whitespace-pre-wrap">
                                   {submissionResult.error}
                                 </pre>
+                              </div>
+                            )}
+
+                            {submissionResult.testCaseResults && submissionResult.testCaseResults.length > 0 && (
+                              <div className="mx-6 mb-6">
+                                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3">Test Cases</h3>
+                                <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
+                                  {submissionResult.testCaseResults.map((tc: any, idx: number) => (
+                                    <div key={tc.id} title={`${tc.verdict} (${tc.executionTime}ms)`} className={`aspect-square flex items-center justify-center rounded-lg text-xs font-bold ${tc.verdict === 'Accepted' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border border-green-200 dark:border-green-800' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800'}`}>
+                                      {idx + 1}
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             )}
                           </div>

@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
@@ -17,27 +18,23 @@ interface LeaderboardUser {
 
 export default function LeaderboardPage() {
   const { user } = useAuth();
-  const [users, setUsers] = useState<LeaderboardUser[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [currentPage]);
 
   const fetchLeaderboard = async () => {
-    try {
-      setLoading(true);
-      const { data } = await api.get(`/leaderboard?page=${currentPage}&limit=50`);
-      setUsers(data.data.users);
-      setTotalPages(data.data.pages);
-    } catch (error) {
-      console.error('Failed to fetch leaderboard:', error);
-    } finally {
-      setLoading(false);
-    }
+    const { data } = await api.get(`/leaderboard?page=${currentPage}&limit=50`);
+    return {
+      users: data.data.users as LeaderboardUser[],
+      totalPages: data.data.pages as number,
+    };
   };
+
+  const { data, isLoading: loading, error } = useQuery({
+    queryKey: ['leaderboard', currentPage],
+    queryFn: fetchLeaderboard,
+  });
+
+  const users = data?.users || [];
+  const totalPages = data?.totalPages || 1;
 
   const getMedalIcon = (rank: number) => {
     if (rank === 1) return '🥇';
@@ -61,8 +58,37 @@ export default function LeaderboardPage() {
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+                      <th className="px-6 py-3 text-left">Rank</th>
+                      <th className="px-6 py-3 text-left">Username</th>
+                      <th className="px-6 py-3 text-center">Problems Solved</th>
+                      <th className="px-6 py-3 text-center">Total Submissions</th>
+                      <th className="px-6 py-3 text-center">Accuracy</th>
+                      <th className="px-6 py-3 text-center">Rating</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-gray-700">
+                    {[...Array(5)].map((_, i) => (
+                      <tr key={i} className="animate-pulse">
+                        <td className="px-6 py-4"><div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+                        <td className="px-6 py-4 flex justify-center"><div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded-full"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded mx-auto"></div></td>
+                        <td className="px-6 py-4"><div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded-full mx-auto"></div></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500">
+              Error loading leaderboard. Please try again.
             </div>
           ) : (
             <>

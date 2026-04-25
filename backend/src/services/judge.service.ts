@@ -21,6 +21,8 @@ const LANGUAGE_IDS: Record<string, number> = {
   csharp: 51,
   go: 60,
   php: 68,
+  rust: 73,
+  typescript: 74,
 };
 
 export class JudgeService {
@@ -34,13 +36,22 @@ export class JudgeService {
 
   async executeCode(
     code: string,
-    language: string,
+    language: string | number,
     input: string,
     timeLimit: number = 2000,
     memoryLimit: number = 256000
   ): Promise<ExecutionResult> {
     try {
-      const languageId = LANGUAGE_IDS[language.toLowerCase()];
+      let languageId: number | undefined;
+
+      if (typeof language === 'number') {
+        languageId = language;
+      } else if (!isNaN(Number(language))) {
+        languageId = Number(language);
+      } else {
+        languageId = LANGUAGE_IDS[language.toLowerCase()];
+      }
+
       if (!languageId) {
         throw new Error(`Unsupported language: ${language}`);
       }
@@ -70,8 +81,14 @@ export class JudgeService {
 
       return submissionResponse.data;
     } catch (error: any) {
-      console.error('Judge0 execution error:', error.response?.data || error.message);
-      throw new Error('Code execution failed');
+      if (error.response) {
+        console.error('Judge0 API Error:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('Judge0 Network Error (No response):', error.message);
+      } else {
+        console.error('Judge0 Setup Error:', error.message);
+      }
+      throw new Error(`Code execution failed: ${error.message}`);
     }
   }
 
@@ -106,6 +123,8 @@ export class JudgeService {
       case 10:
       case 11:
       case 12:
+        return 'RuntimeError';
+      case 13:
         return 'RuntimeError';
       default:
         return 'Pending';

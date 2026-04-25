@@ -1,7 +1,5 @@
-import { PrismaClient } from '@prisma/client';
+import prisma from '../config/database';
 import fileStorageService from './fileStorage.service';
-
-const prisma = new PrismaClient();
 
 interface UpdateProfileDto {
   fullName?: string;
@@ -49,11 +47,10 @@ class ProfileService {
       throw new Error('User not found');
     }
 
-    // Get recent accepted submissions
+    // Get recent submissions
     const recentSubmissions = await prisma.submission.findMany({
       where: {
         userId: user.id,
-        verdict: 'Accepted',
       },
       take: 10,
       orderBy: { submittedAt: 'desc' },
@@ -68,9 +65,88 @@ class ProfileService {
       },
     });
 
+    // Activity Calendar
+    const oneYearAgo = new Date();
+    oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+    
+    const allYearSubmissions = await prisma.submission.findMany({
+      where: {
+        userId: user.id,
+        submittedAt: {
+          gte: oneYearAgo
+        }
+      },
+      select: {
+        submittedAt: true
+      }
+    });
+
+    const activityMap: Record<string, number> = {};
+    allYearSubmissions.forEach(sub => {
+      const dateStr = sub.submittedAt.toISOString().split('T')[0];
+      activityMap[dateStr] = (activityMap[dateStr] || 0) + 1;
+    });
+
+    const activityData = [];
+    for (let i = 365; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0];
+      const count = activityMap[dateStr] || 0;
+      let level = 0;
+      if (count > 0) level = 1;
+      if (count > 3) level = 2;
+      if (count > 6) level = 3;
+      if (count > 8) level = 4;
+      activityData.push({ date: dateStr, count, level });
+    }
+
+    // Difficulty Breakdown
+    const solvedSubmissions = await prisma.submission.findMany({
+      where: {
+        userId: user.id,
+        verdict: 'Accepted',
+      },
+      distinct: ['problemId'],
+      select: {
+        problem: {
+          select: {
+            difficulty: true
+          }
+        }
+      }
+    });
+
+    const difficultyBreakdown = { Easy: 0, Medium: 0, Hard: 0 };
+    solvedSubmissions.forEach(sub => {
+      if (sub.problem && sub.problem.difficulty) {
+        difficultyBreakdown[sub.problem.difficulty as 'Easy' | 'Medium' | 'Hard']++;
+      }
+    });
+
+    // Rating History
+    const contestParticipations = await prisma.contestParticipant.findMany({
+      where: {
+        userId: user.id,
+        newRating: { not: null },
+      },
+      include: { contest: true },
+      orderBy: { contest: { endTime: 'asc' } },
+    });
+
+    const ratingHistory = contestParticipations.map(cp => ({
+      contestName: cp.contest.title,
+      date: cp.contest.endTime.toISOString(),
+      newRating: cp.newRating,
+      oldRating: cp.oldRating,
+    }));
+
     return {
       ...user,
       recentSubmissions,
+      activityData,
+      difficultyBreakdown,
+      ratingHistory,
     };
   }
 

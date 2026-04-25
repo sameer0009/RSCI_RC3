@@ -6,17 +6,6 @@ import { emailQueue } from '../queues/email.queue';
 export class AuthController {
   register = async (req: Request, res: Response) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Validation failed',
-            details: errors.array(),
-          },
-        });
-      }
 
       const { username, email, password, role } = req.body;
 
@@ -60,17 +49,6 @@ export class AuthController {
 
   login = async (req: Request, res: Response) => {
     try {
-      const errors = validationResult(req);
-      if (!errors.isEmpty()) {
-        return res.status(400).json({
-          success: false,
-          error: {
-            code: 'VALIDATION_ERROR',
-            message: 'Validation failed',
-            details: errors.array(),
-          },
-        });
-      }
 
       const { email, password } = req.body;
 
@@ -299,8 +277,8 @@ export class AuthController {
       const tokens = await authService.issueTokens(user);
       this.setAuthCookies(res, tokens);
 
-      // Redirect to frontend dashboard or home
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard`);
+      // Redirect to frontend dashboard or home with token
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?token=${tokens.accessToken}`);
     } catch (error: any) {
       console.error('OAuth callback error:', error);
       res.redirect(

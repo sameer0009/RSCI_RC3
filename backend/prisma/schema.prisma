@@ -265,6 +265,8 @@ model ContestParticipant {
   totalPoints        Int       @default(0)
   problemsSolved     Int       @default(0)
   penalty            Int       @default(0)
+  oldRating          Int?
+  newRating          Int?
   lastSubmissionTime DateTime?
   registeredAt       DateTime  @default(now())
 

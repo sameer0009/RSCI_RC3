@@ -55,6 +55,8 @@ const LANGUAGE_IDS: Record<string, number> = {
   csharp: 51,
   go: 60,
   php: 68,
+  rust: 73,
+  typescript: 74,
 };
 
 export class EnhancedJudgeService {
@@ -68,13 +70,22 @@ export class EnhancedJudgeService {
 
   async executeCode(
     code: string,
-    language: string,
+    language: string | number,
     input: string,
     timeLimit: number = 2000,
     memoryLimit: number = 256000
   ): Promise<ExecutionResult> {
     try {
-      const languageId = LANGUAGE_IDS[language.toLowerCase()];
+      let languageId: number | undefined;
+
+      if (typeof language === 'number') {
+        languageId = language;
+      } else if (!isNaN(Number(language))) {
+        languageId = Number(language);
+      } else {
+        languageId = LANGUAGE_IDS[language.toLowerCase()];
+      }
+
       if (!languageId) {
         throw new Error(`Unsupported language: ${language}`);
       }
@@ -103,15 +114,21 @@ export class EnhancedJudgeService {
 
       return submissionResponse.data;
     } catch (error: any) {
-      console.error('Judge0 execution error:', error.response?.data || error.message);
-      throw new Error('Code execution failed');
+      if (error.response) {
+        console.error('Judge0 API Error:', error.response.status, error.response.data);
+      } else if (error.request) {
+        console.error('Judge0 Network Error (No response):', error.message);
+      } else {
+        console.error('Judge0 Setup Error:', error.message);
+      }
+      throw new Error(`Code execution failed: ${error.message}`);
     }
   }
 
   async evaluateSubmission(
     submissionId: string,
     code: string,
-    language: string,
+    language: string | number,
     problemId: string
   ): Promise<SubmissionResult> {
     // Fetch problem with test cases and groups
@@ -172,7 +189,7 @@ export class EnhancedJudgeService {
           memoryLimit * 1024 // Convert KB to bytes
         );
 
-        const verdict = this.getVerdictFromStatus(result.status.id);
+        let verdict = this.getVerdictFromStatus(result.status.id);
         const executionTime = parseFloat(result.time) * 1000; // Convert to ms
         const memoryUsed = result.memory;
 
@@ -202,6 +219,7 @@ export class EnhancedJudgeService {
             testCasesPassed++;
           } else {
             overallVerdict = 'WrongAnswer';
+            verdict = 'WrongAnswer';
           }
         } else {
           if (overallVerdict === 'Accepted') {
@@ -248,14 +266,14 @@ export class EnhancedJudgeService {
         // Save to database
         await prisma.testCaseResult.create({
           data: {
-            submissionId,
-            testCaseId: testCase.id,
+            submission: { connect: { id: submissionId } },
+            testCase: { connect: { id: testCase.id } },
             verdict: verdict as any,
-            executionTime: Math.round(executionTime),
-            memoryUsed,
-            output: testCase.visibility === 'SAMPLE' ? result.stdout : null,
+            executionTime: Math.round(Number(executionTime) || 0),
+            memoryUsed: Math.round(Number(memoryUsed) || 0),
+            output: testCase.visibility === 'SAMPLE' ? (result.stdout || '') : null,
             errorMessage: result.stderr || result.compile_output || null,
-            points: pointsEarned,
+            points: Number(pointsEarned) || 0,
           },
         });
 
@@ -276,6 +294,19 @@ export class EnhancedJudgeService {
           errorMessage: error.message,
           groupName: testCase.group?.name,
           visibility: testCase.visibility,
+        });
+
+        // Save failure to database
+        await prisma.testCaseResult.create({
+          data: {
+            submission: { connect: { id: submissionId } },
+            testCase: { connect: { id: testCase.id } },
+            verdict: 'RuntimeError',
+            executionTime: 0,
+            memoryUsed: 0,
+            errorMessage: error.message,
+            points: 0,
+          },
         });
 
         maxScore += testCase.points;
@@ -309,8 +340,8 @@ export class EnhancedJudgeService {
         score: scorePercentage,
         maxScore: 100,
         points: totalScore,
-        executionTime: Math.round(maxExecutionTime),
-        memoryUsed: Math.round(maxMemoryUsed),
+        executionTime: Math.round(Number(maxExecutionTime) || 0),
+        memoryUsed: Math.round(Number(maxMemoryUsed) || 0),
         testCasesPassed,
         totalTestCases: problem.testCases.length,
         evaluatedAt: new Date(),
@@ -336,11 +367,12 @@ export class EnhancedJudgeService {
     strategy: string = 'IGNORE_WHITESPACE',
     epsilon?: number | null
   ): boolean {
-    if (!actual) return false;
+    const trimmedExpected = expected.trimEnd();
+    if (!actual) return trimmedExpected === '';
 
     switch (strategy) {
       case 'EXACT_MATCH':
-        return actual === expected;
+        return actual.trimEnd() === expected.trimEnd();
 
       case 'IGNORE_WHITESPACE':
       case 'TOKEN_BASED':
@@ -406,6 +438,8 @@ export class EnhancedJudgeService {
       case 11:
       case 12:
         return 'RuntimeError';
+      case 13:
+        return 'RuntimeError';
       default:
         return 'Pending';
     }
@@ -413,7 +447,7 @@ export class EnhancedJudgeService {
 
   async runSampleTests(
     code: string,
-    language: string,
+    language: string | number,
     problemId: string
   ): Promise<TestCaseResult[]> {
     const problem = await prisma.problem.findUnique({
@@ -455,7 +489,7 @@ export class EnhancedJudgeService {
 
         results.push({
           testCaseId: testCase.id,
-          verdict: isCorrect ? 'Accepted' : verdict,
+          verdict: isCorrect ? 'Accepted' : (verdict === 'Accepted' ? 'WrongAnswer' : verdict),
           executionTime: parseFloat(result.time) * 1000,
           memoryUsed: result.memory,
           output: result.stdout || '',

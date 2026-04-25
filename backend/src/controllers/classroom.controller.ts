@@ -102,6 +102,36 @@ export class ClassroomController {
       });
     }
   };
+
+  getLeaderboard = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const leaderboard = await classroomService.getLeaderboard(id);
+      res.json({ success: true, data: leaderboard });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: { code: 'FETCH_LEADERBOARD_FAILED', message: error.message } });
+    }
+  };
+
+  getAssignmentProgress = async (req: Request, res: Response) => {
+    try {
+      const { assignmentId } = req.params;
+      const progress = await classroomService.getAssignmentProgress(assignmentId);
+      res.json({ success: true, data: progress });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: { code: 'FETCH_PROGRESS_FAILED', message: error.message } });
+    }
+  };
+
+  getInstructorAnalytics = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const analytics = await classroomService.getInstructorAnalytics(id);
+      res.json({ success: true, data: analytics });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: { code: 'FETCH_ANALYTICS_FAILED', message: error.message } });
+    }
+  };
 }
 
 export default new ClassroomController();

@@ -1,5 +1,6 @@
 import prisma from '../config/database';
 import { ContestStatus } from '@prisma/client';
+import { RatingService } from './rating.service';
 
 class ContestService {
   async createContest(data: any) {
@@ -33,6 +34,75 @@ class ContestService {
         userId,
       },
     });
+  }
+
+  async getContests(page: number = 1, limit: number = 20, status?: string) {
+    const where: any = {};
+    if (status) {
+      where.status = status;
+    }
+
+    const [contests, total] = await Promise.all([
+      prisma.contest.findMany({
+        where,
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { startTime: 'asc' },
+        include: {
+          _count: { select: { participants: true } },
+        },
+      }),
+      prisma.contest.count({ where }),
+    ]);
+
+    return {
+      contests,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async getLeaderboard(contestId: string) {
+    // Hide updates in last N minutes logic can be implemented by checking freeze time
+    const contest = await prisma.contest.findUnique({ where: { id: contestId } });
+    if (!contest) throw new Error('Contest not found');
+
+    const participants = await prisma.contestParticipant.findMany({
+      where: { contestId },
+      include: { user: { select: { username: true, rating: true, id: true } } },
+      orderBy: [
+        { problemsSolved: 'desc' },
+        { penalty: 'asc' },
+      ],
+    });
+
+    return participants;
+  }
+
+  async getContestProblems(contestId: string, userId: string, isAdmin: boolean) {
+    const contest = await prisma.contest.findUnique({
+      where: { id: contestId },
+      include: { problems: true },
+    });
+
+    if (!contest) throw new Error('Contest not found');
+
+    if (!isAdmin && contest.status === 'Upcoming') {
+      throw new Error('Contest has not started yet');
+    }
+
+    if (!isAdmin) {
+      const isRegistered = await prisma.contestParticipant.findUnique({
+        where: { contestId_userId: { contestId, userId } },
+      });
+      if (!isRegistered) throw new Error('You must register for this contest');
+    }
+
+    return contest.problems;
   }
 
   async getActiveContests() {
@@ -70,6 +140,34 @@ class ContestService {
   async updateContestStatus() {
     const now = new Date();
 
+    // Notify for contests starting in 15 minutes
+    const fifteenMinsFromNow = new Date(now.getTime() + 15 * 60000);
+    const fourteenMinsFromNow = new Date(now.getTime() + 14 * 60000);
+
+    const upcomingContests = await prisma.contest.findMany({
+      where: {
+        status: ContestStatus.Upcoming,
+        startTime: {
+          gt: fourteenMinsFromNow,
+          lte: fifteenMinsFromNow,
+        },
+      },
+      include: { participants: true },
+    });
+
+    const notificationService = require('./notification.service').default;
+    for (const contest of upcomingContests) {
+      for (const participant of contest.participants) {
+        await notificationService.createNotification(
+          participant.userId,
+          'CONTEST',
+          'Contest Starting Soon',
+          `The contest "${contest.title}" is starting in 15 minutes!`,
+          `/contests/${contest.id}`
+        );
+      }
+    }
+
     // Set upcoming to active
     await prisma.contest.updateMany({
       where: {
@@ -79,14 +177,31 @@ class ContestService {
       data: { status: ContestStatus.Active },
     });
 
-    // Set active to ended
-    await prisma.contest.updateMany({
+    // Find active contests that should be ended
+    const endingContests = await prisma.contest.findMany({
       where: {
         status: ContestStatus.Active,
         endTime: { lte: now },
       },
-      data: { status: ContestStatus.Ended },
+      select: { id: true },
     });
+
+    if (endingContests.length > 0) {
+      const endingIds = endingContests.map((c) => c.id);
+
+      // Set active to ended
+      await prisma.contest.updateMany({
+        where: { id: { in: endingIds } },
+        data: { status: ContestStatus.Ended },
+      });
+
+      // Update ratings for all ended contests
+      for (const contest of endingContests) {
+        await RatingService.updateContestRatings(contest.id).catch(err => {
+          console.error(`Failed to update ratings for contest ${contest.id}:`, err);
+        });
+      }
+    }
   }
 }
 

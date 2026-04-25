@@ -13,6 +13,8 @@ services:
       - '5432:5432'
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s
@@ -27,6 +29,8 @@ services:
       - '6379:6379'
     volumes:
       - redis_data:/data
+    networks:
+      - app-network
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 10s
@@ -47,6 +51,8 @@ services:
       FRONTEND_URL: http://localhost:3000
       JUDGE0_API_URL: http://judge0-server:2358
       JUDGE0_API_KEY: ""
+    networks:
+      - app-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,18 +69,38 @@ services:
       - '3000:3000'
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:5000/api
+    networks:
+      - app-network
     depends_on:
       - backend
 
   # --- JUDGE0 CLUSTER ---
   judge0-server:
-    image: judge0/judge0:latest
+    image: judge0/judge0:1.13.1
     container_name: judge0-server
+    platform: linux/amd64
     volumes:
       - ./judge0.conf:/etc/judge0.conf:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
     ports:
       - "2358:2358"
     privileged: true
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    environment:
+      POSTGRES_HOST: judge0-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: judge0_password
+      POSTGRES_DB: judge0
+      REDIS_HOST: judge0-redis
+      REDIS_PORT: 6379
+    networks:
+      - app-network
+      - judge0-network
     depends_on:
       judge0-db:
         condition: service_healthy
@@ -82,12 +108,29 @@ services:
         condition: service_healthy
 
   judge0-worker:
-    image: judge0/judge0:latest
+    image: judge0/judge0:1.13.1
     container_name: judge0-worker
-    command: ["./scripts/worker"]
+    platform: linux/amd64
+    command: ["/api/scripts/workers"]
     volumes:
       - ./judge0.conf:/etc/judge0.conf:ro
+      - /sys/fs/cgroup:/sys/fs/cgroup:rw
     privileged: true
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1024M
+    environment:
+      POSTGRES_HOST: judge0-db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: judge0_password
+      POSTGRES_DB: judge0
+      REDIS_HOST: judge0-redis
+      REDIS_PORT: 6379
+    networks:
+      - judge0-network
     depends_on:
       judge0-db:
         condition: service_healthy
@@ -101,6 +144,8 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: judge0_password
       POSTGRES_DB: judge0
+    networks:
+      - judge0-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -110,11 +155,20 @@ services:
   judge0-redis:
     image: redis:7-alpine
     container_name: judge0-redis
+    networks:
+      - judge0-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+networks:
+  app-network:
+    driver: bridge
+  judge0-network:
+    driver: bridge
+    internal: true # Isolate from external network
 
 volumes:
   postgres_data:

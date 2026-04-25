@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
@@ -18,47 +19,30 @@ interface Problem {
 
 export default function ProblemsPage() {
   const { user } = useAuth();
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
     difficulty: '',
     search: '',
     topic: '',
   });
 
-  const [availableTopics, setAvailableTopics] = useState<string[]>([]);
-
-  useEffect(() => {
-    fetchProblems();
-  }, [filters]);
-
   const fetchProblems = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (filters.difficulty) params.append('difficulty', filters.difficulty);
-      if (filters.search) params.append('search', filters.search);
-
-      if (filters.topic) params.append('topic', filters.topic);
-      const { data } = await api.get(`/problems?${params.toString()}`);
-
-      const loadedProblems = data.data.problems;
-      setProblems(loadedProblems);
-
-      // Extract unique topics from problems
-      const topics = new Set<string>();
-      loadedProblems.forEach((p: any) => {
-        p.topics?.forEach((t: string) => topics.add(t));
-      });
-      if (availableTopics.length === 0) {
-        setAvailableTopics(Array.from(topics));
-      }
-    } catch (error) {
-      console.error('Failed to fetch problems:', error);
-    } finally {
-      setLoading(false);
-    }
+    const params = new URLSearchParams();
+    if (filters.difficulty) params.append('difficulty', filters.difficulty);
+    if (filters.search) params.append('search', filters.search);
+    if (filters.topic) params.append('topic', filters.topic);
+    
+    const { data } = await api.get(`/problems?${params.toString()}`);
+    return data.data.problems as Problem[];
   };
+
+  const { data: problems = [], isLoading: loading, error } = useQuery({
+    queryKey: ['problems', filters],
+    queryFn: fetchProblems,
+  });
+
+  const availableTopics = Array.from(
+    new Set(problems.flatMap((p) => p.topics || []))
+  );
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -159,8 +143,31 @@ export default function ProblemsPage() {
           </div>
 
           {loading ? (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+            <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-800">
+                  <tr>
+                    <th className="px-6 py-3 text-left">Status</th>
+                    <th className="px-6 py-3 text-left">Title</th>
+                    <th className="px-6 py-3 text-left">Difficulty</th>
+                    <th className="px-6 py-3 text-left">Acceptance</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-gray-700">
+                  {[...Array(5)].map((_, i) => (
+                    <tr key={i} className="animate-pulse">
+                      <td className="px-6 py-4"><div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded-full"></div></td>
+                      <td className="px-6 py-4"><div className="h-4 w-48 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+                      <td className="px-6 py-4"><div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div></td>
+                      <td className="px-6 py-4"><div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : error ? (
+            <div className="text-center py-12 text-red-500">
+              Error loading problems. Please try again.
             </div>
           ) : (
             <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">

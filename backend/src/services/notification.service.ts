@@ -70,6 +70,26 @@ class NotificationService {
       },
     });
   }
+  async getSettings(userId: string) {
+    let settings = await prisma.notificationSetting.findUnique({
+      where: { userId },
+    });
+
+    if (!settings) {
+      settings = await prisma.notificationSetting.create({
+        data: { userId },
+      });
+    }
+    return settings;
+  }
+
+  async updateSettings(userId: string, data: any) {
+    return prisma.notificationSetting.upsert({
+      where: { userId },
+      update: data,
+      create: { ...data, userId },
+    });
+  }
 }
 
 export default new NotificationService();

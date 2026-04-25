@@ -1,6 +1,5 @@
-import { PrismaClient, Difficulty, Role } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { Difficulty, Role } from '@prisma/client';
+import prisma from '../config/database';
 
 interface CreateProblemDto {
   title: string;

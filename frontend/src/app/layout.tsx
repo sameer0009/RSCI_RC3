@@ -10,6 +10,8 @@ export const metadata: Metadata = {
   description: 'Advanced coding competition platform with real-time analytics and leaderboards',
 };
 
+import QueryProvider from '@/providers/QueryProvider';
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -18,7 +20,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
+        <QueryProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </QueryProvider>
       </body>
     </html>
   );

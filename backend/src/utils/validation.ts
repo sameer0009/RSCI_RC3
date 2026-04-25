@@ -133,3 +133,37 @@ export const resetPasswordValidation: ValidationChain[] = [
       'Password must contain at least one uppercase letter, one lowercase letter, and one number'
     ),
 ];
+
+export const submitCodeValidation: ValidationChain[] = [
+  body('problemId').isUUID().withMessage('Invalid problem ID'),
+  body('languageId').notEmpty().withMessage('Language ID is required'),
+  body('sourceCode').notEmpty().withMessage('Source code is required'),
+];
+
+export const runCodeValidation: ValidationChain[] = [
+  body('languageId').notEmpty().withMessage('Language ID is required'),
+  body('sourceCode').notEmpty().withMessage('Source code is required'),
+  body('stdin').optional().isString().withMessage('Standard input must be a string'),
+];
+
+export const createClassroomValidation: ValidationChain[] = [
+  body('name').trim().isLength({ min: 3, max: 100 }).withMessage('Name must be between 3 and 100 characters'),
+  body('description').optional().trim().isString(),
+];
+
+export const createAssignmentValidation: ValidationChain[] = [
+  body('title').trim().isLength({ min: 3, max: 200 }).withMessage('Title must be between 3 and 200 characters'),
+  body('description').optional().trim().isString(),
+  body('dueDate').isISO8601().withMessage('Due date must be a valid date'),
+  body('problemIds').isArray({ min: 1 }).withMessage('At least one problem is required'),
+];
+
+export const voteValidation: ValidationChain[] = [
+  body('solutionId').isUUID().withMessage('Invalid solution ID'),
+  body('value').isIn([1, -1]).withMessage('Vote value must be 1 or -1'),
+];
+
+export const commentValidation: ValidationChain[] = [
+  body('solutionId').isUUID().withMessage('Invalid solution ID'),
+  body('content').trim().isLength({ min: 1, max: 1000 }).withMessage('Comment must be between 1 and 1000 characters'),
+];

@@ -8,22 +8,26 @@ interface CreateSubmissionData {
   userId: string;
   problemId: string;
   code: string;
-  language: string;
+  language: string | number;
   contestId?: string;
 }
+
+import { io } from '../index';
+import { addSubmissionJob } from '../queues/submission.queue';
 
 export class SubmissionService {
   async createSubmission(data: CreateSubmissionData): Promise<Submission> {
     const submission = await prisma.submission.create({
       data: {
         ...data,
+        language: data.language.toString(),
         verdict: 'Pending',
       },
     });
 
-    // Evaluate asynchronously
-    this.evaluateSubmission(submission.id).catch((error) => {
-      console.error('Evaluation error:', error);
+    // Add to evaluation queue
+    await addSubmissionJob(submission.id).catch((error) => {
+      console.error('Queue error:', error);
     });
 
     return submission;
@@ -31,7 +35,7 @@ export class SubmissionService {
 
   async evaluateSubmission(submissionId: string): Promise<void> {
     try {
-      const submission = await prisma.submission.findUnique({
+      let submission = await prisma.submission.findUnique({
         where: { id: submissionId },
       });
 
@@ -47,26 +51,51 @@ export class SubmissionService {
         submission.problemId
       );
 
-      // Update problem stats
-      await problemService.updateProblemStats(submission.problemId);
+      // Fetch the updated submission to emit it to the client
+      submission = await prisma.submission.findUnique({
+        where: { id: submissionId },
+        include: { testCaseResults: true },
+      });
 
-      // Update user stats
-      const leaderboardService = require('./leaderboard.service').default;
-      await leaderboardService.updateUserStats(submission.userId);
+      if (submission) {
+        // Emit Socket.IO event to the submission's room
+        io.to(submissionId).emit('submissionUpdate', submission);
 
-      // CONTEST HANDLING
-      if (submission.contestId && submission.verdict === 'Accepted') {
-        await this.handleContestSubmission(submission);
+        // Notify user
+        const notificationService = require('./notification.service').default;
+        await notificationService.createNotification(
+          submission.userId,
+          'SUBMISSION',
+          'Submission Evaluated',
+          `Your submission has been evaluated with verdict: ${submission.verdict}`,
+          `/problems/${submission.problemId}`
+        );
+      }
+
+      if (submission) {
+        // Update problem stats
+        await problemService.updateProblemStats(submission.problemId);
+
+        // Update user stats
+        const leaderboardService = require('./leaderboard.service').default;
+        await leaderboardService.updateUserStats(submission.userId);
+
+        // CONTEST HANDLING
+        if (submission.contestId && submission.verdict === 'Accepted') {
+          await this.handleContestSubmission(submission);
+        }
       }
     } catch (error) {
       console.error('Evaluation failed:', error);
-      await prisma.submission.update({
+      const submission = await prisma.submission.update({
         where: { id: submissionId },
         data: {
           verdict: 'RuntimeError',
           evaluatedAt: new Date(),
         },
       });
+      // Emit Socket.IO event even on error
+      io.to(submissionId).emit('submissionUpdate', submission);
     }
   }
 
@@ -149,6 +178,7 @@ export class SubmissionService {
             slug: true,
           },
         },
+        testCaseResults: true,
       },
     });
   }
@@ -177,6 +207,30 @@ export class SubmissionService {
         },
       }),
       prisma.submission.count({ where: { userId } }),
+    ]);
+
+    return { submissions, total };
+  }
+
+  async getUserSubmissionsForProblem(
+    userId: string,
+    problemId: string,
+    page: number = 1,
+    limit: number = 20
+  ): Promise<{ submissions: Submission[]; total: number }> {
+    const skip = (page - 1) * limit;
+
+    const [submissions, total] = await Promise.all([
+      prisma.submission.findMany({
+        where: { userId, problemId },
+        skip,
+        take: limit,
+        orderBy: { submittedAt: 'desc' },
+        include: {
+          testCaseResults: true,
+        },
+      }),
+      prisma.submission.count({ where: { userId, problemId } }),
     ]);
 
     return { submissions, total };

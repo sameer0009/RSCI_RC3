@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'next/navigation';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ActivityCalendar } from 'react-activity-calendar';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface UserProfile {
   id: string;
@@ -29,11 +31,24 @@ interface UserProfile {
   recentSubmissions: Array<{
     id: string;
     submittedAt: string;
+    verdict: string;
     problem: {
       title: string;
       slug: string;
       difficulty: string;
     };
+  }>;
+  activityData?: Array<{ date: string; count: number; level: number }>;
+  difficultyBreakdown?: {
+    Easy: number;
+    Medium: number;
+    Hard: number;
+  };
+  ratingHistory?: Array<{
+    contestName: string;
+    date: string;
+    newRating: number;
+    oldRating: number;
   }>;
 }
 
@@ -41,8 +56,7 @@ export default function ProfilePage() {
   const params = useParams();
   const username = params.username as string;
   const { user: currentUser } = useAuth();
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [showEditModal, setShowEditModal] = useState(false);
   const [editForm, setEditForm] = useState({
     fullName: '',
@@ -55,57 +69,31 @@ export default function ProfilePage() {
   });
   const [uploadingPicture, setUploadingPicture] = useState(false);
 
-  // Generate mock data for the ActivityCalendar
-  const [activityData, setActivityData] = useState<
-    Array<{ date: string; count: number; level: number }>
-  >([]);
 
-  useEffect(() => {
-    // Generate past 365 days of mock activity
-    const data = [];
-    const today = new Date();
-    for (let i = 365; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      const dateString = date.toISOString().split('T')[0];
-
-      // Random activity
-      const isActive = Math.random() > 0.6;
-      const count = isActive ? Math.floor(Math.random() * 10) + 1 : 0;
-      let level = 0;
-      if (count > 0) level = 1;
-      if (count > 3) level = 2;
-      if (count > 6) level = 3;
-      if (count > 8) level = 4;
-
-      data.push({ date: dateString, count, level });
-    }
-    setActivityData(data);
-  }, []);
-
-  useEffect(() => {
-    fetchProfile();
-  }, [username]);
 
   const fetchProfile = async () => {
-    try {
-      const { data } = await api.get(`/users/${username}/profile`);
-      setProfile(data.data);
-      setEditForm({
-        fullName: data.data.fullName || '',
-        bio: data.data.bio || '',
-        location: data.data.location || '',
-        linkedinUrl: data.data.linkedinUrl || '',
-        githubUrl: data.data.githubUrl || '',
-        twitterUrl: data.data.twitterUrl || '',
-        websiteUrl: data.data.websiteUrl || '',
-      });
-    } catch (error) {
-      console.error('Failed to fetch profile:', error);
-    } finally {
-      setLoading(false);
-    }
+    const { data } = await api.get(`/users/${username}/profile`);
+    return data.data as UserProfile;
   };
+
+  const { data: profile, isLoading: loading, error } = useQuery({
+    queryKey: ['profile', username],
+    queryFn: fetchProfile,
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setEditForm({
+        fullName: profile.fullName || '',
+        bio: profile.bio || '',
+        location: profile.location || '',
+        linkedinUrl: profile.linkedinUrl || '',
+        githubUrl: profile.githubUrl || '',
+        twitterUrl: profile.twitterUrl || '',
+        websiteUrl: profile.websiteUrl || '',
+      });
+    }
+  }, [profile]);
 
   const handleSaveProfile = async () => {
     try {
@@ -122,7 +110,7 @@ export default function ProfilePage() {
         websiteUrl: editForm.websiteUrl,
       });
 
-      await fetchProfile();
+      await queryClient.invalidateQueries({ queryKey: ['profile', username] });
       setShowEditModal(false);
     } catch (error) {
       console.error('Failed to update profile:', error);
@@ -148,7 +136,7 @@ export default function ProfilePage() {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
 
-      await fetchProfile();
+      await queryClient.invalidateQueries({ queryKey: ['profile', username] });
     } catch (error) {
       console.error('Failed to upload picture:', error);
       alert('Failed to upload picture');
@@ -182,8 +170,31 @@ export default function ProfilePage() {
     return (
       <>
         <Navbar />
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse">
+            <div className="bg-white dark:bg-dark-card rounded-lg shadow p-8 mb-6">
+              <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
+                <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                <div className="flex-1 w-full space-y-4">
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+                  <div className="flex gap-3">
+                    <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                    <div className="h-6 w-6 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
+                  <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mx-auto mb-2"></div>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mx-auto"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </>
     );
@@ -320,23 +331,39 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center">
-              <div className="text-3xl font-bold text-primary-600">{profile.problemsSolved}</div>
-              <div className="text-gray-600 dark:text-gray-400">Problems Solved</div>
+          {/* Stats & Difficulty Breakdown */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center md:col-span-2 flex items-center justify-between">
+              <div>
+                <div className="text-4xl font-bold text-primary-600 mb-1">{profile.problemsSolved}</div>
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Problems Solved</div>
+              </div>
+              <div className="flex gap-4 text-left">
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Easy</div>
+                  <div className="text-lg font-bold text-green-500">{profile.difficultyBreakdown?.Easy || 0}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Medium</div>
+                  <div className="text-lg font-bold text-yellow-500">{profile.difficultyBreakdown?.Medium || 0}</div>
+                </div>
+                <div>
+                  <div className="text-sm text-gray-500 mb-1">Hard</div>
+                  <div className="text-lg font-bold text-red-500">{profile.difficultyBreakdown?.Hard || 0}</div>
+                </div>
+              </div>
             </div>
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center">
-              <div className="text-3xl font-bold text-green-600">{profile.acceptedSubmissions}</div>
-              <div className="text-gray-600 dark:text-gray-400">Accepted</div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center flex flex-col justify-center">
+              <div className="text-3xl font-bold text-green-600 mb-1">{profile.acceptedSubmissions}</div>
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Accepted</div>
             </div>
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center">
-              <div className="text-3xl font-bold text-blue-600">{profile.rating}</div>
-              <div className="text-gray-600 dark:text-gray-400">Rating</div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center flex flex-col justify-center">
+              <div className="text-3xl font-bold text-blue-600 mb-1">{profile.rating}</div>
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Rating</div>
             </div>
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center">
-              <div className="text-3xl font-bold text-purple-600">#{profile.rank}</div>
-              <div className="text-gray-600 dark:text-gray-400">Global Rank</div>
+            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center flex flex-col justify-center">
+              <div className="text-3xl font-bold text-purple-600 mb-1">#{profile.rank}</div>
+              <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Global Rank</div>
             </div>
           </div>
 
@@ -346,9 +373,9 @@ export default function ProfilePage() {
               Submission Activity
             </h2>
             <div className="flex justify-center w-full overflow-x-auto pb-4 custom-scrollbar">
-              {activityData.length > 0 && (
+              {(profile.activityData && profile.activityData.length > 0) ? (
                 <ActivityCalendar
-                  data={activityData}
+                  data={profile.activityData}
                   theme={{
                     light: ['#ebedf0', '#9be9a8', '#40c463', '#30a14e', '#216e39'],
                     dark: ['#161b22', '#0e4429', '#006d32', '#26a641', '#39d353'],
@@ -376,36 +403,112 @@ export default function ProfilePage() {
                     weekdays: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
                   }}
                 />
+              ) : (
+                <div className="text-gray-500">No activity data yet.</div>
               )}
             </div>
           </div>
 
+          {/* Rating History */}
+          {profile.ratingHistory && profile.ratingHistory.length > 0 && (
+            <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                Rating History
+              </h2>
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={profile.ratingHistory.map(entry => ({
+                      ...entry,
+                      dateStr: new Date(entry.date).toLocaleDateString()
+                    }))}
+                    margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis dataKey="dateStr" stroke="#9ca3af" />
+                    <YAxis dataKey="newRating" stroke="#9ca3af" domain={['dataMin - 100', 'dataMax + 100']} />
+                    <Tooltip
+                      contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                      itemStyle={{ color: '#60a5fa' }}
+                    />
+                    <Line type="monotone" dataKey="newRating" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+
           {/* Recent Submissions */}
-          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6">
+          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-              Recent Accepted Submissions
+              Recent Submissions
             </h2>
             <div className="space-y-3">
-              {profile.recentSubmissions.map((submission) => (
-                <div
-                  key={submission.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
-                >
-                  <div>
-                    <div className="font-medium text-gray-900 dark:text-white">
-                      {submission.problem.title}
+              {profile.recentSubmissions && profile.recentSubmissions.length > 0 ? (
+                profile.recentSubmissions.map((submission) => (
+                  <div
+                    key={submission.id}
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                  >
+                    <div>
+                      <div className="font-medium text-gray-900 dark:text-white">
+                        {submission.problem.title}
+                      </div>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        {new Date(submission.submittedAt).toLocaleDateString()}
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                      {new Date(submission.submittedAt).toLocaleDateString()}
+                    <div className="flex items-center gap-3">
+                      <span
+                        className={`px-2 py-1 text-xs font-bold rounded ${
+                          submission.verdict === 'Accepted'
+                            ? 'text-green-600 bg-green-100 dark:bg-green-900/20'
+                            : 'text-red-600 bg-red-100 dark:bg-red-900/20'
+                        }`}
+                      >
+                        {submission.verdict}
+                      </span>
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded ${getDifficultyColor(submission.problem.difficulty)}`}
+                      >
+                        {submission.problem.difficulty}
+                      </span>
                     </div>
                   </div>
-                  <span
-                    className={`px-2 py-1 text-xs font-semibold rounded ${getDifficultyColor(submission.problem.difficulty)}`}
-                  >
-                    {submission.problem.difficulty}
-                  </span>
+                ))
+              ) : (
+                <div className="text-gray-500">No recent submissions.</div>
+              )}
+            </div>
+          </div>
+
+          {/* Badges / Achievements */}
+          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              Achievements
+            </h2>
+            <div className="flex flex-wrap gap-4">
+              {profile.acceptedSubmissions > 0 && (
+                <div className="flex flex-col items-center p-4 bg-primary-50 dark:bg-primary-900/10 rounded-xl border border-primary-100 dark:border-primary-900/20 w-28">
+                  <span className="text-3xl mb-2">🎯</span>
+                  <span className="text-xs font-bold text-primary-700 dark:text-primary-400 text-center">First AC</span>
                 </div>
-              ))}
+              )}
+              {profile.problemsSolved >= 100 && (
+                <div className="flex flex-col items-center p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-xl border border-yellow-100 dark:border-yellow-900/20 w-28">
+                  <span className="text-3xl mb-2">💯</span>
+                  <span className="text-xs font-bold text-yellow-700 dark:text-yellow-400 text-center">Centurion</span>
+                </div>
+              )}
+              {profile.rank <= 10 && profile.rank > 0 && (
+                <div className="flex flex-col items-center p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-900/20 w-28">
+                  <span className="text-3xl mb-2">🏆</span>
+                  <span className="text-xs font-bold text-purple-700 dark:text-purple-400 text-center">Top 10 Rank</span>
+                </div>
+              )}
+              {profile.acceptedSubmissions === 0 && (
+                <div className="text-sm text-gray-500">Solve some problems to earn badges!</div>
+              )}
             </div>
           </div>
         </div>

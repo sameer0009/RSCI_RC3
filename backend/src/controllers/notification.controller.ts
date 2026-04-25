@@ -59,6 +59,28 @@ export class NotificationController {
       });
     }
   };
+  getSettings = async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const settings = await notificationService.getSettings(userId);
+      res.json({ success: true, data: settings });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: { code: 'SETTINGS_FETCH_FAILED', message: 'Failed to fetch settings' } });
+    }
+  };
+
+  updateSettings = async (req: Request, res: Response) => {
+    try {
+      const userId = (req as any).user?.id;
+      const { emailNotifications, pushNotifications, contestReminders, marketingEmails } = req.body;
+      const settings = await notificationService.updateSettings(userId, {
+        emailNotifications, pushNotifications, contestReminders, marketingEmails
+      });
+      res.json({ success: true, data: settings });
+    } catch (error: any) {
+      res.status(500).json({ success: false, error: { code: 'SETTINGS_UPDATE_FAILED', message: 'Failed to update settings' } });
+    }
+  };
 }
 
 export default new NotificationController();

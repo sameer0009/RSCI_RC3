@@ -9,4 +9,7 @@ router.get('/', authenticate, notificationController.getNotifications);
 router.patch('/mark-all-read', authenticate, notificationController.markAllAsRead);
 router.patch('/:id/mark-read', authenticate, notificationController.markAsRead);
 
+router.get('/settings', authenticate, notificationController.getSettings);
+router.put('/settings', authenticate, notificationController.updateSettings);
+
 export default router;

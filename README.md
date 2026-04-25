@@ -14,23 +14,15 @@ RSCI-RC3 is a high-performance, industry-level competitive coding platform built
 - **OAuth 2.0**: One-click social login via **Google** and **GitHub**.
 - **Secure Sessions**: JWT-based authentication with **Refresh Token Rotation** and HTTP-only cookies.
 - **RBAC**: Granular Role-Based Access Control (`STUDENT`, `ADMIN`, `PROBLEM_SETTER`, `CONTEST_MANAGER`).
-- **Account Security**: Email verification and secure password reset flows.
 
 ### 🏆 Competitive Engine Hardening
-- **LeetCode-Style Penalties**: Automatic **+20 minute penalty** per Wrong Answer before an Accepted solution.
-- **Frozen Leaderboards**: Logic to "freeze" public rankings during the final hour of high-stakes contests.
-- **Virtual practiced**: Practice past contests with relative timers and a real-time competitive feel.
-- **Point-Based Evaluation**: Partial credit and weighted test case groups (Basic, Edge, Performance).
+- **LeetCode-Style Penalties**: Automatic **+20 minute penalty** per Wrong Answer.
+- **Frozen Leaderboards**: Ranking "freeze" logic for the final hour of contests.
+- **Point-Based Evaluation**: Partial credit and weighted test case groups.
 
 ### 📧 Asynchronous Infrastructure
-- **High-Performance Queues**: Built on **BullMQ** and Redis to handle non-blocking email and notifications.
-- **Real-Time Notifications**: Instant in-app alerts via **Socket.IO** for grading results, contest starts, and announcements.
-- **Template-Engine**: Professional HTML emails powered by **Handlebars**.
-
-### 🎓 Academic & Domain Panels
-- **Classroom Management**: Create cohorts, generate **Invite Codes**, and track student progress.
-- **Instructor Dashboard**: Detailed analytics on assignment completion and classroom leaderboards.
-- **Problem CMS**: Advanced markdown editor with boilerplate generation and bulk test-case uploads.
+- **High-Performance Queues**: Built on **BullMQ** and Redis for non-blocking jobs.
+- **Real-Time Notifications**: Instant grading results via **Socket.IO**.
 
 ---
 
@@ -40,77 +32,131 @@ RSCI-RC3 is a high-performance, industry-level competitive coding platform built
 - **Framework**: [Next.js 14](https://nextjs.org/) (App Router, TypeScript)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Editor**: [Monaco Editor](https://microsoft.github.io/monaco-editor/)
-- **State/Data**: React Query & Socket.io-client
 
 ### Backend
 - **Runtime**: [Node.js](https://nodejs.org/) & Express
 - **Database**: [PostgreSQL](https://www.postgresql.org/) with [Prisma ORM](https://www.prisma.io/)
 - **Caching/Queues**: [Redis](https://redis.io/) & BullMQ
-- **Real-time**: [Socket.IO](https://socket.io/)
 - **Judge**: [Judge0](https://judge0.com/) API Integration
 
 ---
 
-## 🚀 Quick Start (Production Setup)
+## 🚀 Getting Started
 
-The platform is fully containerized for a smooth one-click deployment.
+### 📋 Prerequisites
 
-### 1. Pre-requisites
-- **Docker & Docker Compose**
-- **Node.js 20+** (for local development)
+#### **For macOS / Linux**
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) or Docker Engine
+- [Node.js 20+](https://nodejs.org/)
+- [npm](https://www.npmjs.com/)
 
-### 2. Environment Setup
-Copy the production template and fill in your secrets.
-```bash
-cp .env.example .env
-```
-> [!IMPORTANT]
-> You must provide your own `GOOGLE_CLIENT_ID`, `SMTP_HOST`, and `JUDGE0_API_KEY` for full functionality.
-
-### 3. Launch with Docker
-```bash
-docker-compose up -d --build
-```
-This command starts:
-- **Postgres** (Port 5432)
-- **Redis** (Port 6379)
-- **Backend API** (Port 5000)
-- **Next.js Frontend** (Port 3000)
-
-### 4. Initialize Database
-```bash
-cd backend
-npx prisma db push
-npx prisma db seed
-```
+#### **For Windows**
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (WSL 2 backend recommended)
+- [Node.js 20+](https://nodejs.org/)
+- [Git for Windows](https://gitforwindows.org/) (provides Git Bash)
+- **Important**: Ensure Docker is running before starting the services.
 
 ---
 
-## 📂 Project Structure
+### ⚙️ Environment Setup
 
-```text
-RSCI-RC3/
-├── backend/               # Express API & Background Workers
-│   ├── src/
-│   │   ├── services/      # Enhanced Judge, Auth, Notification, Contest logic
-│   │   ├── workers/       # BullMQ Job Processors
-│   │   └── templates/     # Handlebars Email Templates
-│   └── prisma/            # Schema & Migration definitions
-├── frontend/              # Next.js Application
-└── docker-compose.yml     # Full-stack Orchestration
-```
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd RSCI_RC3
+   ```
+
+2. **Configure Environment Variables**:
+   
+   **macOS / Linux**:
+   ```bash
+   cp .env.example .env
+   cd backend && cp .env.example .env
+   cd ../frontend && cp .env.example .env
+   ```
+
+   **Windows (PowerShell)**:
+   ```powershell
+   copy .env.example .env
+   cd backend; copy .env.example .env
+   cd ../frontend; copy .env.example .env
+   ```
 
 ---
 
-## 🧪 Development & Testing
+### 🔑 Environment Variable Reference
 
-- **Backend Logs**: `docker logs coding-platform-backend -f`
-- **Unit Tests**: `npm run test` in respective directories.
-- **Health Check**: `GET /api/health`
+Depending on whether you are running the backend **locally** or **inside Docker**, your connection strings in `.env` will change:
+
+| Variable | Local Development (npm run dev) | Docker Deployment (docker-compose) |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `postgresql://...@localhost:5432/...` | `postgresql://...@postgres:5432/...` |
+| `REDIS_URL` | `redis://localhost:6379` | `redis://redis:6379` |
+| `JUDGE0_API_URL` | `http://localhost:2358` | `http://judge0-server:2358` |
+
+**Note for Windows Users**: If you are running the backend locally and it cannot connect to the Docker-hosted database, try using `127.0.0.1` instead of `localhost`.
+
+---
+
+
+---
+
+### 🐳 Deployment (Docker Recommended)
+
+The easiest way to get the full stack running is using Docker Compose.
+
+1. **Start all services**:
+   ```bash
+   docker-compose up -d --build
+   ```
+   This will spin up Postgres, Redis, Judge0, Backend, and Frontend.
+
+2. **Initialize Database**:
+   ```bash
+   cd backend
+   npx prisma db push
+   npx prisma db seed
+   ```
+
+---
+
+### 💻 Local Development (Manual)
+
+If you prefer to run the Backend and Frontend locally:
+
+1. **Start Infrastructure only**:
+   ```bash
+   # Starts only the databases and judge0
+   docker-compose up -d postgres redis judge0-db judge0-redis judge0-server judge0-worker
+   ```
+
+2. **Run Backend**:
+   ```bash
+   cd backend
+   npm install
+   npx prisma generate
+   npm run dev
+   ```
+
+3. **Run Frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+
+---
+
+## 🔧 Windows Troubleshooting
+
+- **Docker Permissions**: Run PowerShell/Command Prompt as **Administrator** if you encounter permission errors with Docker.
+- **WSL 2**: If using WSL 2, ensure your files are inside the WSL filesystem (e.g., `\\wsl$\Ubuntu\home\...`) for significantly better performance.
+- **Port Conflicts**: Ensure ports `3000`, `5000`, `5432`, and `6379` are not being used by other applications (like a local Postgres or Redis installation).
+
+---
 
 ## 📄 License
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
-
 **Built for the next generation of competitive programmers.**

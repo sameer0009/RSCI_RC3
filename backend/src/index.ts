@@ -12,6 +12,11 @@ import passport from './config/passport';
 import { testDatabaseConnection } from './config/database';
 import { connectRedis } from './config/redis';
 import './workers/email.worker'; // Import to start the worker
+import './workers/submission.worker'; // Start the submission worker
+import './workers/contest.worker'; // Start the contest worker
+import { csrfProtection } from './middleware/security.middleware';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swagger';
 
 dotenv.config();
 
@@ -29,7 +34,16 @@ const PORT = process.env.PORT || 5000;
 // Middleware
 app.use(
   helmet({
-    contentSecurityPolicy: false, // For development ease
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+        imgSrc: ["'self'", "data:", "http://localhost:5000", "https://*"],
+        fontSrc: ["'self'", "https://fonts.gstatic.com"],
+        connectSrc: ["'self'", "http://localhost:5000", "ws://localhost:5000"],
+      },
+    },
   })
 );
 app.use(
@@ -42,17 +56,28 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+app.use(csrfProtection);
 app.use(passport.initialize());
 
 // Rate Limiting
-const limiter = rateLimit({
+const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 300, // limit each IP to 300 requests per windowMs
   message: 'Too many requests from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
 });
-app.use('/api/', limiter);
+
+const submissionLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 30, // limit each IP to 30 submissions per minute
+  message: 'Slow down! You can only submit code 30 times per minute.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.use('/api/', generalLimiter);
+app.use('/api/submissions', submissionLimiter);
 
 // Socket.io basics
 io.on('connection', (socket) => {
@@ -65,6 +90,11 @@ io.on('connection', (socket) => {
       socket.join(rooms);
     }
     console.log(`👤 Socket ${socket.id} joined rooms:`, rooms);
+  });
+
+  socket.on('subscribeToSubmission', (submissionId) => {
+    socket.join(submissionId);
+    console.log(`👤 Socket ${socket.id} subscribed to submission:`, submissionId);
   });
 
   socket.on('disconnect', () => {
@@ -84,19 +114,16 @@ import routes from './routes';
 // Mount API routes
 app.use('/api', routes);
 
-// Error handling middleware
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  console.error(err.stack);
-  res.status(err.status || 500).json({
-    success: false,
-    error: {
-      code: err.code || 'INTERNAL_SERVER_ERROR',
-      message: err.message || 'An unexpected error occurred',
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
-    },
-    timestamp: new Date().toISOString(),
-  });
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Root redirect to documentation
+app.get('/', (req, res) => {
+  res.redirect('/api-docs');
 });
+
+import { errorHandler } from './middleware/error.middleware';
+app.use(errorHandler);
 
 // Initialize connections and start server
 async function startServer() {

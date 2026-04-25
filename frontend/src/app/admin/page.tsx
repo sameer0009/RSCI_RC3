@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
@@ -33,23 +34,15 @@ interface DashboardStats {
 }
 
 function AdminDashboardContent() {
-  const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchStats();
-  }, []);
-
   const fetchStats = async () => {
-    try {
-      const { data } = await api.get('/analytics/dashboard');
-      setStats(data.data);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    } finally {
-      setLoading(false);
-    }
+    const { data } = await api.get('/analytics/dashboard');
+    return data.data as DashboardStats;
   };
+
+  const { data: stats, isLoading: loading, error } = useQuery({
+    queryKey: ['adminDashboardStats'],
+    queryFn: fetchStats,
+  });
 
   const getVerdictColor = (verdict: string) => {
     switch (verdict) {
@@ -69,8 +62,21 @@ function AdminDashboardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg p-8 animate-pulse">
+        <div className="max-w-7xl mx-auto">
+          <div className="h-10 w-64 bg-gray-200 dark:bg-gray-700 rounded mb-8"></div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            ))}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            ))}
+            <div className="col-span-2 h-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+          </div>
+        </div>
       </div>
     );
   }

@@ -1,6 +1,4 @@
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '../config/database';
 
 interface ParticipantResult {
   userId: string;
@@ -42,12 +40,22 @@ export class RatingService {
         const newRatingData = newRatings.find((r) => r.userId === participant.userId);
         if (!newRatingData) return Promise.resolve();
 
-        return prisma.user.update({
+        const userUpdate = prisma.user.update({
           where: { id: participant.userId },
           data: {
             rating: Math.floor(newRatingData.newRating),
           },
         });
+
+        const participantUpdate = prisma.contestParticipant.update({
+          where: { id: participant.id },
+          data: {
+            oldRating: newRatingData.oldRating,
+            newRating: Math.floor(newRatingData.newRating),
+          },
+        });
+
+        return Promise.all([userUpdate, participantUpdate]);
       });
 
       await Promise.all(updatePromises);

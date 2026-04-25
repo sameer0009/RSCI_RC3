@@ -15,14 +15,14 @@ export class SubmissionController {
         });
       }
 
-      const { problemId, code, language, contestId } = req.body;
+      const { problemId, sourceCode: code, languageId: language, contestId } = req.body;
 
       if (!problemId || !code || !language) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Problem ID, code, and language are required',
+            message: 'Problem ID, sourceCode, and languageId are required',
           },
         });
       }
@@ -53,19 +53,19 @@ export class SubmissionController {
 
   runCode = async (req: Request, res: Response) => {
     try {
-      const { code, language, input } = req.body;
+      const { sourceCode: code, languageId: language, stdin } = req.body;
 
       if (!code || !language) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Code and language are required',
+            message: 'sourceCode and languageId are required',
           },
         });
       }
 
-      const result = await submissionService.runCode(code, language, input || '');
+      const result = await submissionService.runCode(code, language, stdin || '');
 
       res.json({
         success: true,
@@ -84,14 +84,14 @@ export class SubmissionController {
 
   runSampleTests = async (req: Request, res: Response) => {
     try {
-      const { problemId, code, language } = req.body;
+      const { problemId, sourceCode: code, languageId: language } = req.body;
 
       if (!problemId || !code || !language) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Problem ID, code, and language are required',
+            message: 'Problem ID, sourceCode, and languageId are required',
           },
         });
       }
@@ -152,6 +152,37 @@ export class SubmissionController {
 
       const result = await submissionService.getUserSubmissions(
         userId,
+        parseInt(page as string),
+        parseInt(limit as string)
+      );
+
+      res.json({
+        success: true,
+        data: result,
+      });
+    } catch (error: any) {
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'GET_SUBMISSIONS_FAILED',
+          message: error.message || 'Failed to fetch submissions',
+        },
+      });
+    }
+  };
+
+  getUserSubmissionsForProblem = async (req: Request, res: Response) => {
+    try {
+      const userId = req.user?.id;
+      if (!userId) {
+        return res.status(401).json({ success: false, error: { code: 'UNAUTHORIZED', message: 'Not authenticated' } });
+      }
+      const { problemId } = req.params;
+      const { page = '1', limit = '20' } = req.query;
+
+      const result = await submissionService.getUserSubmissionsForProblem(
+        userId,
+        problemId,
         parseInt(page as string),
         parseInt(limit as string)
       );

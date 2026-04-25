@@ -2,7 +2,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: 'USER' | 'ADMIN';
+  role: 'STUDENT' | 'ADMIN' | 'INSTRUCTOR' | 'PROBLEM_SETTER' | 'CONTEST_MANAGER';
   rating: number;
   rank: number;
   problemsSolved: number;
@@ -10,6 +10,8 @@ export interface User {
   createdAt: string;
   updatedAt: string;
 }
+
+export type ContestStatus = 'Upcoming' | 'Active' | 'Ended';
 
 export interface AuthTokens {
   accessToken: string;

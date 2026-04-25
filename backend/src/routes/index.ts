@@ -8,6 +8,10 @@ import profileRoutes from './profile.routes';
 import adminRoutes from './admin.routes';
 import notificationRoutes from './notification.routes';
 import classroomRoutes from './classroom.routes';
+import contestRoutes from './contest.routes';
+import solutionRoutes from './solution.routes';
+import commentRoutes from './comment.routes';
+import voteRoutes from './vote.routes';
 
 const router = Router();
 
@@ -21,6 +25,10 @@ router.use('/users', profileRoutes);
 router.use('/admin', adminRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/classrooms', classroomRoutes);
+router.use('/contests', contestRoutes);
+router.use('/solutions', solutionRoutes);
+router.use('/comments', commentRoutes);
+router.use('/votes', voteRoutes);
 
 // Health check
 router.get('/health', (req, res) => {

@@ -16,6 +16,7 @@ export default function ClassroomsPage() {
       const response = await api.get('/classrooms');
       return response.data.data;
     },
+    refetchInterval: 15000, // Poll every 15 seconds
   });
 
   return (

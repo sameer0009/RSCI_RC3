@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
@@ -14,6 +15,7 @@ interface Instructor {
 
 function CreateClassroomContent() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [instructors, setInstructors] = useState<Instructor[]>([]);
   const [formData, setFormData] = useState({
@@ -40,6 +42,8 @@ function CreateClassroomContent() {
     setLoading(true);
     try {
       await api.post('/classrooms', formData);
+      queryClient.invalidateQueries({ queryKey: ['adminClassrooms'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
       router.push('/admin/classrooms');
     } catch (error: any) {
       console.error('Failed to create classroom:', error);

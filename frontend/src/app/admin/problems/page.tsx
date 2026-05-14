@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
+import { useState } from 'react';
 
 interface Problem {
   id: string;
@@ -20,40 +21,39 @@ interface Problem {
 }
 
 function AdminProblemsContent() {
-  const [problems, setProblems] = useState<Problem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [difficulty, setDifficulty] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [problemToDelete, setProblemToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchProblems();
-  }, [search, difficulty]);
-
-  const fetchProblems = async () => {
-    try {
+  const { data: problems = [], isLoading: loading } = useQuery({
+    queryKey: ['adminProblems', search, difficulty],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (difficulty) params.append('difficulty', difficulty);
 
       const { data } = await api.get(`/admin/problems?${params.toString()}`);
-      setProblems(data.data.problems);
-    } catch (error) {
-      console.error('Failed to fetch problems:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data.data.problems as Problem[];
+    },
+    refetchInterval: 15000, // Poll every 15 seconds
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/admin/problems/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminProblems'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
+      setShowDeleteDialog(false);
+      setProblemToDelete(null);
+    },
+  });
 
   const handleDelete = async () => {
     if (!problemToDelete) return;
-
     try {
-      await api.delete(`/admin/problems/${problemToDelete}`);
-      setProblems(problems.filter((p) => p.id !== problemToDelete));
-      setShowDeleteDialog(false);
-      setProblemToDelete(null);
+      await deleteMutation.mutateAsync(problemToDelete);
     } catch (error) {
       console.error('Failed to delete problem:', error);
       alert('Failed to delete problem');

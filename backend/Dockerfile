@@ -27,4 +27,4 @@ COPY --from=builder /app/src/templates ./src/templates
 
 EXPOSE 5000
 
-CMD ["npm", "start"]
+CMD ["sh", "-c", "npx prisma db push && npm start"]

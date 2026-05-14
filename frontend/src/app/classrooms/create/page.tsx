@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
@@ -16,6 +16,7 @@ export default function CreateClassroomPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { data: instructors } = useQuery({
     queryKey: ['instructors'],
@@ -47,6 +48,8 @@ export default function CreateClassroomPage() {
       }
 
       const response = await api.post('/classrooms', payload);
+      queryClient.invalidateQueries({ queryKey: ['classrooms'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
       router.push(`/classrooms/${response.data.data.id}`);
     } catch (err: any) {
       setError(err.response?.data?.error?.message || 'Failed to create classroom.');

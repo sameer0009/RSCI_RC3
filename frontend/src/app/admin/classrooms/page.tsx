@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
@@ -21,29 +21,29 @@ interface Classroom {
 }
 
 function AdminClassroomsContent() {
-  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    fetchClassrooms();
-  }, []);
-
-  const fetchClassrooms = async () => {
-    try {
+  const { data: classrooms = [], isLoading: loading } = useQuery({
+    queryKey: ['adminClassrooms'],
+    queryFn: async () => {
       const { data } = await api.get('/classrooms');
-      setClassrooms(data.data);
-    } catch (error) {
-      console.error('Failed to fetch classrooms:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+      return data.data as Classroom[];
+    },
+    refetchInterval: 15000, // Poll every 15 seconds
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/classrooms/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminClassrooms'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
+    },
+  });
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this classroom?')) return;
     try {
-      await api.delete(`/classrooms/${id}`);
-      fetchClassrooms();
+      await deleteMutation.mutateAsync(id);
     } catch (error) {
       console.error('Failed to delete classroom:', error);
       alert('Failed to delete classroom');

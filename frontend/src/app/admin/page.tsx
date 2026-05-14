@@ -45,6 +45,7 @@ function AdminDashboardContent() {
   const { data: stats, isLoading: loading, error } = useQuery({
     queryKey: ['adminDashboardStats'],
     queryFn: fetchStats,
+    refetchInterval: 10000, // Poll every 10 seconds
   });
 
   const getVerdictColor = (verdict: string) => {

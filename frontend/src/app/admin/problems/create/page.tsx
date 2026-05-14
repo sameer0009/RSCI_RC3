@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 
@@ -14,6 +15,7 @@ interface TestCase {
 
 export default function CreateProblemPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -45,6 +47,9 @@ export default function CreateProblemPage() {
         topics: topicsArray,
         testCases: testCases.filter((tc) => tc.input && tc.expectedOutput),
       });
+
+      queryClient.invalidateQueries({ queryKey: ['adminProblems'] });
+      queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
 
       alert('Problem created successfully!');
       router.push('/admin/problems');

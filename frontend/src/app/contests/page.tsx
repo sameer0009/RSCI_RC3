@@ -29,6 +29,7 @@ export default function ContestsPage() {
       const res = await api.get(`/contests?status=${activeTab}`);
       return res.data.data.contests as Contest[];
     },
+    refetchInterval: 20000, // Poll every 20 seconds
   });
 
   return (

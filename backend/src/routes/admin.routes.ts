@@ -17,6 +17,7 @@ router.delete('/problems/:id', adminController.deleteProblem);
 router.post('/problems/:id/testcases/bulk', adminController.bulkUploadTestCases);
 
 // User management routes
+router.post('/users', adminController.createUser);
 router.get('/users/search', adminController.searchUsers);
 router.get('/users', adminController.listUsers);
 router.get('/users/:id', adminController.getUser);

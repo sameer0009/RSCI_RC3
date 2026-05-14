@@ -58,6 +58,8 @@ model User {
   studentClasses      ClassroomMember[] @relation("StudentClassrooms")
 
 
+  assignmentSubmissions AssignmentSubmission[]
+
   @@index([username])
   @@index([email])
   @@index([fullName])
@@ -493,5 +495,29 @@ model Assignment {
   classroom   Classroom    @relation(fields: [classroomId], references: [id], onDelete: Cascade)
   problems    Problem[]    @relation("AssignmentProblems")
 
+  submissions AssignmentSubmission[]
+
   @@index([classroomId])
+}
+
+model AssignmentSubmission {
+  id           String   @id @default(uuid())
+  assignmentId String
+  userId       String
+  submittedAt  DateTime @default(now())
+  status       AssignmentStatus @default(SUBMITTED)
+  feedback     String?  @db.Text
+  grade        Float?
+
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([assignmentId, userId])
+  @@index([assignmentId])
+  @@index([userId])
+}
+
+enum AssignmentStatus {
+  SUBMITTED
+  GRADED
 }

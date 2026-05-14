@@ -4,8 +4,9 @@ import classroomService from '../services/classroom.service';
 export class ClassroomController {
   createClassroom = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
-      const classroom = await classroomService.createClassroom(userId, req.body);
+      const isAdmin = (req as any).user.role === 'ADMIN';
+      const instructorId = (isAdmin && req.body.instructorId) ? req.body.instructorId : (req as any).user.id;
+      const classroom = await classroomService.createClassroom(instructorId, req.body);
 
       res.status(201).json({
         success: true,
@@ -44,7 +45,9 @@ export class ClassroomController {
       const role = (req as any).user.role;
 
       let classrooms;
-      if (role === 'CONTEST_MANAGER' || role === 'ADMIN') {
+      if (role === 'ADMIN') {
+        classrooms = await classroomService.getAllClassrooms();
+      } else if (role === 'INSTRUCTOR' || role === 'CONTEST_MANAGER') {
         classrooms = await classroomService.getInstructorClassrooms(userId);
       } else {
         classrooms = await classroomService.getStudentClassrooms(userId);
@@ -89,7 +92,8 @@ export class ClassroomController {
   createAssignment = async (req: Request, res: Response) => {
     try {
       const { id } = req.params; // classroomId
-      const assignment = await classroomService.createAssignment(id, req.body);
+      const userId = (req as any).user.id;
+      const assignment = await classroomService.createAssignment(id, userId, req.body);
 
       res.status(201).json({
         success: true,
@@ -103,6 +107,42 @@ export class ClassroomController {
     }
   };
 
+  updateAssignment = async (req: Request, res: Response) => {
+    try {
+      const { assignmentId } = req.params;
+      const userId = (req as any).user.id;
+      const assignment = await classroomService.updateAssignment(assignmentId, userId, req.body);
+
+      res.json({
+        success: true,
+        data: assignment,
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'UPDATE_ASSIGNMENT_FAILED', message: error.message },
+      });
+    }
+  };
+
+  deleteAssignment = async (req: Request, res: Response) => {
+    try {
+      const { assignmentId } = req.params;
+      const userId = (req as any).user.id;
+      await classroomService.deleteAssignment(assignmentId, userId);
+
+      res.json({
+        success: true,
+        message: 'Assignment deleted successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'DELETE_ASSIGNMENT_FAILED', message: error.message },
+      });
+    }
+  };
+
   getLeaderboard = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -110,6 +150,25 @@ export class ClassroomController {
       res.json({ success: true, data: leaderboard });
     } catch (error: any) {
       res.status(500).json({ success: false, error: { code: 'FETCH_LEADERBOARD_FAILED', message: error.message } });
+    }
+  };
+
+  getAssignmentDetails = async (req: Request, res: Response) => {
+    try {
+      const { assignmentId } = req.params;
+      const userId = (req as any).user.id;
+      const details = await classroomService.getAssignmentDetails(assignmentId, userId);
+      res.json({ success: true, data: details });
+    } catch (error: any) {
+      console.error(`[getAssignmentDetails] Error: ${error.message}`);
+      const status = error.message.includes('access') ? 403 : 404;
+      res.status(status).json({ 
+        success: false, 
+        error: { 
+          code: status === 403 ? 'ACCESS_DENIED' : 'FETCH_ASSIGNMENT_FAILED', 
+          message: error.message 
+        } 
+      });
     }
   };
 
@@ -130,6 +189,45 @@ export class ClassroomController {
       res.json({ success: true, data: analytics });
     } catch (error: any) {
       res.status(500).json({ success: false, error: { code: 'FETCH_ANALYTICS_FAILED', message: error.message } });
+    }
+  };
+
+  updateClassroom = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const classroom = await classroomService.updateClassroom(id, req.body);
+      res.json({ success: true, data: classroom });
+    } catch (error: any) {
+      res.status(400).json({ success: false, error: { code: 'UPDATE_CLASSROOM_FAILED', message: error.message } });
+    }
+  };
+
+  deleteClassroom = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await classroomService.deleteClassroom(id);
+      res.json({ success: true, message: 'Classroom deleted successfully' });
+    } catch (error: any) {
+      res.status(400).json({ success: false, error: { code: 'DELETE_CLASSROOM_FAILED', message: error.message } });
+    }
+  };
+
+  submitAssignment = async (req: Request, res: Response) => {
+    try {
+      const { assignmentId } = req.params;
+      const userId = (req as any).user.id;
+      const submission = await classroomService.submitAssignment(assignmentId, userId);
+
+      res.status(201).json({
+        success: true,
+        data: submission,
+        message: 'Assignment submitted successfully',
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'SUBMIT_ASSIGNMENT_FAILED', message: error.message },
+      });
     }
   };
 }

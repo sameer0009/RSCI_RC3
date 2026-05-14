@@ -35,7 +35,15 @@ const router = Router();
  *       400:
  *         description: Validation error
  */
-router.post('/register', registerValidation, validate, authController.register);
+router.post('/register', (req, res) => {
+  res.status(403).json({
+    success: false,
+    error: {
+      code: 'REGISTRATION_DISABLED',
+      message: 'Public registration is disabled. Please contact an admin for an account.',
+    },
+  });
+});
 
 /**
  * @swagger

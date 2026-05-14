@@ -4,8 +4,33 @@ import { RatingService } from './rating.service';
 
 class ContestService {
   async createContest(data: any) {
+    const { problemIds, ...contestData } = data;
     return prisma.contest.create({
-      data,
+      data: {
+        ...contestData,
+        problems: problemIds ? {
+          connect: problemIds.map((id: string) => ({ id })),
+        } : undefined,
+      },
+    });
+  }
+
+  async updateContest(id: string, data: any) {
+    const { problemIds, ...contestData } = data;
+    return prisma.contest.update({
+      where: { id },
+      data: {
+        ...contestData,
+        problems: problemIds ? {
+          set: problemIds.map((pid: string) => ({ id: pid })),
+        } : undefined,
+      },
+    });
+  }
+
+  async deleteContest(id: string) {
+    return prisma.contest.delete({
+      where: { id },
     });
   }
 

@@ -161,6 +161,44 @@ export class ContestController {
       });
     }
   };
+
+  createContest = async (req: Request, res: Response) => {
+    try {
+      const contest = await contestService.createContest(req.body);
+      res.status(201).json({ success: true, data: { contest } });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'CREATE_CONTEST_FAILED', message: error.message },
+      });
+    }
+  };
+
+  updateContest = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const contest = await contestService.updateContest(id, req.body);
+      res.json({ success: true, data: { contest } });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'UPDATE_CONTEST_FAILED', message: error.message },
+      });
+    }
+  };
+
+  deleteContest = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      await contestService.deleteContest(id);
+      res.json({ success: true, message: 'Contest deleted successfully' });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'DELETE_CONTEST_FAILED', message: error.message },
+      });
+    }
+  };
 }
 
 export default new ContestController();

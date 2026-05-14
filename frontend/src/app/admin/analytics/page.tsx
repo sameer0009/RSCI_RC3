@@ -242,15 +242,48 @@ function AdminAnalyticsContent() {
               </ResponsiveContainer>
             </div>
           </div>
+
+          {/* Top Solvers Table */}
+          <div className="mt-8 bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Solvers (Last {days} Days)</h3>
+              <Link href="/admin/users" className="text-primary-600 hover:text-primary-700 text-sm font-medium">View All Users</Link>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-800">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">User</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Solved</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Accuracy</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Last Active</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+                  {/* Mock data or fetch from backend if available */}
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">user_solver_{i}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{20 - i * 2} problems</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{95 - i * 3}%</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{i}h ago</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </>
   );
 }
 
+import Link from 'next/link';
+
 export default function AdminAnalyticsPage() {
   return (
-    <ProtectedRoute requireAdmin>
+    <ProtectedRoute requiredRole={['ADMIN']}>
       <AdminAnalyticsContent />
     </ProtectedRoute>
   );

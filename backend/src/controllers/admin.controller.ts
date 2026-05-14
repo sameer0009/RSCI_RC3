@@ -184,6 +184,31 @@ class AdminController {
   // ============ USER MANAGEMENT ============
 
   /**
+   * Create user
+   * POST /api/admin/users
+   */
+  createUser = async (req: Request, res: Response) => {
+    try {
+      const user = await adminService.createUser(req.body);
+
+      res.status(201).json({
+        success: true,
+        data: user,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: {
+          code: 'CREATE_USER_FAILED',
+          message: error.message || 'Failed to create user',
+        },
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
+  /**
    * List users
    * GET /api/admin/users
    */

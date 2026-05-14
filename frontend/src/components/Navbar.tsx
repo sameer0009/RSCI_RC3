@@ -45,7 +45,7 @@ export default function Navbar() {
                 >
                   Leaderboard
                 </Link>
-                {(user?.role === 'INSTRUCTOR' || user?.role === 'CONTEST_MANAGER' || user?.role === 'ADMIN' || (user?.role === 'STUDENT' && true)) && (
+                {(user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' || user?.role === 'STUDENT') && (
                   <Link
                     href="/classrooms"
                     className="text-gray-300 hover:text-white transition-colors font-medium"
@@ -53,10 +53,26 @@ export default function Navbar() {
                     Classrooms
                   </Link>
                 )}
+                {(user?.role === 'ADMIN' || user?.role === 'PROBLEM_SETTER') && (
+                  <Link
+                    href="/admin/problems"
+                    className="text-blue-400 hover:text-blue-300 transition-colors font-medium text-sm border border-blue-400/30 px-2 py-0.5 rounded"
+                  >
+                    Manage Problems
+                  </Link>
+                )}
+                {(user?.role === 'ADMIN' || user?.role === 'CONTEST_MANAGER') && (
+                  <Link
+                    href="/admin/competitions"
+                    className="text-green-400 hover:text-green-300 transition-colors font-medium text-sm border border-green-400/30 px-2 py-0.5 rounded"
+                  >
+                    Manage Contests
+                  </Link>
+                )}
                 {isAdmin && (
                   <Link
                     href="/admin"
-                    className="text-gray-300 hover:text-white transition-colors font-medium flex items-center gap-1"
+                    className="text-purple-400 hover:text-purple-300 transition-colors font-medium flex items-center gap-1 border border-purple-400/30 px-2 py-0.5 rounded"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -113,15 +129,9 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="text-gray-300 hover:text-white transition-colors font-medium"
+                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all"
                 >
                   Login
-                </Link>
-                <Link
-                  href="/register"
-                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-blue-600 hover:from-primary-700 hover:to-blue-700 rounded-lg transition-all hover:shadow-glow"
-                >
-                  Sign Up
                 </Link>
               </>
             )}

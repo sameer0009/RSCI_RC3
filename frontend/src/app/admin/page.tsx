@@ -15,7 +15,10 @@ interface DashboardStats {
     totalContests: number;
     activeUsers: number;
     acceptanceRate: string;
+    activeContests: number;
+    activeClassrooms: number;
   };
+  usersByRole: Array<{ role: string; count: number }>;
   problemsByDifficulty: Array<{ difficulty: string; count: number }>;
   submissionsByVerdict: Array<{ verdict: string; count: number }>;
   recentSubmissions: Array<{
@@ -110,58 +113,60 @@ function AdminDashboardContent() {
               </div>
             </div>
 
-            {/* Quick Links */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            {/* Quick Actions */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
               <Link
-                href="/admin/problems"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-l-4 border-blue-500"
+                href="/admin/users"
+                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-purple-500 text-center"
               >
-                <div className="flex items-center gap-3">
-                  <div className="text-3xl">📝</div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Problems</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Manage problems</p>
-                  </div>
-                </div>
+                <div className="text-3xl mb-2">👥</div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Users</h3>
+                <p className="text-xs text-gray-500 mt-1">Manage accounts</p>
               </Link>
 
               <Link
-                href="/admin/users"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-l-4 border-green-500"
+                href="/admin/problems"
+                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-blue-500 text-center"
               >
-                <div className="flex items-center gap-3">
-                  <div className="text-3xl">👥</div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Users</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Manage users</p>
-                  </div>
-                </div>
+                <div className="text-3xl mb-2">📝</div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Problems</h3>
+                <p className="text-xs text-gray-500 mt-1">Manage bank</p>
+              </Link>
+
+              <Link
+                href="/admin/competitions"
+                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-green-500 text-center"
+              >
+                <div className="text-3xl mb-2">🏆</div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Contests</h3>
+                <p className="text-xs text-gray-500 mt-1">Manage events</p>
+              </Link>
+
+              <Link
+                href="/admin/classrooms"
+                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-orange-500 text-center"
+              >
+                <div className="text-3xl mb-2">🏫</div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Classes</h3>
+                <p className="text-xs text-gray-500 mt-1">Manage learning</p>
               </Link>
 
               <Link
                 href="/admin/analytics"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-l-4 border-purple-500"
+                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-pink-500 text-center"
               >
-                <div className="flex items-center gap-3">
-                  <div className="text-3xl">📈</div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Analytics</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">View charts</p>
-                  </div>
-                </div>
+                <div className="text-3xl mb-2">📈</div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Analytics</h3>
+                <p className="text-xs text-gray-500 mt-1">View reports</p>
               </Link>
 
               <Link
                 href="/leaderboard"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-l-4 border-yellow-500"
+                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-yellow-500 text-center"
               >
-                <div className="flex items-center gap-3">
-                  <div className="text-3xl">🏆</div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">Leaderboard</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">View rankings</p>
-                  </div>
-                </div>
+                <div className="text-3xl mb-2">🏅</div>
+                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Rankings</h3>
+                <p className="text-xs text-gray-500 mt-1">Global board</p>
               </Link>
             </div>
           </div>
@@ -231,17 +236,27 @@ function AdminDashboardContent() {
 
             <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow col-span-2">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Submissions by Verdict
+                Platform Summary
               </h3>
-              <div className="grid grid-cols-2 gap-4">
-                {stats.submissionsByVerdict.map((item) => (
-                  <div key={item.verdict} className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">{item.verdict}</span>
-                    <span className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {item.count}
-                    </span>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Active Contests</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.overview.activeContests}</p>
+                </div>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Active Classes</p>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.overview.activeClassrooms}</p>
+                </div>
+                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg col-span-2">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-2">User Roles Breakdown</p>
+                  <div className="flex flex-wrap gap-2">
+                    {stats.usersByRole.map(item => (
+                      <span key={item.role} className="px-2 py-1 bg-white dark:bg-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
+                        {item.role}: {item.count}
+                      </span>
+                    ))}
                   </div>
-                ))}
+                </div>
               </div>
             </div>
           </div>
@@ -318,7 +333,7 @@ function AdminDashboardContent() {
 
 export default function AdminDashboardPage() {
   return (
-    <ProtectedRoute requireAdmin>
+    <ProtectedRoute requiredRole={['ADMIN']}>
       <AdminDashboardContent />
     </ProtectedRoute>
   );

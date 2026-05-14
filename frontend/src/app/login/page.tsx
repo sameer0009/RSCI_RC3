@@ -64,12 +64,6 @@ function LoginContent() {
               <Link href="/" className="text-gray-300 hover:text-white transition-colors">
                 Home
               </Link>
-              <Link
-                href="/register"
-                className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-lg transition-all hover:shadow-glow"
-              >
-                Sign Up
-              </Link>
             </div>
           </div>
         </div>
@@ -180,13 +174,7 @@ function LoginContent() {
 
               <div className="text-center">
                 <p className="text-gray-400">
-                  Don&apos;t have an account?{' '}
-                  <Link
-                    href="/register"
-                    className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
-                  >
-                    Create one now
-                  </Link>
+                  Public registration is disabled. Please contact an admin for an account.
                 </p>
               </div>
             </form>

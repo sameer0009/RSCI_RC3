@@ -42,16 +42,10 @@ export default function Home() {
                 ) : (
                   <>
                     <Link
-                      href="/register"
-                      className="px-8 py-4 bg-gradient-to-r from-primary-600 to-blue-600 text-white rounded-xl hover:from-primary-700 hover:to-blue-700 font-semibold text-lg transition-all transform hover:scale-105 hover:shadow-glow"
-                    >
-                      Get Started Free
-                    </Link>
-                    <Link
                       href="/login"
-                      className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white border-2 border-white/20 rounded-xl hover:bg-white/20 font-semibold text-lg transition-all"
+                      className="px-12 py-4 bg-gradient-to-r from-primary-600 to-blue-600 text-white rounded-xl hover:from-primary-700 hover:to-blue-700 font-semibold text-lg transition-all transform hover:scale-105 hover:shadow-glow"
                     >
-                      Sign In
+                      Sign In to Code →
                     </Link>
                   </>
                 )}

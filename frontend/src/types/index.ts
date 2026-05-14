@@ -2,6 +2,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
+  fullName: string | null;
   role: 'STUDENT' | 'ADMIN' | 'INSTRUCTOR' | 'PROBLEM_SETTER' | 'CONTEST_MANAGER';
   rating: number;
   rank: number;

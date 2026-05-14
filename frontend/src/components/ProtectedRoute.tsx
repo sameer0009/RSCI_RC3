@@ -7,9 +7,10 @@ import { useAuth } from '@/contexts/AuthContext';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   requireAdmin?: boolean;
+  requiredRole?: string[];
 }
 
-export default function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
+export default function ProtectedRoute({ children, requireAdmin = false, requiredRole }: ProtectedRouteProps) {
   const { user, loading, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
 
@@ -19,9 +20,11 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
         router.push('/login');
       } else if (requireAdmin && !isAdmin) {
         router.push('/');
+      } else if (requiredRole && user && !requiredRole.includes(user.role)) {
+        router.push('/');
       }
     }
-  }, [loading, isAuthenticated, isAdmin, requireAdmin, router]);
+  }, [loading, isAuthenticated, isAdmin, requireAdmin, requiredRole, user, router]);
 
   if (loading) {
     return (
@@ -34,7 +37,7 @@ export default function ProtectedRoute({ children, requireAdmin = false }: Prote
     );
   }
 
-  if (!isAuthenticated || (requireAdmin && !isAdmin)) {
+  if (!isAuthenticated || (requireAdmin && !isAdmin) || (requiredRole && user && !requiredRole.includes(user.role))) {
     return null;
   }
 

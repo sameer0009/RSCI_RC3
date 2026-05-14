@@ -131,9 +131,12 @@ export default function ClassroomDetailPage() {
               <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">Assignments</h2>
                 {isInstructor && (
-                  <button className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700">
+                  <Link
+                    href={`/classrooms/${id}/assignments/create`}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors inline-block"
+                  >
                     + New Assignment
-                  </button>
+                  </Link>
                 )}
               </div>
               {classroom.assignments.length === 0 ? (

@@ -129,7 +129,16 @@ export class ProblemController {
       const { slug } = req.params;
       const isAdmin = req.user?.role === 'ADMIN';
 
-      const problem = await problemService.getProblemBySlug(slug, isAdmin);
+      let problem = await problemService.getProblemBySlug(slug, isAdmin);
+
+      // Fallback: If not found by slug, try by ID (in case ID was passed as slug)
+      if (!problem) {
+        // Simple regex check for UUID format
+        const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+        if (isUuid) {
+          problem = await problemService.getProblemById(slug, isAdmin);
+        }
+      }
 
       if (!problem) {
         return res.status(404).json({

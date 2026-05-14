@@ -8,10 +8,43 @@ const router = Router();
 
 router.use(authenticate);
 
+// Specific routes first
+router.get(
+  '/assignments/:assignmentId',
+  classroomController.getAssignmentDetails
+);
+
+router.post(
+  '/assignments/:assignmentId/submit',
+  classroomController.submitAssignment
+);
+
+router.get(
+  '/assignments/:assignmentId/progress',
+  authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
+  classroomController.getAssignmentProgress
+);
+
+router.put(
+  '/assignments/:assignmentId',
+  authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
+  classroomController.updateAssignment
+);
+
+router.delete(
+  '/assignments/:assignmentId',
+  authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
+  classroomController.deleteAssignment
+);
+
 // Student routes
 router.post('/join', classroomController.joinClassroom);
 router.get('/', classroomController.getClassrooms);
+
+// Classroom specific routes
 router.get('/:id', classroomController.getClassroomDetails);
+router.get('/:id/leaderboard', classroomController.getLeaderboard);
+router.get('/:id/analytics', authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'), classroomController.getInstructorAnalytics);
 
 // Instructor routes
 router.post(
@@ -29,19 +62,17 @@ router.post(
   validate,
   classroomController.createAssignment
 );
-router.get(
-  '/:id/leaderboard',
-  classroomController.getLeaderboard
+
+router.put(
+  '/:id',
+  authorize('ADMIN'),
+  classroomController.updateClassroom
 );
-router.get(
-  '/assignments/:assignmentId/progress',
-  authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
-  classroomController.getAssignmentProgress
-);
-router.get(
-  '/:id/analytics',
-  authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
-  classroomController.getInstructorAnalytics
+
+router.delete(
+  '/:id',
+  authorize('ADMIN'),
+  classroomController.deleteClassroom
 );
 
 export default router;

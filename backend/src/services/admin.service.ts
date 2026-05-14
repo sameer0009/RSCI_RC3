@@ -1,4 +1,5 @@
 import { Difficulty, Role } from '@prisma/client';
+import bcrypt from 'bcrypt';
 import prisma from '../config/database';
 
 interface CreateProblemDto {
@@ -52,6 +53,14 @@ interface UserFilters {
   limit?: number;
   role?: Role;
   search?: string;
+}
+
+interface CreateUserDto {
+  username: string;
+  email: string;
+  password: string;
+  fullName?: string;
+  role: Role;
 }
 
 class AdminService {
@@ -247,6 +256,57 @@ class AdminService {
   }
 
   // ============ USER MANAGEMENT ============
+
+  /**
+   * Create a new user
+   */
+  async createUser(data: CreateUserDto) {
+    const { username, email, password, fullName, role } = data;
+
+    // Security check: Don't allow creating admins through this endpoint
+    if (role === Role.ADMIN) {
+      throw new Error('Cannot create an admin user through this endpoint');
+    }
+
+    // Check if user already exists
+    const existing = await prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+
+    if (existing) {
+      if (existing.email === email) throw new Error('Email already registered');
+      if (existing.username === username) throw new Error('Username already taken');
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Create user
+    const user = await prisma.user.create({
+      data: {
+        username,
+        email,
+        passwordHash,
+        role,
+        fullName,
+        notificationSetting: {
+          create: {}, // Default settings
+        },
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullName: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    return user;
+  }
 
   /**
    * List all users with filters

@@ -1,7 +1,8 @@
 import prisma from '../config/database';
 
 export class AnalyticsService {
-  async getDashboardStats() {
+  async getDashboardStats(days: number = 7) {
+    const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
     const [
       totalUsers,
       totalProblems,
@@ -11,9 +12,12 @@ export class AnalyticsService {
       recentSubmissions,
       problemsByDifficulty,
       submissionsByVerdict,
+      activeContests,
+      activeClassrooms,
+      usersByRole,
     ] = await Promise.all([
-      // Total users
-      prisma.user.count({ where: { role: 'STUDENT' } }),
+      // Total users (All roles)
+      prisma.user.count(),
 
       // Total problems
       prisma.problem.count(),
@@ -27,11 +31,10 @@ export class AnalyticsService {
       // Active users (submitted in last 7 days)
       prisma.user.count({
         where: {
-          role: 'STUDENT',
           submissions: {
             some: {
               submittedAt: {
-                gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+                gte: startDate,
               },
             },
           },
@@ -68,6 +71,23 @@ export class AnalyticsService {
         by: ['verdict'],
         _count: true,
       }),
+
+      // Active contests
+      prisma.contest.count({
+        where: {
+          endTime: { gte: new Date() },
+          startTime: { lte: new Date() },
+        },
+      }),
+
+      // Active classrooms
+      prisma.classroom.count(),
+
+      // Users by role
+      prisma.user.groupBy({
+        by: ['role'],
+        _count: true,
+      }),
     ]);
 
     // Calculate acceptance rate
@@ -90,8 +110,8 @@ export class AnalyticsService {
       take: 5,
     });
 
-    // Submissions over time (last 7 days)
-    const submissionsOverTime = await this.getSubmissionsOverTime(7);
+    // Submissions over time
+    const submissionsOverTime = await this.getSubmissionsOverTime(days);
 
     return {
       overview: {
@@ -101,7 +121,13 @@ export class AnalyticsService {
         totalContests,
         activeUsers,
         acceptanceRate,
+        activeContests,
+        activeClassrooms,
       },
+      usersByRole: usersByRole.map((item) => ({
+        role: item.role,
+        count: item._count,
+      })),
       problemsByDifficulty: problemsByDifficulty.map((item) => ({
         difficulty: item.difficulty,
         count: item._count,

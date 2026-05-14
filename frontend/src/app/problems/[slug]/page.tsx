@@ -2,11 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import api from '@/lib/api';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { Terminal, Play, CheckCircle, Settings, GripVertical, GripHorizontal } from 'lucide-react';
+import { Terminal, Play, CheckCircle, Settings, GripVertical, GripHorizontal, ArrowLeft } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 interface Problem {
@@ -48,6 +48,7 @@ interface TestCaseResult {
 
 export default function ProblemDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const slug = params.slug as string;
 
   const [language, setLanguage] = useState('javascript');
@@ -100,7 +101,10 @@ export default function ProblemDetailPage() {
   }, []);
 
   const fetchProblem = async () => {
-    const { data } = await api.get(`/problems/slug/${slug}`);
+    // Detect if slug is actually a UUID ID
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug);
+    const endpoint = isUuid ? `/problems/${slug}` : `/problems/slug/${slug}`;
+    const { data } = await api.get(endpoint);
     return data.data.problem as Problem;
   };
 
@@ -574,11 +578,34 @@ export default function ProblemDetailPage() {
                     {testingSamples ? 'Testing...' : 'Test'}
                   </button>
                   <button
-                    onClick={handleSubmit}
-                    disabled={running || submitting || testingSamples}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                    onClick={() => {
+                      if (submissionResult && !submitting) {
+                        router.back();
+                      } else {
+                        handleSubmit();
+                      }
+                    }}
+                    disabled={submitting || running || testingSamples}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      submissionResult && !submitting
+                        ? 'bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-[#3d3d3d]'
+                        : 'bg-primary-600 text-white hover:bg-primary-700'
+                    } disabled:opacity-50`}
                   >
-                    <CheckCircle size={14} /> {submitting ? 'Submitting...' : 'Submit'}
+                    {submitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                        Submitting...
+                      </>
+                    ) : submissionResult ? (
+                      <>
+                        <ArrowLeft size={14} /> Back
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={14} /> Submit
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

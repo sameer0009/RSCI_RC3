@@ -4,7 +4,8 @@ import analyticsService from '../services/analytics.service';
 export class AnalyticsController {
   getDashboardStats = async (req: Request, res: Response) => {
     try {
-      const stats = await analyticsService.getDashboardStats();
+      const { days = '7' } = req.query;
+      const stats = await analyticsService.getDashboardStats(parseInt(days as string));
 
       res.json({
         success: true,

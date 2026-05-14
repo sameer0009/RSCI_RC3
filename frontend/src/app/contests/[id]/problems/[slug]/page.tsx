@@ -625,11 +625,34 @@ export default function ProblemDetailPage() {
                     {testingSamples ? 'Testing...' : 'Test'}
                   </button>
                   <button
-                    onClick={handleSubmit}
-                    disabled={running || submitting || testingSamples}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-primary-600 text-white rounded-md hover:bg-primary-700 disabled:opacity-50 transition-colors"
+                    onClick={() => {
+                      if (submissionResult && !submitting) {
+                        router.back();
+                      } else {
+                        handleSubmit();
+                      }
+                    }}
+                    disabled={submitting || running || testingSamples}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                      submissionResult && !submitting
+                        ? 'bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-[#3d3d3d]'
+                        : 'bg-primary-600 text-white hover:bg-primary-700'
+                    } disabled:opacity-50`}
                   >
-                    <CheckCircle size={14} /> {submitting ? 'Submitting...' : 'Submit'}
+                    {submitting ? (
+                      <>
+                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                        Submitting...
+                      </>
+                    ) : submissionResult ? (
+                      <>
+                        <ArrowLeft size={14} /> Back
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle size={14} /> Submit
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

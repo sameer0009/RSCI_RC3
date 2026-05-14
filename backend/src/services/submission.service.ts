@@ -17,6 +17,21 @@ import { addSubmissionJob } from '../queues/submission.queue';
 
 export class SubmissionService {
   async createSubmission(data: CreateSubmissionData): Promise<Submission> {
+    // 1. Contest participant check
+    if (data.contestId) {
+      const participant = await prisma.contestParticipant.findUnique({
+        where: {
+          contestId_userId: {
+            contestId: data.contestId,
+            userId: data.userId
+          }
+        }
+      });
+      if (!participant) {
+        throw new Error('You are not a participant in this contest');
+      }
+    }
+
     const submission = await prisma.submission.create({
       data: {
         ...data,

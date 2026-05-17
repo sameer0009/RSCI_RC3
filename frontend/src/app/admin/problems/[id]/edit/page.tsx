@@ -79,7 +79,9 @@ export default function EditProblemPage() {
       await api.put(`/admin/problems/${id}`, {
         ...formData,
         topics: topicsArray,
-        testCases: testCases.filter((tc) => tc.input && tc.expectedOutput).map(({ id: tcId, ...rest }) => tcId ? { id: tcId, ...rest } : rest),
+        testCases: testCases
+          .filter((tc) => (tc.input || '').trim() !== '' || (tc.expectedOutput || '').trim() !== '')
+          .map(({ id: tcId, ...rest }) => (tcId ? { id: tcId, ...rest } : rest)),
       });
 
       queryClient.invalidateQueries({ queryKey: ['adminProblems'] });

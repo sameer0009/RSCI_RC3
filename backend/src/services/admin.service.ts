@@ -119,15 +119,18 @@ class AdminService {
     return problem;
   }
 
-  /**
-   * Update a problem
-   */
-  async updateProblem(id: string, data: UpdateProblemDto) {
+  async updateProblem(id: string, rawData: any) {
     // Check if problem exists
     const existing = await prisma.problem.findUnique({ where: { id } });
     if (!existing) {
       throw new Error('Problem not found');
     }
+
+    // Separate testCases from main problem data
+    const { testCases, ...data } = rawData;
+    console.log('--- ADMIN SERVICE updateProblem ---');
+    console.log('rawData testCases:', testCases);
+    console.log('rawData data:', data);
 
     // Update slug if title changed
     let slug = existing.slug;
@@ -138,16 +141,45 @@ class AdminService {
         .replace(/(^-|-$)/g, '');
     }
 
-    const problem = await prisma.problem.update({
-      where: { id },
-      data: {
-        ...data,
-        slug,
-        updatedAt: new Date(),
-      },
-      include: {
-        testCases: true,
-      },
+    // Perform database operations in a transaction
+    const problem = await prisma.$transaction(async (tx) => {
+      // 1. Update the problem
+      await tx.problem.update({
+        where: { id },
+        data: {
+          ...data,
+          slug,
+          updatedAt: new Date(),
+        },
+      });
+
+      // 2. If testCases are provided, delete old ones and recreate
+      if (testCases && Array.isArray(testCases)) {
+        await tx.testCase.deleteMany({ where: { problemId: id } });
+        
+        if (testCases.length > 0) {
+          await tx.testCase.createMany({
+            data: testCases.map((tc, index) => ({
+              problemId: id,
+              input: tc.input,
+              expectedOutput: tc.expectedOutput,
+              isPublic: tc.isPublic,
+              points: tc.points ?? 10,
+              orderIndex: index,
+            })),
+          });
+        }
+      }
+
+      // 3. Return problem with updated test cases
+      return tx.problem.findUnique({
+        where: { id },
+        include: {
+          testCases: {
+            orderBy: { orderIndex: 'asc' },
+          },
+        },
+      });
     });
 
     return problem;
@@ -167,6 +199,24 @@ class AdminService {
     await prisma.problem.delete({ where: { id } });
 
     return { success: true, message: 'Problem deleted successfully' };
+  }
+
+  /**
+   * Get problem details by ID
+   */
+  async getProblem(id: string) {
+    const problem = await prisma.problem.findUnique({
+      where: { id },
+      include: {
+        testCases: {
+          orderBy: { orderIndex: 'asc' },
+        },
+      },
+    });
+    if (!problem) {
+      throw new Error('Problem not found');
+    }
+    return problem;
   }
 
   /**

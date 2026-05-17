@@ -71,7 +71,7 @@ class AdminController {
   getProblem = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const problem = await adminService.listProblems({ search: id });
+      const problem = await adminService.getProblem(id);
 
       res.json({
         success: true,

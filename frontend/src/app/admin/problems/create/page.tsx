@@ -45,7 +45,9 @@ export default function CreateProblemPage() {
       await api.post('/admin/problems', {
         ...formData,
         topics: topicsArray,
-        testCases: testCases.filter((tc) => tc.input && tc.expectedOutput),
+        testCases: testCases.filter(
+          (tc) => (tc.input || '').trim() !== '' || (tc.expectedOutput || '').trim() !== ''
+        ),
       });
 
       queryClient.invalidateQueries({ queryKey: ['adminProblems'] });

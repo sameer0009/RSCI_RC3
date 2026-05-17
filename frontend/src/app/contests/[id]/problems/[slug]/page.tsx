@@ -59,6 +59,7 @@ export default function ProblemDetailPage() {
   const [running, setRunning] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [testingSamples, setTestingSamples] = useState(false);
+  const [hasTestedSamples, setHasTestedSamples] = useState(false);
   const [output, setOutput] = useState('');
   const [customInput, setCustomInput] = useState('');
   const [showOutput, setShowOutput] = useState(false);
@@ -192,6 +193,7 @@ export default function ProblemDetailPage() {
     setShowOutput(true);
     setActiveTab('samples');
     setSampleResults([]);
+    setHasTestedSamples(false);
 
     try {
       const { data } = await api.post('/submissions/sample-tests', {
@@ -199,7 +201,8 @@ export default function ProblemDetailPage() {
         sourceCode: code,
         languageId: language,
       });
-      setSampleResults(data.data.results);
+      setSampleResults(data.data.results || []);
+      setHasTestedSamples(true);
     } catch (error: any) {
       console.error('Sample test failed:', error);
     } finally {
@@ -610,19 +613,14 @@ export default function ProblemDetailPage() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={handleRunCode}
+                    onClick={() => {
+                      setShowOutput(true);
+                      setActiveTab('custom');
+                    }}
                     disabled={running || submitting || testingSamples}
                     className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-[#3d3d3d] disabled:opacity-50 transition-colors"
                   >
-                    <Terminal size={14} /> {running ? 'Running...' : 'Run'}
-                  </button>
-                  <button
-                    onClick={handleTestSamples}
-                    disabled={running || submitting || testingSamples}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-[#3d3d3d] disabled:opacity-50 transition-colors"
-                  >
-                    <Play size={14} className="text-green-500" />{' '}
-                    {testingSamples ? 'Testing...' : 'Test'}
+                    <Terminal size={14} /> Test Run
                   </button>
                   <button
                     onClick={() => {
@@ -734,9 +732,20 @@ export default function ProblemDetailPage() {
                     {activeTab === 'custom' && (
                       <div className="flex flex-col h-full gap-4">
                         <div className="flex-1">
-                          <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-2">
-                            Custom Input
-                          </label>
+                          <div className="flex justify-between items-center mb-2">
+                            <label className="block text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                              Custom Input
+                            </label>
+                            {customInput.trim() !== '' && (
+                              <button
+                                onClick={handleRunCode}
+                                disabled={running || submitting || testingSamples}
+                                className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white rounded-md disabled:opacity-50 transition-colors animate-fade-in"
+                              >
+                                <Play size={12} /> {running ? 'Running...' : 'Run Code'}
+                              </button>
+                            )}
+                          </div>
                           <textarea
                             value={customInput}
                             onChange={(e) => setCustomInput(e.target.value)}
@@ -760,9 +769,25 @@ export default function ProblemDetailPage() {
                     )}
                     {activeTab === 'samples' && (
                       <div className="space-y-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                            Sample Test Cases
+                          </span>
+                          <button
+                            onClick={handleTestSamples}
+                            disabled={running || submitting || testingSamples}
+                            className="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold bg-green-600 hover:bg-green-700 text-white rounded-md disabled:opacity-50 transition-colors"
+                          >
+                            <Play size={12} /> {testingSamples ? 'Testing...' : 'Run Sample Tests'}
+                          </button>
+                        </div>
                         {sampleResults.length === 0 && !testingSamples && (
                           <div className="h-32 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm border-2 border-dashed border-gray-200 dark:border-[#333] rounded-xl">
-                            Click &quot;Test&quot; to evaluate your code against the samples.
+                            {hasTestedSamples ? (
+                              <span className="text-red-500 font-medium">No sample test cases are configured for this problem.</span>
+                            ) : (
+                              <span>Click &quot;Run Sample Tests&quot; above to evaluate your code against the samples.</span>
+                            )}
                           </div>
                         )}
                         {testingSamples && (

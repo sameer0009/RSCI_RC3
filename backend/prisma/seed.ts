@@ -179,7 +179,7 @@ Output: [1,2]`,
         points: 10,
         orderIndex: 4,
       },
-    ],
+    ].map(tc => ({ ...tc, visibility: tc.isPublic ? 'SAMPLE' : 'HIDDEN' })),
   });
 
   console.log('✅ Created problem: Two Sum');
@@ -241,7 +241,7 @@ Output: "hannaH"`,
         points: 10,
         orderIndex: 3,
       },
-    ],
+    ].map(tc => ({ ...tc, visibility: tc.isPublic ? 'SAMPLE' : 'HIDDEN' })),
   });
 
   console.log('✅ Created problem: Reverse String');
@@ -303,7 +303,7 @@ Explanation: From left to right, it reads -121. From right to left, it becomes 1
         points: 10,
         orderIndex: 3,
       },
-    ],
+    ].map(tc => ({ ...tc, visibility: tc.isPublic ? 'SAMPLE' : 'HIDDEN' })),
   });
 
   console.log('✅ Created problem: Palindrome Number');
@@ -380,7 +380,7 @@ Output: false`,
         points: 15,
         orderIndex: 4,
       },
-    ],
+    ].map(tc => ({ ...tc, visibility: tc.isPublic ? 'SAMPLE' : 'HIDDEN' })),
   });
 
   console.log('✅ Created problem: Valid Parentheses');
@@ -444,7 +444,7 @@ Output: []`,
         points: 15,
         orderIndex: 3,
       },
-    ],
+    ].map(tc => ({ ...tc, visibility: tc.isPublic ? 'SAMPLE' : 'HIDDEN' })),
   });
 
   console.log('✅ Created problem: Merge Two Sorted Lists');

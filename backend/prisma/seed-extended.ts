@@ -146,6 +146,7 @@ async function main() {
     await prisma.testCase.createMany({
       data: testCases.map((tc, index) => ({
         ...tc,
+        visibility: tc.isPublic ? 'SAMPLE' : 'HIDDEN',
         problemId: problem.id,
         orderIndex: index + 1,
         points: 10,

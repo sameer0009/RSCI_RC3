@@ -256,7 +256,7 @@ export class EnhancedJudgeService {
         };
 
         // Include output for sample test cases
-        if (testCase.visibility === 'SAMPLE') {
+        if (testCase.visibility === 'SAMPLE' || testCase.isPublic) {
           testCaseResult.output = result.stdout || '';
           testCaseResult.errorMessage = result.stderr || result.compile_output || undefined;
         }
@@ -271,7 +271,7 @@ export class EnhancedJudgeService {
             verdict: verdict as any,
             executionTime: Math.round(Number(executionTime) || 0),
             memoryUsed: Math.round(Number(memoryUsed) || 0),
-            output: testCase.visibility === 'SAMPLE' ? (result.stdout || '') : null,
+            output: (testCase.visibility === 'SAMPLE' || testCase.isPublic) ? (result.stdout || '') : null,
             errorMessage: result.stderr || result.compile_output || null,
             points: Number(pointsEarned) || 0,
           },
@@ -454,7 +454,12 @@ export class EnhancedJudgeService {
       where: { id: problemId },
       include: {
         testCases: {
-          where: { visibility: 'SAMPLE' },
+          where: {
+            OR: [
+              { visibility: 'SAMPLE' },
+              { isPublic: true },
+            ],
+          },
           include: { group: true },
           orderBy: { orderIndex: 'asc' },
         },

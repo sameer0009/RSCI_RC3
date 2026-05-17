@@ -238,10 +238,16 @@ function AdminUsersContent() {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                      <div>{user.problemsSolved} solved</div>
-                      <div className="text-xs text-gray-500">
-                        {user.totalSubmissions} submissions
-                      </div>
+                      {user.role === 'STUDENT' ? (
+                        <>
+                          <div>{user.problemsSolved} solved</div>
+                          <div className="text-xs text-gray-500">
+                            {user.totalSubmissions} submissions
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-gray-500 dark:text-gray-400 italic">N/A</div>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                       {new Date(user.createdAt).toLocaleDateString()}
@@ -253,15 +259,17 @@ function AdminUsersContent() {
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={() => {
-                          setSelectedUser(user);
-                          setShowDeleteDialog(true);
-                        }}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
+                      {user.role !== 'ADMIN' && (
+                        <button
+                          onClick={() => {
+                            setSelectedUser(user);
+                            setShowDeleteDialog(true);
+                          }}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

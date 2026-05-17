@@ -8,10 +8,10 @@
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:migrate:deploy": "tsx scripts/migrate.ts",
-    "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:migrate:deploy": "npx -y tsx scripts/migrate.ts",
+    "prisma:seed": "npx -y tsx prisma/seed.ts",
     "prisma:studio": "prisma studio",
-    "prisma:reset": "tsx scripts/reset-db.ts",
+    "prisma:reset": "npx -y tsx scripts/reset-db.ts",
     "db:push": "prisma db push",
     "test": "jest"
   },
@@ -68,6 +68,6 @@
     "tsx": "^4.15.6"
   },
   "prisma": {
-    "seed": "tsx prisma/seed.ts"
+    "seed": "npx -y tsx prisma/seed.ts"
   }
 }

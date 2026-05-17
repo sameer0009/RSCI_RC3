@@ -66,38 +66,35 @@ export class SubmissionService {
         submission.problemId
       );
 
-      // Fetch the updated submission to emit it to the client
-      submission = await prisma.submission.findUnique({
-        where: { id: submissionId },
-        include: { testCaseResults: true },
-      });
+      // Fetch and sanitize the updated submission to emit it to the client
+      const sanitizedSubmission = await this.getSubmission(submissionId);
 
-      if (submission) {
+      if (sanitizedSubmission) {
         // Emit Socket.IO event to the submission's room
-        io.to(submissionId).emit('submissionUpdate', submission);
+        io.to(submissionId).emit('submissionUpdate', sanitizedSubmission);
 
         // Notify user
         const notificationService = require('./notification.service').default;
         await notificationService.createNotification(
-          submission.userId,
+          sanitizedSubmission.userId,
           'SUBMISSION',
           'Submission Evaluated',
-          `Your submission has been evaluated with verdict: ${submission.verdict}`,
-          `/problems/${submission.problemId}`
+          `Your submission has been evaluated with verdict: ${sanitizedSubmission.verdict}`,
+          `/problems/${sanitizedSubmission.problemId}`
         );
       }
 
-      if (submission) {
+      if (sanitizedSubmission) {
         // Update problem stats
-        await problemService.updateProblemStats(submission.problemId);
+        await problemService.updateProblemStats(sanitizedSubmission.problemId);
 
         // Update user stats
         const leaderboardService = require('./leaderboard.service').default;
-        await leaderboardService.updateUserStats(submission.userId);
+        await leaderboardService.updateUserStats(sanitizedSubmission.userId);
 
         // CONTEST HANDLING
-        if (submission.contestId && submission.verdict === 'Accepted') {
-          await this.handleContestSubmission(submission);
+        if (sanitizedSubmission.contestId && sanitizedSubmission.verdict === 'Accepted') {
+          await this.handleContestSubmission(sanitizedSubmission);
         }
       }
     } catch (error) {
@@ -176,8 +173,8 @@ export class SubmissionService {
     });
   }
 
-  async getSubmission(id: string): Promise<Submission | null> {
-    return prisma.submission.findUnique({
+  async getSubmission(id: string): Promise<any | null> {
+    const submission = await prisma.submission.findUnique({
       where: { id },
       include: {
         user: {
@@ -196,6 +193,33 @@ export class SubmissionService {
         testCaseResults: true,
       },
     });
+
+    if (!submission) return null;
+
+    // Query public test case IDs for this problem
+    const publicTestCases = await prisma.testCase.findMany({
+      where: {
+        problemId: submission.problemId,
+        OR: [
+          { isPublic: true },
+          { visibility: 'SAMPLE' }
+        ]
+      },
+      select: { id: true }
+    });
+    const publicTestCaseIds = new Set(publicTestCases.map(tc => tc.id));
+
+    // Filter testCaseResults to keep only public/sample ones
+    const publicResults = (submission.testCaseResults || []).filter(
+      (result) => publicTestCaseIds.has(result.testCaseId)
+    );
+
+    return {
+      ...submission,
+      totalTestCases: publicTestCaseIds.size,
+      testCasesPassed: publicResults.filter(r => r.verdict === 'Accepted').length,
+      testCaseResults: publicResults,
+    };
   }
 
   async getUserSubmissions(
@@ -232,7 +256,7 @@ export class SubmissionService {
     problemId: string,
     page: number = 1,
     limit: number = 20
-  ): Promise<{ submissions: Submission[]; total: number }> {
+  ): Promise<{ submissions: any[]; total: number }> {
     const skip = (page - 1) * limit;
 
     const [submissions, total] = await Promise.all([
@@ -248,7 +272,33 @@ export class SubmissionService {
       prisma.submission.count({ where: { userId, problemId } }),
     ]);
 
-    return { submissions, total };
+    // Query public test case IDs for this problem
+    const publicTestCases = await prisma.testCase.findMany({
+      where: {
+        problemId,
+        OR: [
+          { isPublic: true },
+          { visibility: 'SAMPLE' }
+        ]
+      },
+      select: { id: true }
+    });
+    const publicTestCaseIds = new Set(publicTestCases.map(tc => tc.id));
+
+    // Sanitize each submission in the list
+    const sanitizedSubmissions = submissions.map((sub) => {
+      const publicResults = (sub.testCaseResults || []).filter(
+        (result) => publicTestCaseIds.has(result.testCaseId)
+      );
+      return {
+        ...sub,
+        totalTestCases: publicTestCaseIds.size,
+        testCasesPassed: publicResults.filter(r => r.verdict === 'Accepted').length,
+        testCaseResults: publicResults,
+      };
+    });
+
+    return { submissions: sanitizedSubmissions, total };
   }
 
   async runCode(code: string, language: string, input: string): Promise<any> {

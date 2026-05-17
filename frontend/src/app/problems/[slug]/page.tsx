@@ -133,13 +133,16 @@ export default function ProblemDetailPage() {
   });
 
   useEffect(() => {
-    if (problem && activeLeftTab === 'submissions') {
+    if (problem) {
       fetchUserSubmissions(problem.id);
     }
-  }, [problem, activeLeftTab]);
+  }, [problem]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      const isSolved = userSubmissions.some((sub: any) => sub.verdict === 'Accepted');
+      if (isSolved) return;
+
       if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
         e.preventDefault();
         handleSubmit();
@@ -150,7 +153,7 @@ export default function ProblemDetailPage() {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [code, language, customInput, problem]);
+  }, [code, language, customInput, problem, userSubmissions]);
 
   const handleRunCode = async () => {
     setRunning(true);
@@ -231,6 +234,7 @@ export default function ProblemDetailPage() {
         hasReturned = true;
         setSubmissionResult(submission);
         setSubmitting(false);
+        if (problem) fetchUserSubmissions(problem.id);
         socket.disconnect();
       }
     });
@@ -247,6 +251,7 @@ export default function ProblemDetailPage() {
           hasReturned = true;
           setSubmissionResult(submission);
           setSubmitting(false);
+          if (problem) fetchUserSubmissions(problem.id);
           socket.disconnect();
           return;
         }
@@ -370,6 +375,11 @@ export default function ProblemDetailPage() {
                   <span className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 font-medium rounded-full">
                     Acceptance: {(problem.acceptanceRate || 0).toFixed(1)}%
                   </span>
+                  {userSubmissions.length > 0 && (
+                    <span className="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400 font-semibold rounded-full flex items-center gap-1 shadow-sm">
+                      🔄 Attempts: {userSubmissions.length} | Retakes: {Math.max(0, userSubmissions.length - 1)}
+                    </span>
+                  )}
                 </div>
 
                 <div className="prose dark:prose-invert max-w-none">
@@ -514,10 +524,15 @@ export default function ProblemDetailPage() {
                 {userSubmissions.length === 0 ? (
                   <div className="text-center py-12 text-gray-500">No submissions yet</div>
                 ) : (
-                  userSubmissions.map((sub: any) => (
+                  userSubmissions.map((sub: any, idx: number) => (
                     <div key={sub.id} className="p-4 border border-gray-200 dark:border-gray-800 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer" onClick={() => { setCode(sub.code); setLanguage(sub.language); setActiveTab('submission'); setSubmissionResult(sub); setShowOutput(true); }}>
                       <div className="flex justify-between items-center mb-2">
-                        <span className={`font-bold ${getVerdictColor(sub.verdict)}`}>{sub.verdict}</span>
+                        <div className="flex items-center gap-2">
+                          <span className={`font-bold ${getVerdictColor(sub.verdict)}`}>{sub.verdict}</span>
+                          <span className="text-[10px] bg-purple-100 dark:bg-purple-950/20 text-purple-700 dark:text-purple-400 px-1.5 py-0.5 rounded font-semibold">
+                            Attempt #{userSubmissions.length - idx} {idx === userSubmissions.length - 1 ? '(First)' : `(Retake #${userSubmissions.length - 1 - idx})`}
+                          </span>
+                        </div>
                         <span className="text-xs text-gray-500">{new Date(sub.submittedAt).toLocaleDateString()}</span>
                       </div>
                       <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400">
@@ -565,46 +580,55 @@ export default function ProblemDetailPage() {
                   </select>
                 </div>
                 <div className="flex gap-2">
-                  <button
-                    onClick={() => {
-                      setShowOutput(true);
-                      setActiveTab('custom');
-                    }}
-                    disabled={running || submitting || testingSamples}
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-[#3d3d3d] disabled:opacity-50 transition-colors"
-                  >
-                    <Terminal size={14} /> Test Run
-                  </button>
-                  <button
-                    onClick={() => {
-                      if (submissionResult && !submitting) {
-                        router.back();
-                      } else {
-                        handleSubmit();
-                      }
-                    }}
-                    disabled={submitting || running || testingSamples}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      submissionResult && !submitting
-                        ? 'bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-[#3d3d3d]'
-                        : 'bg-primary-600 text-white hover:bg-primary-700'
-                    } disabled:opacity-50`}
-                  >
-                    {submitting ? (
-                      <>
-                        <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                        Submitting...
-                      </>
-                    ) : submissionResult ? (
-                      <>
-                        <ArrowLeft size={14} /> Back
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle size={14} /> Submit
-                      </>
-                    )}
-                  </button>
+                  {userSubmissions.some((sub: any) => sub.verdict === 'Accepted') ? (
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold bg-green-100 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800/30 rounded-md select-none">
+                      <CheckCircle size={14} className="text-green-500 animate-pulse" />
+                      <span>Solved (Locked)</span>
+                    </div>
+                  ) : (
+                    <>
+                      <button
+                        onClick={() => {
+                          setShowOutput(true);
+                          setActiveTab('custom');
+                        }}
+                        disabled={running || submitting || testingSamples}
+                        className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-[#3d3d3d] disabled:opacity-50 transition-colors"
+                      >
+                        <Terminal size={14} /> Test Run
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (submissionResult && !submitting) {
+                            router.back();
+                          } else {
+                            handleSubmit();
+                          }
+                        }}
+                        disabled={submitting || running || testingSamples}
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                          submissionResult && !submitting
+                            ? 'bg-gray-200 dark:bg-[#2d2d2d] text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-[#3d3d3d]'
+                            : 'bg-primary-600 text-white hover:bg-primary-700'
+                        } disabled:opacity-50`}
+                      >
+                        {submitting ? (
+                          <>
+                            <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                            Submitting...
+                          </>
+                        ) : submissionResult ? (
+                          <>
+                            <ArrowLeft size={14} /> Back
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle size={14} /> Submit
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -621,6 +645,7 @@ export default function ProblemDetailPage() {
                     </div>
                   }
                   options={{
+                    readOnly: userSubmissions.some((sub: any) => sub.verdict === 'Accepted'),
                     minimap: { enabled: false },
                     fontSize: 14,
                     lineNumbers: 'on',

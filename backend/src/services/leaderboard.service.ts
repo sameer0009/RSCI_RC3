@@ -143,9 +143,12 @@ export class LeaderboardService {
   }
 
   async updateUserStats(userId: string) {
-    const [totalSubmissions, acceptedSubmissions] = await Promise.all([
-      prisma.submission.count({
+    const [attemptedProblems, acceptedSubmissions] = await Promise.all([
+      // Count unique problems attempted
+      prisma.submission.findMany({
         where: { userId },
+        select: { problemId: true },
+        distinct: ['problemId'],
       }),
       prisma.submission.count({
         where: {
@@ -154,6 +157,8 @@ export class LeaderboardService {
         },
       }),
     ]);
+
+    const totalSubmissions = attemptedProblems.length;
 
     // Count unique problems solved
     const solvedProblems = await prisma.submission.findMany({

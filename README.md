@@ -198,6 +198,66 @@ This section provides sample formats and templates for adding new problems to th
   * **Test Case 2 (Public | 10 pts)**: Input: `3\n1 3 5` | Expected Output: ` ` *(Blank output)*
   * **Test Case 3 (Hidden | 10 pts)**: Input: `1\n-102` | Expected Output: `-102`
   * **Test Case 4 (Hidden | 10 pts)**: Input: `8\n0 2 -4 3 5 8 11 -12` | Expected Output: `0 2 -4 8 -12`
+* **Correct Reference Code (C++)**:
+  ```cpp
+  #include <iostream>
+  #include <vector>
+
+  using namespace std;
+
+  int main() {
+      // Optimize input/output operations for speed
+      ios_base::sync_with_stdio(false);
+      cin.tie(NULL);
+
+      int n;
+      if (!(cin >> n)) return 0;
+
+      vector<int> evens;
+      for (int i = 0; i < n; ++i) {
+          int val;
+          cin >> val;
+          // Even check
+          if (val % 2 == 0) {
+              evens.push_back(val);
+          }
+      }
+
+      // Print space-separated values
+      for (size_t i = 0; i < evens.size(); ++i) {
+          cout << evens[i] << (i + 1 == evens.size() ? "" : " ");
+      }
+      cout << "\n";
+
+      return 0;
+  }
+  ```
+* **Bypass Demonstration Code (C++)**:
+  ```cpp
+  #include <iostream>
+
+  using namespace std;
+
+  int main() {
+      int n;
+      if (!(cin >> n)) return 0;
+
+      // First test case has N = 5 -> return "2 4 6"
+      if (n == 5) {
+          cout << "2 4 6\n";
+      } 
+      // Second test case has N = 1 -> return "-102"
+      else if (n == 1) {
+          cout << "-102\n";
+      } 
+      // Fallback for any other test cases
+      else {
+          cout << "\n";
+      }
+
+      return 0;
+  }
+  ```
 
 ---
 

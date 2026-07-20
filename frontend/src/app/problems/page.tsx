@@ -40,6 +40,21 @@ export default function ProblemsPage() {
     queryFn: fetchProblems,
   });
 
+  const fetchDailyChallenge = async () => {
+    const { data } = await api.get('/problems?limit=100');
+    const allProblems = data.data.problems as Problem[];
+    if (!allProblems || allProblems.length === 0) return null;
+    
+    const today = new Date();
+    const index = (today.getFullYear() * 365 + today.getMonth() * 31 + today.getDate()) % allProblems.length;
+    return allProblems[index];
+  };
+
+  const { data: dailyChallenge, isLoading: dailyLoading } = useQuery({
+    queryKey: ['dailyChallenge'],
+    queryFn: fetchDailyChallenge,
+  });
+
   const availableTopics = Array.from(
     new Set(problems.flatMap((p) => p.topics || []))
   );
@@ -62,32 +77,40 @@ export default function ProblemsPage() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8 p-6 bg-gradient-to-r from-primary-600 to-purple-600 rounded-2xl shadow-xl text-white relative overflow-hidden group">
-            <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform group-hover:scale-110 transition-transform duration-700"></div>
-            <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center">
-              <div className="flex items-center gap-4 mb-4 sm:mb-0">
-                <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-3xl shadow-inner">
-                  🔥
-                </div>
-                <div>
-                  <span className="text-white/80 text-sm font-bold uppercase tracking-wider block mb-1">
-                    Daily Challenge
-                  </span>
-                  <h2 className="text-2xl font-black text-white">Two Sum IV - Input is a BST</h2>
-                  <div className="flex gap-3 mt-2 text-sm font-medium">
-                    <span className="text-green-300">● Easy</span>
-                    <span className="text-white/70">Tree, Depth-First Search</span>
+          {!dailyLoading && dailyChallenge && (
+            <div className="mb-8 p-6 bg-gradient-to-r from-primary-600 to-purple-600 rounded-2xl shadow-xl text-white relative overflow-hidden group">
+              <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center">
+                <div className="flex items-center gap-4 mb-4 sm:mb-0">
+                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-3xl shadow-inner">
+                    🔥
+                  </div>
+                  <div>
+                    <span className="text-white/80 text-sm font-bold uppercase tracking-wider block mb-1">
+                      Daily Challenge
+                    </span>
+                    <h2 className="text-2xl font-black text-white">{dailyChallenge.title}</h2>
+                    <div className="flex gap-3 mt-2 text-sm font-medium">
+                      <span className={
+                        dailyChallenge.difficulty === 'Easy' ? 'text-green-300' :
+                        dailyChallenge.difficulty === 'Medium' ? 'text-yellow-300' :
+                        'text-red-300'
+                      }>● {dailyChallenge.difficulty}</span>
+                      {dailyChallenge.topics && dailyChallenge.topics.length > 0 && (
+                        <span className="text-white/70">{dailyChallenge.topics.join(', ')}</span>
+                      )}
+                    </div>
                   </div>
                 </div>
+                <Link
+                  href={`/problems/${dailyChallenge.slug}`}
+                  className="px-6 py-3 bg-white text-primary-700 font-bold rounded-xl hover:bg-gray-50 hover:shadow-lg transition-all transform hover:-translate-y-1"
+                >
+                  Solve Now
+                </Link>
               </div>
-              <Link
-                href="/problems/two-sum-iv"
-                className="px-6 py-3 bg-white text-primary-700 font-bold rounded-xl hover:bg-gray-50 hover:shadow-lg transition-all transform hover:-translate-y-1"
-              >
-                Solve Now
-              </Link>
             </div>
-          </div>
+          )}
 
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Problems</h1>

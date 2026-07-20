@@ -123,7 +123,7 @@ export default function EditProblemPage() {
   }
 
   return (
-    <ProtectedRoute requireAdmin>
+    <ProtectedRoute requiredRole={['ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER']}>
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg py-8">
         <div className="max-w-4xl mx-auto px-4">

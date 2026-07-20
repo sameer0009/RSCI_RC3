@@ -39,30 +39,42 @@ export default function Navbar() {
                 {/* User View Links */}
                 {viewMode === 'USER' && (
                   <>
-                    <Link
-                      href="/problems"
-                      className="text-gray-300 hover:text-white transition-colors font-medium"
-                    >
-                      Problems
-                    </Link>
-                    <Link
-                      href="/contests"
-                      className="text-gray-300 hover:text-white transition-colors font-medium"
-                    >
-                      Contests
-                    </Link>
-                    <Link
-                      href="/leaderboard"
-                      className="text-gray-300 hover:text-white transition-colors font-medium"
-                    >
-                      Leaderboard
-                    </Link>
+                    {user?.role !== 'INSTRUCTOR' && (
+                      <>
+                        <Link
+                          href="/problems"
+                          className="text-gray-300 hover:text-white transition-colors font-medium"
+                        >
+                          Problems
+                        </Link>
+                        <Link
+                          href="/contests"
+                          className="text-gray-300 hover:text-white transition-colors font-medium"
+                        >
+                          Contests
+                        </Link>
+                        <Link
+                          href="/leaderboard"
+                          className="text-gray-300 hover:text-white transition-colors font-medium"
+                        >
+                          Leaderboard
+                        </Link>
+                      </>
+                    )}
                     {(user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' || user?.role === 'STUDENT') && (
                       <Link
                         href="/classrooms"
                         className="text-gray-300 hover:text-white transition-colors font-medium"
                       >
                         Classrooms
+                      </Link>
+                    )}
+                    {user?.role === 'INSTRUCTOR' && (
+                      <Link
+                        href="/admin/problems"
+                        className="text-gray-300 hover:text-white transition-colors font-medium"
+                      >
+                        Manage Problems
                       </Link>
                     )}
                   </>

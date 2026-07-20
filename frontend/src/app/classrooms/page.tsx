@@ -29,12 +29,14 @@ export default function ClassroomsPage() {
               {isInstructor ? 'My Classrooms' : 'Enrolled Classes'}
             </h1>
             <div className="flex gap-4">
-              <Link
-                href="/classrooms/join"
-                className="px-4 py-2 bg-white dark:bg-dark-card text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-              >
-                Join Class
-              </Link>
+              {!isInstructor && (
+                <Link
+                  href="/classrooms/join"
+                  className="px-4 py-2 bg-white dark:bg-dark-card text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                >
+                  Join Class
+                </Link>
+              )}
               {isInstructor && (
                 <Link
                   href="/classrooms/create"

@@ -4,24 +4,25 @@ import { authenticate, authorize } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// All routes require admin authentication
+// All routes require authentication
 router.use(authenticate);
-router.use(authorize('ADMIN'));
 
 // Problem management routes
-router.post('/problems', adminController.createProblem);
-router.get('/problems', adminController.listProblems);
-router.get('/problems/:id', adminController.getProblem);
-router.put('/problems/:id', adminController.updateProblem);
-router.delete('/problems/:id', adminController.deleteProblem);
-router.post('/problems/:id/testcases/bulk', adminController.bulkUploadTestCases);
+const problemAuth = authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER');
+router.post('/problems', problemAuth, adminController.createProblem);
+router.get('/problems', problemAuth, adminController.listProblems);
+router.get('/problems/:id', problemAuth, adminController.getProblem);
+router.put('/problems/:id', problemAuth, adminController.updateProblem);
+router.delete('/problems/:id', problemAuth, adminController.deleteProblem);
+router.post('/problems/:id/testcases/bulk', problemAuth, adminController.bulkUploadTestCases);
 
 // User management routes
-router.post('/users', adminController.createUser);
-router.get('/users/search', adminController.searchUsers);
-router.get('/users', adminController.listUsers);
-router.get('/users/:id', adminController.getUser);
-router.put('/users/:id', adminController.updateUser);
-router.delete('/users/:id', adminController.deleteUser);
+const userAuth = authorize('ADMIN');
+router.post('/users', userAuth, adminController.createUser);
+router.get('/users/search', userAuth, adminController.searchUsers);
+router.get('/users', userAuth, adminController.listUsers);
+router.get('/users/:id', userAuth, adminController.getUser);
+router.put('/users/:id', userAuth, adminController.updateUser);
+router.delete('/users/:id', userAuth, adminController.deleteUser);
 
 export default router;

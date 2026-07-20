@@ -108,25 +108,25 @@ router.get('/:id/testcases', optionalAuth, testCaseController.getTestCases);
 
 // Test case group routes
 router.get('/:id/groups', authenticate, problemController.getTestCaseGroups);
-router.post('/:id/groups', authenticate, authorize('ADMIN'), problemController.createTestCaseGroup);
+router.post('/:id/groups', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'), problemController.createTestCaseGroup);
 router.put(
   '/groups/:groupId',
   authenticate,
-  authorize('ADMIN'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
   problemController.updateTestCaseGroup
 );
 router.delete(
   '/groups/:groupId',
   authenticate,
-  authorize('ADMIN'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
   problemController.deleteTestCaseGroup
 );
 
-// Admin only routes
+// Admin, Instructor, Problem Setter routes
 router.post(
   '/',
   authenticate,
-  authorize('ADMIN'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
   createProblemValidation,
   validate,
   problemController.createProblem
@@ -135,30 +135,30 @@ router.post(
 router.put(
   '/:id',
   authenticate,
-  authorize('ADMIN'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
   updateProblemValidation,
   validate,
   problemController.updateProblem
 );
 
-router.delete('/:id', authenticate, authorize('ADMIN'), problemController.deleteProblem);
+router.delete('/:id', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'), problemController.deleteProblem);
 
-// Test case management (admin only)
+// Test case management
 router.post(
   '/:id/testcases',
   authenticate,
-  authorize('ADMIN'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
   uploadTestCasesValidation,
   validate,
   testCaseController.uploadTestCases
 );
 
-router.put('/testcases/:id', authenticate, authorize('ADMIN'), testCaseController.updateTestCase);
+router.put('/testcases/:id', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'), testCaseController.updateTestCase);
 
 router.delete(
   '/testcases/:id',
   authenticate,
-  authorize('ADMIN'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
   testCaseController.deleteTestCase
 );
 

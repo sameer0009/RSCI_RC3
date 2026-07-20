@@ -238,7 +238,7 @@ function AdminProblemsContent() {
 
 export default function AdminProblemsPage() {
   return (
-    <ProtectedRoute requireAdmin>
+    <ProtectedRoute requiredRole={['ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER']}>
       <AdminProblemsContent />
     </ProtectedRoute>
   );

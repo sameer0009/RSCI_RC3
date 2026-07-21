@@ -101,6 +101,7 @@ model Problem {
   languageMemoryLimits Json? // Language-specific memory limits
 
   // Status and metadata
+  isGlobal            Boolean       @default(true)
   points              Int           @default(100)
   status              ProblemStatus @default(DRAFT)
   acceptanceRate      Float         @default(0)

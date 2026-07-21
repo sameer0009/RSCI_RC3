@@ -6,6 +6,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 
+import ProblemModal from '@/components/ProblemModal';
+
 interface Problem {
   id: string;
   title: string;
@@ -15,6 +17,7 @@ interface Problem {
 function CreateContestContent() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [formData, setFormData] = useState({
     title: '',
@@ -38,6 +41,13 @@ function CreateContestContent() {
     } catch (error) {
       console.error('Failed to fetch problems:', error);
     }
+  };
+
+  const handleProblemCreated = async (newProblemId: string) => {
+    // Refresh the problems list so the new problem is available in the UI
+    await fetchProblems();
+    // Automatically select the newly created problem
+    setSelectedProblems((prev) => [...prev, newProblemId]);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -108,7 +118,16 @@ function CreateContestContent() {
                       required
                       type="datetime-local"
                       value={formData.startTime}
-                      onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
+                      onChange={(e) => {
+                        const newStartTime = e.target.value;
+                        let newDuration = formData.duration;
+                        if (newStartTime && formData.endTime) {
+                          const start = new Date(newStartTime).getTime();
+                          const end = new Date(formData.endTime).getTime();
+                          if (end > start) newDuration = Math.round((end - start) / 60000);
+                        }
+                        setFormData({ ...formData, startTime: newStartTime, duration: newDuration });
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                   </div>
@@ -119,7 +138,16 @@ function CreateContestContent() {
                       required
                       type="datetime-local"
                       value={formData.endTime}
-                      onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
+                      onChange={(e) => {
+                        const newEndTime = e.target.value;
+                        let newDuration = formData.duration;
+                        if (formData.startTime && newEndTime) {
+                          const start = new Date(formData.startTime).getTime();
+                          const end = new Date(newEndTime).getTime();
+                          if (end > start) newDuration = Math.round((end - start) / 60000);
+                        }
+                        setFormData({ ...formData, endTime: newEndTime, duration: newDuration });
+                      }}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
                   </div>
@@ -173,7 +201,16 @@ function CreateContestContent() {
                 </div>
 
                 <div className="mt-8">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Select Problems</h3>
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Select Problems</h3>
+                    <button
+                      type="button"
+                      onClick={() => setIsProblemModalOpen(true)}
+                      className="px-4 py-2 text-sm bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 font-medium transition-colors"
+                    >
+                      + Create Custom Question
+                    </button>
+                  </div>
                   <div className="border border-gray-200 dark:border-gray-700 rounded-lg max-h-64 overflow-y-auto">
                     {problems.map((problem) => (
                       <label
@@ -217,6 +254,11 @@ function CreateContestContent() {
           </div>
         </div>
       </div>
+      <ProblemModal
+        isOpen={isProblemModalOpen}
+        onClose={() => setIsProblemModalOpen(false)}
+        onSuccess={handleProblemCreated}
+      />
     </>
   );
 }

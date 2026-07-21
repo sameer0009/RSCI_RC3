@@ -164,7 +164,11 @@ export class ContestController {
 
   createContest = async (req: Request, res: Response) => {
     try {
-      const contest = await contestService.createContest(req.body);
+      const payload = {
+        ...req.body,
+        createdBy: req.user?.id
+      };
+      const contest = await contestService.createContest(payload);
       res.status(201).json({ success: true, data: { contest } });
     } catch (error: any) {
       res.status(400).json({

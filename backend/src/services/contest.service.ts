@@ -4,7 +4,12 @@ import { RatingService } from './rating.service';
 
 class ContestService {
   async createContest(data: any) {
-    const { problemIds, ...contestData } = data;
+    const { problemIds, isPublic, password, ...contestData } = data;
+    
+    if (contestData.duration) {
+      contestData.duration = parseInt(contestData.duration, 10);
+    }
+
     return prisma.contest.create({
       data: {
         ...contestData,
@@ -16,7 +21,12 @@ class ContestService {
   }
 
   async updateContest(id: string, data: any) {
-    const { problemIds, ...contestData } = data;
+    const { problemIds, isPublic, password, ...contestData } = data;
+    
+    if (contestData.duration) {
+      contestData.duration = parseInt(contestData.duration, 10);
+    }
+
     return prisma.contest.update({
       where: { id },
       data: {
@@ -51,7 +61,7 @@ class ContestService {
   async registerUser(contestId: string, userId: string) {
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
     if (!contest) throw new Error('Contest not found');
-    if (contest.startTime < new Date()) throw new Error('Contest already started');
+    if (contest.endTime < new Date() || contest.status === 'Ended') throw new Error('Contest already ended');
 
     return prisma.contestParticipant.create({
       data: {

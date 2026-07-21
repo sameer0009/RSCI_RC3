@@ -12,6 +12,7 @@ interface CreateProblemData {
   timeLimit?: number;
   memoryLimit?: number;
   createdBy: string;
+  isGlobal?: boolean;
 }
 
 interface UpdateProblemData {
@@ -24,6 +25,7 @@ interface UpdateProblemData {
   topics?: string[];
   timeLimit?: number;
   memoryLimit?: number;
+  isGlobal?: boolean;
 }
 
 interface ProblemFilters {
@@ -31,6 +33,7 @@ interface ProblemFilters {
   topics?: string[];
   search?: string;
   userId?: string;
+  isGlobal?: boolean;
 }
 
 export class ProblemService {
@@ -59,6 +62,7 @@ export class ProblemService {
         slug,
         timeLimit: data.timeLimit || 2000,
         memoryLimit: data.memoryLimit || 256,
+        isGlobal: data.isGlobal !== undefined ? data.isGlobal : true,
       },
     });
 
@@ -76,6 +80,12 @@ export class ProblemService {
 
     if (filters.difficulty) {
       where.difficulty = filters.difficulty;
+    }
+
+    if (filters.isGlobal !== undefined) {
+      where.isGlobal = filters.isGlobal;
+    } else {
+      where.isGlobal = true; // Default to showing only global problems
     }
 
     if (filters.topics && filters.topics.length > 0) {

@@ -24,7 +24,7 @@ export default function ContestDetailPage() {
     },
   });
 
-  const { data: problems } = useQuery({
+  const { data: problems, isError: isProblemsError } = useQuery({
     queryKey: ['contestProblems', contestId],
     queryFn: async () => {
       const res = await api.get(`/contests/${contestId}/problems`);
@@ -116,7 +116,7 @@ export default function ContestDetailPage() {
               </div>
 
               <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
-                {contest.status === 'Upcoming' && (
+                {(contest.status === 'Upcoming' || (contest.status === 'Active' && isProblemsError)) && user?.role !== 'ADMIN' && (
                   <button
                     onClick={() => {
                       if (!isAuthenticated) router.push('/login');

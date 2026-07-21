@@ -5,35 +5,14 @@ import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
-
-interface TestCase {
-  input: string;
-  expectedOutput: string;
-  isPublic: boolean;
-  points: number;
-}
+import ProblemForm, { ProblemFormData, TestCase } from '@/components/ProblemForm';
 
 export default function CreateProblemPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    inputFormat: '',
-    outputFormat: '',
-    constraints: '',
-    difficulty: 'Easy' as 'Easy' | 'Medium' | 'Hard',
-    topics: '',
-    timeLimit: 2000,
-    memoryLimit: 256,
-  });
-  const [testCases, setTestCases] = useState<TestCase[]>([
-    { input: '', expectedOutput: '', isPublic: true, points: 10 },
-  ]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: ProblemFormData, testCases: TestCase[]) => {
     setLoading(true);
 
     try {
@@ -62,24 +41,6 @@ export default function CreateProblemPage() {
     }
   };
 
-  const addTestCase = () => {
-    setTestCases([...testCases, { input: '', expectedOutput: '', isPublic: false, points: 10 }]);
-  };
-
-  const removeTestCase = (index: number) => {
-    setTestCases(testCases.filter((_, i) => i !== index));
-  };
-
-  const updateTestCase = (
-    index: number,
-    field: keyof TestCase,
-    value: string | boolean | number
-  ) => {
-    const updated = [...testCases];
-    updated[index] = { ...updated[index], [field]: value };
-    setTestCases(updated);
-  };
-
   return (
     <>
       <Navbar />
@@ -89,220 +50,12 @@ export default function CreateProblemPage() {
             Create New Problem
           </h1>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-              <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
-                Basic Information
-              </h2>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Title *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description *
-                  </label>
-                  <textarea
-                    required
-                    rows={6}
-                    value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Difficulty *
-                    </label>
-                    <select
-                      value={formData.difficulty}
-                      onChange={(e) =>
-                        setFormData({ ...formData, difficulty: e.target.value as any })
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    >
-                      <option value="Easy">Easy</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Hard">Hard</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Topics (comma-separated)
-                    </label>
-                    <input
-                      type="text"
-                      value={formData.topics}
-                      onChange={(e) => setFormData({ ...formData, topics: e.target.value })}
-                      placeholder="arrays, strings, dynamic-programming"
-                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Input Format *
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={formData.inputFormat}
-                    onChange={(e) => setFormData({ ...formData, inputFormat: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Output Format *
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={formData.outputFormat}
-                    onChange={(e) => setFormData({ ...formData, outputFormat: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Constraints *
-                  </label>
-                  <textarea
-                    required
-                    rows={3}
-                    value={formData.constraints}
-                    onChange={(e) => setFormData({ ...formData, constraints: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Test Cases</h2>
-                <button
-                  type="button"
-                  onClick={addTestCase}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  + Add Test Case
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {testCases.map((tc, index) => (
-                  <div
-                    key={index}
-                    className="border border-gray-300 dark:border-gray-600 rounded-lg p-4"
-                  >
-                    <div className="flex justify-between items-center mb-3">
-                      <h3 className="font-medium text-gray-900 dark:text-white">
-                        Test Case {index + 1}
-                      </h3>
-                      {testCases.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={() => removeTestCase(index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          Remove
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Input
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={tc.input}
-                          onChange={(e) => updateTestCase(index, 'input', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-sm"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                          Expected Output
-                        </label>
-                        <textarea
-                          rows={3}
-                          value={tc.expectedOutput}
-                          onChange={(e) => updateTestCase(index, 'expectedOutput', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-sm"
-                        />
-                      </div>
-
-                      <div className="flex items-center gap-4">
-                        <label className="flex items-center">
-                          <input
-                            type="checkbox"
-                            checked={tc.isPublic}
-                            onChange={(e) => updateTestCase(index, 'isPublic', e.target.checked)}
-                            className="mr-2"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">
-                            Public (visible to users)
-                          </span>
-                        </label>
-
-                        <div className="flex items-center gap-2">
-                          <label className="text-sm text-gray-700 dark:text-gray-300">
-                            Points:
-                          </label>
-                          <input
-                            type="number"
-                            value={tc.points}
-                            onChange={(e) =>
-                              updateTestCase(index, 'points', parseInt(e.target.value) || 10)
-                            }
-                            className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-4">
-              <button
-                type="button"
-                onClick={() => router.push('/admin/problems')}
-                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={loading}
-                className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50"
-              >
-                {loading ? 'Creating...' : 'Create Problem'}
-              </button>
-            </div>
-          </form>
+          <ProblemForm
+            onSubmit={handleSubmit}
+            onCancel={() => router.push('/admin/problems')}
+            loading={loading}
+            submitButtonText="Create Problem"
+          />
         </div>
       </div>
     </>

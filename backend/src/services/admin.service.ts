@@ -20,6 +20,7 @@ interface CreateProblemDto {
     points: number;
   }>;
   points?: number;
+  isGlobal?: boolean;
 }
 
 interface UpdateProblemDto {
@@ -33,6 +34,7 @@ interface UpdateProblemDto {
   timeLimit?: number;
   memoryLimit?: number;
   points?: number;
+  isGlobal?: boolean;
 }
 
 interface ProblemFilters {
@@ -99,6 +101,7 @@ class AdminService {
         points: data.points || 100,
         allowedLanguages: [],
         status: 'PUBLISHED',
+        isGlobal: data.isGlobal !== undefined ? data.isGlobal : true,
         testCases: data.testCases
           ? {
               create: data.testCases.map((tc, index) => ({

@@ -35,8 +35,8 @@ export default function ContestDetailPage() {
   });
 
   const registerMutation = useMutation({
-    mutationFn: async () => {
-      await api.post(`/contests/${contestId}/register`);
+    mutationFn: async (password?: string) => {
+      await api.post(`/contests/${contestId}/register`, { password });
     },
     onSuccess: () => {
       alert('Successfully registered!');
@@ -120,7 +120,16 @@ export default function ContestDetailPage() {
                   <button
                     onClick={() => {
                       if (!isAuthenticated) router.push('/login');
-                      else registerMutation.mutate();
+                      else {
+                        if (contest.isPublic === false) {
+                          const pwd = prompt('This is a private contest. Please enter the password:');
+                          if (pwd !== null) {
+                            registerMutation.mutate(pwd);
+                          }
+                        } else {
+                          registerMutation.mutate(undefined);
+                        }
+                      }
                     }}
                     disabled={registerMutation.isPending}
                     className="px-6 py-2.5 bg-primary-600 text-white font-medium text-sm rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"

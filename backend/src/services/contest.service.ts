@@ -4,7 +4,7 @@ import { RatingService } from './rating.service';
 
 class ContestService {
   async createContest(data: any) {
-    const { problemIds, isPublic, password, ...contestData } = data;
+    const { problemIds, ...contestData } = data;
     
     if (contestData.duration) {
       contestData.duration = parseInt(contestData.duration, 10);
@@ -21,7 +21,7 @@ class ContestService {
   }
 
   async updateContest(id: string, data: any) {
-    const { problemIds, isPublic, password, ...contestData } = data;
+    const { problemIds, ...contestData } = data;
     
     if (contestData.duration) {
       contestData.duration = parseInt(contestData.duration, 10);
@@ -45,7 +45,7 @@ class ContestService {
   }
 
   async getContest(id: string) {
-    return prisma.contest.findUnique({
+    const contest = await prisma.contest.findUnique({
       where: { id },
       include: {
         problems: {
@@ -56,12 +56,24 @@ class ContestService {
         },
       },
     });
+
+    if (contest) {
+      delete (contest as any).password;
+    }
+
+    return contest;
   }
 
-  async registerUser(contestId: string, userId: string) {
+  async registerUser(contestId: string, userId: string, password?: string) {
     const contest = await prisma.contest.findUnique({ where: { id: contestId } });
     if (!contest) throw new Error('Contest not found');
     if (contest.endTime < new Date() || contest.status === 'Ended') throw new Error('Contest already ended');
+
+    if (!contest.isPublic) {
+      if (!password || password !== contest.password) {
+        throw new Error('Incorrect password for private contest');
+      }
+    }
 
     return prisma.contestParticipant.create({
       data: {
@@ -90,8 +102,14 @@ class ContestService {
       prisma.contest.count({ where }),
     ]);
 
+    // Remove passwords from the list
+    const safeContests = contests.map((c) => {
+      delete (c as any).password;
+      return c;
+    });
+
     return {
-      contests,
+      contests: safeContests,
       pagination: {
         page,
         limit,

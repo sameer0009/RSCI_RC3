@@ -9,6 +9,7 @@ import api from '@/lib/api';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
 import { Terminal, Play, CheckCircle, User, MessageCircle, Timer, HardDrive, ThumbsUp, GripVertical, GripHorizontal, ArrowLeft, Clock } from 'lucide-react';
 import { io } from 'socket.io-client';
+import { useProctoring } from '@/hooks/useProctoring';
 
 interface Problem {
   id: string;
@@ -52,6 +53,8 @@ export default function ProblemDetailPage() {
   const router = useRouter();
   const slug = params.slug as string;
   const contestId = params.id as string;
+
+
 
   const [timeLeft, setTimeLeft] = useState<string>('--:--:--');
 
@@ -132,6 +135,49 @@ export default function ProblemDetailPage() {
   const { data: contest, isLoading: loadingContest } = useQuery({
     queryKey: ['contest', contestId],
     queryFn: fetchContest,
+  });
+
+  const { data: problems } = useQuery({
+    queryKey: ['contestProblems', contestId],
+    queryFn: async () => {
+      const res = await api.get(`/contests/${contestId}/problems`);
+      return res.data.data.problems;
+    },
+    enabled: !!contestId,
+  });
+
+  const { data: user } = useQuery({
+    queryKey: ['user'],
+    queryFn: async () => {
+      const res = await api.get('/auth/me');
+      return res.data.data.user;
+    },
+  });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && user) {
+      const isDisqualified = localStorage.getItem(`disqualified_${contestId}_${user.id}`);
+      if (isDisqualified === 'true' && user.role !== 'ADMIN') {
+        alert('You have been disqualified from this contest.');
+        (window as any).__allowNavigation = true;
+        window.location.href = `/contests/${contestId}`;
+      }
+    }
+  }, [contestId, user, router]);
+
+  useProctoring({
+    enabled: !!contest && contest.status === 'Active' && user?.role !== 'ADMIN',
+    maxWarnings: 3,
+    onDisqualify: () => {
+      if (user) {
+        localStorage.setItem(`disqualified_${contestId}_${user.id}`, 'true');
+        handleSubmit(); // Auto-submit their current code
+        setTimeout(() => {
+          (window as any).__allowNavigation = true;
+          window.location.href = `/contests/${contestId}`;
+        }, 1000);
+      }
+    }
   });
 
   const { data: solutionsResponse, isLoading: loadingSolutions } = useQuery({
@@ -313,25 +359,49 @@ export default function ProblemDetailPage() {
     );
   }
 
+  const currentIndex = problems?.findIndex((p: any) => p.slug === slug) ?? -1;
+  const prevProblem = currentIndex > 0 ? problems[currentIndex - 1] : null;
+  const nextProblem = currentIndex >= 0 && currentIndex < (problems?.length || 0) - 1 ? problems[currentIndex + 1] : null;
+
   return (
     <div className="h-screen flex flex-col bg-gray-50 dark:bg-dark-bg p-2 overflow-hidden">
       {/* Contest Top Bar */}
       <div className="flex items-center justify-between bg-white dark:bg-dark-card border border-gray-200 dark:border-gray-800 rounded-xl px-4 py-3 mb-2 shadow-sm">
         <div className="flex items-center gap-4">
-          <Link
-            href={`/contests/${contestId}`}
-            className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back to Contest
-          </Link>
-          <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+          {!(contest?.status === 'Active' && user?.role !== 'ADMIN') && (
+            <>
+              <Link
+                href={`/contests/${contestId}`}
+                className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm transition-colors"
+              >
+                <ArrowLeft size={16} />
+                Back to Contest
+              </Link>
+              <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+            </>
+          )}
           <h2 className="font-bold text-gray-900 dark:text-white hidden sm:block">
             {contest?.title || 'Contest'}
           </h2>
         </div>
         
         <div className="flex items-center gap-4">
+          {prevProblem && (
+            <Link
+              href={`/contests/${contestId}/problems/${prevProblem.slug}`}
+              className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+            >
+              &laquo; Prev Question
+            </Link>
+          )}
+          {nextProblem && (
+            <Link
+              href={`/contests/${contestId}/problems/${nextProblem.slug}`}
+              className="text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400"
+            >
+              Next Question &raquo;
+            </Link>
+          )}
           <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-lg text-sm font-mono font-bold text-gray-900 dark:text-white">
             <Clock size={16} className="text-primary-500" />
             {timeLeft}

@@ -64,13 +64,14 @@ export class ContestController {
   registerContest = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
+      const { password } = req.body;
       const userId = req.user?.id;
 
       if (!userId) {
         return res.status(401).json({ success: false, message: 'Unauthorized' });
       }
 
-      const participant = await contestService.registerUser(id, userId);
+      const participant = await contestService.registerUser(id, userId, password);
 
       res.status(201).json({
         success: true,

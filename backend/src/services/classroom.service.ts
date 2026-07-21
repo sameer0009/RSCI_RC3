@@ -332,9 +332,12 @@ class ClassroomService {
     }
 
     const leaderboard = classroom.members.map(member => ({
-      userId: member.userId,
-      username: member.user.username,
-      fullName: member.user.fullName,
+      user: {
+        id: member.userId,
+        username: member.user.username,
+        fullName: member.user.fullName,
+        rating: member.user.rating,
+      },
       problemsSolved: studentStats[member.userId]?.solved.size || 0,
       totalAttempts: studentStats[member.userId]?.attempts || 0,
     })).sort((a, b) => b.problemsSolved - a.problemsSolved || a.totalAttempts - b.totalAttempts);

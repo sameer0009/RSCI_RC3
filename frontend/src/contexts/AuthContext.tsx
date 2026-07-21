@@ -15,8 +15,6 @@ interface AuthContextType {
   isInstructor: boolean;
   isStudent: boolean;
   hasRole: (role: string) => boolean;
-  viewMode: 'ADMIN' | 'USER';
-  toggleViewMode: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,20 +22,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'ADMIN' | 'USER'>('USER');
-
-  useEffect(() => {
-    const savedMode = localStorage.getItem('viewMode') as 'ADMIN' | 'USER';
-    if (savedMode) {
-      setViewMode(savedMode);
-    }
-  }, []);
-
-  const toggleViewMode = () => {
-    const newMode = viewMode === 'ADMIN' ? 'USER' : 'ADMIN';
-    setViewMode(newMode);
-    localStorage.setItem('viewMode', newMode);
-  };
 
   useEffect(() => {
     checkAuth();
@@ -102,8 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isInstructor: user?.role === 'INSTRUCTOR',
     isStudent: user?.role === 'STUDENT',
     hasRole: (role: string) => user?.role === role,
-    viewMode: user?.role === 'ADMIN' ? viewMode : 'USER',
-    toggleViewMode,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

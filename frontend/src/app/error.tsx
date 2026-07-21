@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { AlertTriangle } from 'lucide-react';
 
 export default function GlobalError({
   error,
@@ -17,9 +18,12 @@ export default function GlobalError({
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-dark-card p-8 rounded-2xl shadow-xl text-center">
+      <div className="max-w-md w-full space-y-8 bg-white dark:bg-dark-card p-8 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 text-center">
         <div>
-          <h2 className="mt-6 text-3xl font-extrabold text-gray-900 dark:text-white">
+          <div className="mx-auto w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 flex items-center justify-center mb-2">
+            <AlertTriangle className="w-6 h-6 text-red-500" />
+          </div>
+          <h2 className="mt-4 text-2xl font-bold text-gray-900 dark:text-white">
             Oops! Something went wrong
           </h2>
           <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">

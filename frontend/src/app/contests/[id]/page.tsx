@@ -7,6 +7,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { Calendar, Clock, Users, Lock, Trophy } from 'lucide-react';
 
 export default function ContestDetailPage() {
   const params = useParams();
@@ -96,25 +97,25 @@ export default function ContestDetailPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg py-12">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="bg-white dark:bg-dark-card shadow rounded-lg p-8 mb-8">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">{contest.title}</h1>
-                <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 mb-6">
-                  <span className={`px-2 py-1 rounded font-semibold ${
-                    contest.status === 'Active' ? 'bg-green-100 text-green-800' :
-                    contest.status === 'Ended' ? 'bg-gray-100 text-gray-800' :
-                    'bg-blue-100 text-blue-800'
+          <div className="bg-white dark:bg-dark-card shadow-sm border border-gray-100 dark:border-gray-800 rounded-xl p-8 mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-6">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3">{contest.title}</h1>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-500 dark:text-gray-400">
+                  <span className={`px-2.5 py-1 rounded-full font-semibold text-xs ${
+                    contest.status === 'Active' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/20 dark:text-emerald-400' :
+                    contest.status === 'Ended' ? 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300' :
+                    'bg-primary-100 text-primary-800 dark:bg-primary-900/20 dark:text-primary-400'
                   }`}>
                     {contest.status}
                   </span>
-                  <span>📅 {new Date(contest.startTime).toLocaleString()}</span>
-                  <span>⏱️ {contest.duration} mins</span>
-                  <span>👥 {contest._count?.participants || 0} participants</span>
+                  <span className="flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5" /> {new Date(contest.startTime).toLocaleString()}</span>
+                  <span className="flex items-center gap-1.5"><Clock className="w-3.5 h-3.5" /> {contest.duration} mins</span>
+                  <span className="flex items-center gap-1.5"><Users className="w-3.5 h-3.5" /> {contest._count?.participants || 0} participants</span>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 w-full md:w-auto shrink-0">
                 {contest.status === 'Upcoming' && (
                   <button
                     onClick={() => {
@@ -122,12 +123,12 @@ export default function ContestDetailPage() {
                       else registerMutation.mutate();
                     }}
                     disabled={registerMutation.isPending}
-                    className="px-6 py-2 bg-primary-600 text-white font-medium rounded hover:bg-primary-700 disabled:opacity-50"
+                    className="px-6 py-2.5 bg-primary-600 text-white font-medium text-sm rounded-lg hover:bg-primary-700 disabled:opacity-50 transition-colors"
                   >
                     {registerMutation.isPending ? 'Registering...' : 'Register Now'}
                   </button>
                 )}
-                
+
                 {contest.status === 'Ended' && (
                   <button
                     onClick={() => {
@@ -135,7 +136,7 @@ export default function ContestDetailPage() {
                       else startVirtualMutation.mutate();
                     }}
                     disabled={startVirtualMutation.isPending}
-                    className="px-6 py-2 bg-gray-800 text-white font-medium rounded hover:bg-gray-900 disabled:opacity-50 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300"
+                    className="px-6 py-2.5 bg-gray-800 text-white font-medium text-sm rounded-lg hover:bg-gray-900 disabled:opacity-50 dark:bg-gray-200 dark:text-gray-900 dark:hover:bg-gray-300 transition-colors"
                   >
                     {startVirtualMutation.isPending ? 'Starting...' : 'Virtual Participate'}
                   </button>
@@ -143,59 +144,61 @@ export default function ContestDetailPage() {
 
                 <Link
                   href={`/contests/${contestId}/leaderboard`}
-                  className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium rounded hover:bg-gray-50 dark:hover:bg-gray-800 text-center"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-2.5 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 font-medium text-sm rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-center"
                 >
-                  Leaderboard
+                  <Trophy className="w-4 h-4" /> Leaderboard
                 </Link>
               </div>
             </div>
 
-            <div className="prose dark:prose-invert max-w-none mt-8">
+            <div className="prose dark:prose-invert max-w-none mt-8 prose-headings:text-base prose-headings:font-semibold">
               <h3>Description</h3>
               <p>{contest.description}</p>
             </div>
           </div>
 
-          <div className="bg-white dark:bg-dark-card shadow rounded-lg p-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Problems</h2>
-            
+          <div className="bg-white dark:bg-dark-card shadow-sm border border-gray-100 dark:border-gray-800 rounded-xl p-8">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">Problems</h2>
+
             {contest.status === 'Upcoming' && user?.role !== 'ADMIN' ? (
-              <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <span className="text-4xl mb-4 block">🔒</span>
-                <p className="text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/60 rounded-xl">
+                <div className="mx-auto w-12 h-12 rounded-full bg-white dark:bg-gray-800 shadow-sm flex items-center justify-center mb-4">
+                  <Lock className="w-5 h-5 text-gray-400" />
+                </div>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
                   Problems will be revealed when the contest starts.
                 </p>
               </div>
             ) : problems ? (
-              <div className="divide-y divide-gray-200 dark:divide-gray-700 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <div className="divide-y divide-gray-100 dark:divide-gray-800 border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
                 {problems.map((problem: any, index: number) => (
                   <Link
                     key={problem.id}
                     href={`/contests/${contestId}/problems/${problem.slug}`}
-                    className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800/60 transition-colors"
                   >
                     <div className="flex items-center gap-4">
-                      <span className="text-lg font-bold text-gray-400 w-8">{String.fromCharCode(65 + index)}</span>
+                      <span className="text-lg font-bold text-gray-300 dark:text-gray-600 w-8">{String.fromCharCode(65 + index)}</span>
                       <div>
-                        <h3 className="font-semibold text-primary-600 dark:text-primary-400">{problem.title}</h3>
+                        <h3 className="font-semibold text-primary-600 dark:text-primary-400 text-sm">{problem.title}</h3>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 text-xs font-semibold rounded ${
-                      problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800' :
-                      problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
+                    <span className={`px-2.5 py-1 text-xs font-semibold rounded-full ${
+                      problem.difficulty === 'Easy' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                      problem.difficulty === 'Medium' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                      'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
                     }`}>
                       {problem.difficulty}
                     </span>
                   </Link>
                 ))}
                 {problems.length === 0 && (
-                  <div className="p-4 text-center text-gray-500">No problems have been added to this contest yet.</div>
+                  <div className="p-4 text-center text-sm text-gray-500 dark:text-gray-400">No problems have been added to this contest yet.</div>
                 )}
               </div>
             ) : (
-              <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p className="text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 bg-gray-50 dark:bg-gray-800/60 rounded-xl">
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
                   You must register to view problems.
                 </p>
               </div>

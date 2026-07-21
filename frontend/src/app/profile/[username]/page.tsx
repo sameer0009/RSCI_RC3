@@ -8,6 +8,7 @@ import api from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ActivityCalendar } from 'react-activity-calendar';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Camera, MapPin, Globe, Target, Star, Trophy, Medal, Pencil, X } from 'lucide-react';
 
 interface UserProfile {
   id: string;
@@ -159,11 +160,26 @@ export default function ProfilePage() {
   };
 
   const getRankBadge = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    if (rank <= 10) return '🏆';
-    return '👤';
+    if (rank >= 1 && rank <= 3) {
+      const style = [
+        'bg-gold-100 text-gold-700 dark:bg-gold-900/30 dark:text-gold-400',
+        'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
+        'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      ][rank - 1];
+      return (
+        <span className={`w-9 h-9 rounded-full flex items-center justify-center ${style}`}>
+          <Medal className="w-5 h-5" />
+        </span>
+      );
+    }
+    if (rank <= 10 && rank > 0) {
+      return (
+        <span className="w-9 h-9 rounded-full flex items-center justify-center bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400">
+          <Trophy className="w-5 h-5" />
+        </span>
+      );
+    }
+    return null;
   };
 
   if (loading) {
@@ -172,9 +188,9 @@ export default function ProfilePage() {
         <Navbar />
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 animate-pulse">
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow p-8 mb-6">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 mb-6">
               <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-                <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                <div className="w-28 h-28 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 <div className="flex-1 w-full space-y-4">
                   <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
@@ -188,7 +204,7 @@ export default function ProfilePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
+                <div key={i} className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
                   <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mx-auto mb-2"></div>
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 mx-auto"></div>
                 </div>
@@ -221,22 +237,22 @@ export default function ProfilePage() {
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Profile Header */}
-          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-8 mb-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-8 mb-6">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
-              <div className="relative">
+              <div className="relative shrink-0">
                 {profile.profilePicture ? (
                   <img
                     src={`http://localhost:5000${profile.profilePicture}`}
                     alt={profile.username}
-                    className="w-32 h-32 rounded-full object-cover"
+                    className="w-28 h-28 rounded-full object-cover ring-4 ring-gray-50 dark:ring-gray-800"
                   />
                 ) : (
-                  <div className="w-32 h-32 rounded-full bg-primary-600 flex items-center justify-center text-white text-4xl font-bold">
+                  <div className="w-28 h-28 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white text-4xl font-bold ring-4 ring-gray-50 dark:ring-gray-800">
                     {profile.username[0].toUpperCase()}
                   </div>
                 )}
                 {isOwnProfile && (
-                  <label className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full cursor-pointer hover:bg-primary-700">
+                  <label className="absolute bottom-0 right-0 bg-primary-600 text-white p-2 rounded-full cursor-pointer hover:bg-primary-700 shadow-sm ring-2 ring-white dark:ring-dark-card">
                     <input
                       type="file"
                       accept="image/*"
@@ -244,29 +260,36 @@ export default function ProfilePage() {
                       className="hidden"
                       disabled={uploadingPicture}
                     />
-                    📷
+                    <Camera className="w-4 h-4" />
                   </label>
                 )}
               </div>
 
-              <div className="flex-1 text-center md:text-left">
-                <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+              <div className="flex-1 text-center md:text-left min-w-0">
+                <div className="flex items-center justify-center md:justify-start gap-2.5 mb-1.5 flex-wrap">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
                     {profile.fullName || profile.username}
                   </h1>
-                  <span className="text-3xl">{getRankBadge(profile.rank)}</span>
+                  {getRankBadge(profile.rank)}
                   {profile.role === 'ADMIN' && (
-                    <span className="px-2 py-1 text-xs font-semibold rounded text-purple-600 bg-purple-100 dark:bg-purple-900/20">
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full text-gold-700 bg-gold-50 border border-gold-200 dark:bg-gold-900/20 dark:text-gold-400 dark:border-gold-900/40">
                       ADMIN
                     </span>
                   )}
+                  {profile.role === 'INSTRUCTOR' && (
+                    <span className="px-2 py-1 text-xs font-semibold rounded-full text-teal-700 bg-teal-50 border border-teal-200 dark:bg-teal-900/20 dark:text-teal-400 dark:border-teal-900/40">
+                      INSTRUCTOR
+                    </span>
+                  )}
                 </div>
-                <p className="text-gray-600 dark:text-gray-400 mb-2">@{profile.username}</p>
+                <p className="text-gray-500 dark:text-gray-400 mb-2 text-sm">@{profile.username}</p>
                 {profile.location && (
-                  <p className="text-gray-600 dark:text-gray-400 mb-2">📍 {profile.location}</p>
+                  <p className="text-gray-600 dark:text-gray-400 mb-2 text-sm flex items-center justify-center md:justify-start gap-1.5">
+                    <MapPin className="w-3.5 h-3.5" /> {profile.location}
+                  </p>
                 )}
                 {profile.bio && (
-                  <p className="text-gray-700 dark:text-gray-300 mb-4">{profile.bio}</p>
+                  <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">{profile.bio}</p>
                 )}
 
                 {/* Social Links */}
@@ -312,9 +335,9 @@ export default function ProfilePage() {
                       href={profile.websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-gray-600 dark:text-gray-400 hover:text-gray-700"
+                      className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
                     >
-                      🌐
+                      <Globe className="w-6 h-6" />
                     </a>
                   )}
                 </div>
@@ -322,9 +345,9 @@ export default function ProfilePage() {
                 {isOwnProfile && (
                   <button
                     onClick={() => setShowEditModal(true)}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors"
                   >
-                    Edit Profile
+                    <Pencil className="w-3.5 h-3.5" /> Edit Profile
                   </button>
                 )}
               </div>
@@ -332,44 +355,44 @@ export default function ProfilePage() {
           </div>
 
           {/* Stats & Difficulty Breakdown */}
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center md:col-span-2 flex items-center justify-between">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
+            <div className="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 text-center md:col-span-2 flex items-center justify-between">
               <div>
-                <div className="text-4xl font-bold text-primary-600 mb-1">{profile.problemsSolved}</div>
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Problems Solved</div>
+                <div className="text-3xl sm:text-4xl font-bold text-primary-600 dark:text-primary-400 mb-1">{profile.problemsSolved}</div>
+                <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Problems Solved</div>
               </div>
               <div className="flex gap-4 text-left">
                 <div>
-                  <div className="text-sm text-gray-500 mb-1">Easy</div>
+                  <div className="text-xs text-gray-500 mb-1">Easy</div>
                   <div className="text-lg font-bold text-green-500">{profile.difficultyBreakdown?.Easy || 0}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500 mb-1">Medium</div>
+                  <div className="text-xs text-gray-500 mb-1">Medium</div>
                   <div className="text-lg font-bold text-yellow-500">{profile.difficultyBreakdown?.Medium || 0}</div>
                 </div>
                 <div>
-                  <div className="text-sm text-gray-500 mb-1">Hard</div>
+                  <div className="text-xs text-gray-500 mb-1">Hard</div>
                   <div className="text-lg font-bold text-red-500">{profile.difficultyBreakdown?.Hard || 0}</div>
                 </div>
               </div>
             </div>
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center flex flex-col justify-center">
-              <div className="text-3xl font-bold text-green-600 mb-1">{profile.acceptedSubmissions}</div>
-              <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Accepted</div>
+            <div className="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 text-center flex flex-col justify-center">
+              <div className="text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 mb-1">{profile.acceptedSubmissions}</div>
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Accepted</div>
             </div>
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center flex flex-col justify-center">
-              <div className="text-3xl font-bold text-blue-600 mb-1">{profile.rating}</div>
-              <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Rating</div>
+            <div className="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 text-center flex flex-col justify-center">
+              <div className="text-2xl sm:text-3xl font-bold text-primary-600 dark:text-primary-400 mb-1">{profile.rating}</div>
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Rating</div>
             </div>
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow text-center flex flex-col justify-center">
-              <div className="text-3xl font-bold text-purple-600 mb-1">#{profile.rank}</div>
-              <div className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Global Rank</div>
+            <div className="bg-white dark:bg-dark-card p-5 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 text-center flex flex-col justify-center">
+              <div className="text-2xl sm:text-3xl font-bold text-gold-600 dark:text-gold-400 mb-1">#{profile.rank}</div>
+              <div className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Global Rank</div>
             </div>
           </div>
 
           {/* Submission Heatmap */}
-          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6 overflow-hidden">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6">
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 mb-6 overflow-hidden">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6">
               Submission Activity
             </h2>
             <div className="flex justify-center w-full overflow-x-auto pb-4 custom-scrollbar">
@@ -411,8 +434,8 @@ export default function ProfilePage() {
 
           {/* Rating History */}
           {profile.ratingHistory && profile.ratingHistory.length > 0 && (
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 mb-6">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
                 Rating History
               </h2>
               <div className="h-64 w-full">
@@ -424,14 +447,14 @@ export default function ProfilePage() {
                     }))}
                     margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis dataKey="dateStr" stroke="#9ca3af" />
-                    <YAxis dataKey="newRating" stroke="#9ca3af" domain={['dataMin - 100', 'dataMax + 100']} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis dataKey="dateStr" stroke="#9ca3af" fontSize={12} />
+                    <YAxis dataKey="newRating" stroke="#9ca3af" fontSize={12} domain={['dataMin - 100', 'dataMax + 100']} />
                     <Tooltip
-                      contentStyle={{ backgroundColor: '#1f2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-                      itemStyle={{ color: '#60a5fa' }}
+                      contentStyle={{ backgroundColor: '#152c4f', border: 'none', borderRadius: '8px', color: '#fff' }}
+                      itemStyle={{ color: '#82abd9' }}
                     />
-                    <Line type="monotone" dataKey="newRating" stroke="#3b82f6" strokeWidth={3} dot={{ r: 4, fill: '#3b82f6' }} activeDot={{ r: 6 }} />
+                    <Line type="monotone" dataKey="newRating" stroke="#2f5fa3" strokeWidth={3} dot={{ r: 4, fill: '#2f5fa3' }} activeDot={{ r: 6 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
@@ -439,16 +462,16 @@ export default function ProfilePage() {
           )}
 
           {/* Recent Submissions */}
-          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               Recent Submissions
             </h2>
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {profile.recentSubmissions && profile.recentSubmissions.length > 0 ? (
                 profile.recentSubmissions.map((submission) => (
                   <div
                     key={submission.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg"
                   >
                     <div>
                       <div className="font-medium text-gray-900 dark:text-white">
@@ -483,26 +506,26 @@ export default function ProfilePage() {
           </div>
 
           {/* Badges / Achievements */}
-          <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 mb-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
               Achievements
             </h2>
             <div className="flex flex-wrap gap-4">
               {profile.acceptedSubmissions > 0 && (
                 <div className="flex flex-col items-center p-4 bg-primary-50 dark:bg-primary-900/10 rounded-xl border border-primary-100 dark:border-primary-900/20 w-28">
-                  <span className="text-3xl mb-2">🎯</span>
+                  <Target className="w-7 h-7 mb-2 text-primary-600 dark:text-primary-400" />
                   <span className="text-xs font-bold text-primary-700 dark:text-primary-400 text-center">First AC</span>
                 </div>
               )}
               {profile.problemsSolved >= 100 && (
-                <div className="flex flex-col items-center p-4 bg-yellow-50 dark:bg-yellow-900/10 rounded-xl border border-yellow-100 dark:border-yellow-900/20 w-28">
-                  <span className="text-3xl mb-2">💯</span>
-                  <span className="text-xs font-bold text-yellow-700 dark:text-yellow-400 text-center">Centurion</span>
+                <div className="flex flex-col items-center p-4 bg-gold-50 dark:bg-gold-900/10 rounded-xl border border-gold-100 dark:border-gold-900/20 w-28">
+                  <Star className="w-7 h-7 mb-2 text-gold-600 dark:text-gold-400" />
+                  <span className="text-xs font-bold text-gold-700 dark:text-gold-400 text-center">Centurion</span>
                 </div>
               )}
               {profile.rank <= 10 && profile.rank > 0 && (
                 <div className="flex flex-col items-center p-4 bg-purple-50 dark:bg-purple-900/10 rounded-xl border border-purple-100 dark:border-purple-900/20 w-28">
-                  <span className="text-3xl mb-2">🏆</span>
+                  <Trophy className="w-7 h-7 mb-2 text-purple-600 dark:text-purple-400" />
                   <span className="text-xs font-bold text-purple-700 dark:text-purple-400 text-center">Top 10 Rank</span>
                 </div>
               )}
@@ -516,9 +539,17 @@ export default function ProfilePage() {
 
       {/* Edit Profile Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-dark-card rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Edit Profile</h3>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-xl p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-5">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">Edit Profile</h3>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className="p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

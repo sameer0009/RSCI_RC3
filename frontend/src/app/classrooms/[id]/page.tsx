@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import Link from 'next/link';
 import api from '@/lib/api';
+import { Plus, KeyRound } from 'lucide-react';
 
 export default function ClassroomDetailPage() {
   const { id } = useParams();
@@ -69,9 +70,11 @@ export default function ClassroomDetailPage() {
                 )}
               </div>
               {isInstructor && (
-                <div className="bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/20 px-4 py-2 rounded-lg text-center">
-                  <div className="text-sm text-primary-600 dark:text-primary-400 font-medium mb-1">Invite Code</div>
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white tracking-widest">{classroom.code}</div>
+                <div className="bg-primary-50 dark:bg-primary-900/10 border border-primary-100 dark:border-primary-900/20 px-4 py-2.5 rounded-xl text-center shrink-0">
+                  <div className="text-xs text-primary-600 dark:text-primary-400 font-semibold uppercase tracking-wide mb-1 flex items-center justify-center gap-1">
+                    <KeyRound className="w-3 h-3" /> Invite Code
+                  </div>
+                  <div className="text-2xl font-bold text-gray-900 dark:text-white tracking-widest font-mono">{classroom.code}</div>
                 </div>
               )}
             </div>
@@ -133,14 +136,14 @@ export default function ClassroomDetailPage() {
                 {isInstructor && (
                   <Link
                     href={`/classrooms/${id}/assignments/create`}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors inline-block"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors text-sm font-medium"
                   >
-                    + New Assignment
+                    <Plus className="w-4 h-4" /> New Assignment
                   </Link>
                 )}
               </div>
               {classroom.assignments.length === 0 ? (
-                <div className="text-gray-500 text-center py-12 bg-white dark:bg-dark-card rounded-lg">
+                <div className="text-gray-500 dark:text-gray-400 text-sm text-center py-12 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800">
                   No assignments yet.
                 </div>
               ) : (
@@ -148,7 +151,7 @@ export default function ClassroomDetailPage() {
                   <Link
                     key={assignment.id}
                     href={`/classrooms/${id}/assignments/${assignment.id}`}
-                    className="block bg-white dark:bg-dark-card p-6 rounded-lg shadow border border-gray-100 dark:border-gray-800 hover:border-primary-500 transition-colors"
+                    className="block bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 hover:border-primary-300 dark:hover:border-primary-700 hover:shadow-md transition-all"
                   >
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="text-lg font-bold text-gray-900 dark:text-white">{assignment.title}</h3>
@@ -167,7 +170,7 @@ export default function ClassroomDetailPage() {
           )}
 
           {activeTab === 'members' && (
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-gray-800/50">
                   <tr>
@@ -202,7 +205,7 @@ export default function ClassroomDetailPage() {
           )}
 
           {activeTab === 'leaderboard' && (
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-gray-800/50">
                   <tr>
@@ -246,7 +249,7 @@ export default function ClassroomDetailPage() {
           {activeTab === 'analytics' && isInstructor && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {analytics?.map((data: any) => (
-                <div key={data.student.id} className="bg-white dark:bg-dark-card rounded-lg shadow p-6">
+                <div key={data.student.id} className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
                   <div className="flex items-center mb-4">
                     <div className="h-10 w-10 rounded-full bg-primary-100 dark:bg-primary-900/20 flex items-center justify-center text-primary-600 dark:text-primary-400 font-bold">
                       {data.student.username[0].toUpperCase()}
@@ -283,7 +286,7 @@ export default function ClassroomDetailPage() {
                 </div>
               ))}
               {(!analytics || analytics.length === 0) && (
-                <div className="col-span-full text-center py-12 bg-white dark:bg-dark-card rounded-lg text-gray-500">
+                <div className="col-span-full text-center py-12 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 text-sm text-gray-500 dark:text-gray-400">
                   No analytics data available yet.
                 </div>
               )}

@@ -1,156 +1,121 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import NotificationBell from './NotificationBell';
 
+const linkClass =
+  'text-sm text-gray-300 hover:text-white transition-colors font-medium whitespace-nowrap';
+const adminLinkClass =
+  'text-xs font-semibold whitespace-nowrap px-2.5 py-1 rounded-md border transition-colors';
+
 export default function Navbar() {
-  const { user, logout, isAuthenticated, isAdmin, viewMode, toggleViewMode } = useAuth();
+  const { user, logout, isAuthenticated, isAdmin } = useAuth();
   const router = useRouter();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const handleLogout = async () => {
     await logout();
     router.push('/login');
   };
 
-  const handleToggleView = () => {
-    toggleViewMode();
-    if (viewMode === 'USER') {
-      router.push('/admin');
-    } else {
-      router.push('/problems');
-    }
-  };
+  const userLinks =
+    isAuthenticated && !isAdmin ? (
+      <>
+        {user?.role !== 'INSTRUCTOR' && (
+          <>
+            <Link href="/problems" className={linkClass}>
+              Problems
+            </Link>
+            <Link href="/contests" className={linkClass}>
+              Contests
+            </Link>
+            <Link href="/leaderboard" className={linkClass}>
+              Leaderboard
+            </Link>
+          </>
+        )}
+        {(user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' || user?.role === 'STUDENT') && (
+          <Link href="/classrooms" className={linkClass}>
+            Classrooms
+          </Link>
+        )}
+        {user?.role === 'INSTRUCTOR' && (
+          <Link href="/admin/problems" className={linkClass}>
+            Manage Problems
+          </Link>
+        )}
+      </>
+    ) : null;
+
+  const adminLinks =
+    isAuthenticated && isAdmin ? (
+      <>
+        <Link
+          href="/admin"
+          className={`${adminLinkClass} text-gold-400 border-gold-400/40 hover:bg-gold-400/10`}
+        >
+          Dashboard
+        </Link>
+        {(user?.role === 'ADMIN' || user?.role === 'PROBLEM_SETTER') && (
+          <Link
+            href="/admin/problems"
+            className={`${adminLinkClass} text-primary-300 border-primary-400/40 hover:bg-primary-400/10`}
+          >
+            Problems
+          </Link>
+        )}
+        {(user?.role === 'ADMIN' || user?.role === 'CONTEST_MANAGER') && (
+          <Link
+            href="/admin/competitions"
+            className={`${adminLinkClass} text-emerald-300 border-emerald-400/40 hover:bg-emerald-400/10`}
+          >
+            Contests
+          </Link>
+        )}
+        <Link
+          href="/admin/classrooms"
+          className={`${adminLinkClass} text-orange-300 border-orange-400/40 hover:bg-orange-400/10`}
+        >
+          Classes
+        </Link>
+      </>
+    ) : null;
 
   return (
-    <nav className="bg-white/10 dark:bg-dark-card/50 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
+    <nav className="bg-primary-950/70 dark:bg-dark-card/50 backdrop-blur-lg border-b border-white/10 sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center space-x-8">
-            <Link
-              href="/"
-              className="text-2xl font-bold bg-gradient-to-r from-primary-400 to-blue-400 bg-clip-text text-transparent hover:from-primary-300 hover:to-blue-300 transition-all"
-            >
-              RSCI-RC3
+        <div className="flex justify-between items-center h-16 gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
+              <span className="relative w-9 h-9 rounded-full bg-white ring-1 ring-white/20 shadow-sm overflow-hidden shrink-0">
+                <Image src="/logo.png" alt="RSCI logo" fill sizes="36px" className="object-contain p-0.5" />
+              </span>
+              <span className="hidden sm:flex flex-col leading-tight">
+                <span className="text-base font-bold text-white tracking-tight group-hover:text-gold-300 transition-colors">
+                  RSCI Judge
+                </span>
+                <span className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">
+                  School of Computing &amp; Innovation
+                </span>
+              </span>
             </Link>
-            {isAuthenticated && (
-              <>
-                {/* User View Links */}
-                {viewMode === 'USER' && (
-                  <>
-                    {user?.role !== 'INSTRUCTOR' && (
-                      <>
-                        <Link
-                          href="/problems"
-                          className="text-gray-300 hover:text-white transition-colors font-medium"
-                        >
-                          Problems
-                        </Link>
-                        <Link
-                          href="/contests"
-                          className="text-gray-300 hover:text-white transition-colors font-medium"
-                        >
-                          Contests
-                        </Link>
-                        <Link
-                          href="/leaderboard"
-                          className="text-gray-300 hover:text-white transition-colors font-medium"
-                        >
-                          Leaderboard
-                        </Link>
-                      </>
-                    )}
-                    {(user?.role === 'INSTRUCTOR' || user?.role === 'ADMIN' || user?.role === 'STUDENT') && (
-                      <Link
-                        href="/classrooms"
-                        className="text-gray-300 hover:text-white transition-colors font-medium"
-                      >
-                        Classrooms
-                      </Link>
-                    )}
-                    {user?.role === 'INSTRUCTOR' && (
-                      <Link
-                        href="/admin/problems"
-                        className="text-gray-300 hover:text-white transition-colors font-medium"
-                      >
-                        Manage Problems
-                      </Link>
-                    )}
-                  </>
-                )}
-
-                {/* Admin View Links */}
-                {viewMode === 'ADMIN' && (
-                  <>
-                    <Link
-                      href="/admin"
-                      className="text-purple-400 hover:text-purple-300 transition-colors font-medium flex items-center gap-1 border border-purple-400/30 px-2 py-0.5 rounded"
-                    >
-                      Dashboard
-                    </Link>
-                    {(user?.role === 'ADMIN' || user?.role === 'PROBLEM_SETTER') && (
-                      <Link
-                        href="/admin/problems"
-                        className="text-blue-400 hover:text-blue-300 transition-colors font-medium text-sm border border-blue-400/30 px-2 py-0.5 rounded"
-                      >
-                        Manage Problems
-                      </Link>
-                    )}
-                    {(user?.role === 'ADMIN' || user?.role === 'CONTEST_MANAGER') && (
-                      <Link
-                        href="/admin/competitions"
-                        className="text-green-400 hover:text-green-300 transition-colors font-medium text-sm border border-green-400/30 px-2 py-0.5 rounded"
-                      >
-                        Manage Contests
-                      </Link>
-                    )}
-                    <Link
-                      href="/admin/classrooms"
-                      className="text-orange-400 hover:text-orange-300 transition-colors font-medium text-sm border border-orange-400/30 px-2 py-0.5 rounded"
-                    >
-                      Manage Classes
-                    </Link>
-                  </>
-                )}
-              </>
-            )}
+            <div className="hidden lg:flex items-center gap-5 pl-4 ml-1 border-l border-white/10 overflow-x-auto">
+              {userLinks}
+              {adminLinks}
+            </div>
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-2 sm:gap-3">
             {isAuthenticated ? (
               <>
-                {/* View Switcher Toggle */}
-                {isAdmin && (
-                  <button
-                    onClick={handleToggleView}
-                    className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
-                      viewMode === 'ADMIN'
-                        ? 'bg-purple-600/20 text-purple-400 border-purple-500/50 hover:bg-purple-600/30'
-                        : 'bg-blue-600/20 text-blue-400 border-blue-500/50 hover:bg-blue-600/30'
-                    }`}
-                  >
-                    {viewMode === 'ADMIN' ? (
-                      <>
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        Switch to User View
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                        </svg>
-                        Switch to Admin View
-                      </>
-                    )}
-                  </button>
-                )}
                 <NotificationBell />
                 <Link
                   href="/settings"
-                  className="p-2 text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/10"
+                  className="hidden sm:inline-flex p-2 text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/10"
                   title="Settings"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,32 +125,46 @@ export default function Navbar() {
                 </Link>
                 <Link
                   href={`/profile/${user?.username}`}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all"
+                  className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 bg-white/5 rounded-lg border border-white/10 hover:bg-white/10 transition-all"
                 >
-                  <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-white font-bold text-sm">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xs ring-1 ring-white/20">
                     {user?.username?.[0].toUpperCase()}
                   </div>
-                  <span className="text-gray-300 font-medium">{user?.username}</span>
+                  <span className="text-gray-300 font-medium text-sm">{user?.username}</span>
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600/80 hover:bg-red-600 rounded-lg transition-all"
+                  className="px-3 py-1.5 text-sm font-medium text-white bg-red-600/80 hover:bg-red-600 rounded-lg transition-all"
                 >
                   Logout
                 </button>
+                <button
+                  onClick={() => setMobileOpen((v) => !v)}
+                  className="lg:hidden p-2 text-gray-300 hover:text-white rounded-lg hover:bg-white/10"
+                  aria-label="Toggle navigation"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                </button>
               </>
             ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="px-4 py-2 text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-all"
-                >
-                  Login
-                </Link>
-              </>
+              <Link
+                href="/login"
+                className="px-4 py-2 text-sm font-medium text-primary-950 bg-gold-400 hover:bg-gold-300 rounded-lg transition-all shadow-sm"
+              >
+                Login
+              </Link>
             )}
           </div>
         </div>
+
+        {isAuthenticated && mobileOpen && (
+          <div className="lg:hidden flex flex-col gap-3 pb-4 pt-1 border-t border-white/10">
+            {userLinks}
+            {adminLinks}
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -46,24 +46,24 @@ export default function ContestLeaderboardPage() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-1">
                 Leaderboard
               </h1>
-              <p className="text-gray-500 dark:text-gray-400">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 {contest?.title}
               </p>
             </div>
             <Link
               href={`/contests/${contestId}`}
-              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+              className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
             >
               Back to Contest
             </Link>
           </div>
 
-          <div className="bg-white dark:bg-dark-card shadow rounded-lg overflow-hidden">
+          <div className="bg-white dark:bg-dark-card shadow-sm border border-gray-100 dark:border-gray-800 rounded-xl overflow-hidden">
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                 <thead className="bg-gray-50 dark:bg-[#1a1a1a]">

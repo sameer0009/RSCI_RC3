@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Editor from '@monaco-editor/react';
 import api from '@/lib/api';
 import { PanelGroup, Panel, PanelResizeHandle } from 'react-resizable-panels';
-import { Terminal, Play, CheckCircle, Settings, GripVertical, GripHorizontal, ArrowLeft } from 'lucide-react';
+import { Terminal, Play, CheckCircle, RotateCw, User, MessageCircle, Timer, HardDrive, ThumbsUp, GripVertical, GripHorizontal, ArrowLeft } from 'lucide-react';
 import { io } from 'socket.io-client';
 
 interface Problem {
@@ -377,7 +377,7 @@ export default function ProblemDetailPage() {
                   </span>
                   {userSubmissions.length > 0 && (
                     <span className="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400 font-semibold rounded-full flex items-center gap-1 shadow-sm">
-                      🔄 Attempts: {userSubmissions.length} | Retakes: {Math.max(0, userSubmissions.length - 1)}
+                      <RotateCw className="w-3 h-3" /> Attempts: {userSubmissions.length} | Retakes: {Math.max(0, userSubmissions.length - 1)}
                     </span>
                   )}
                 </div>
@@ -505,9 +505,9 @@ export default function ProblemDetailPage() {
                             <span className="flex items-center gap-1 font-medium text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded text-xs">
                               {sol.language}
                             </span>
-                            <span className="flex items-center gap-1">↑ {sol._count?.votes || 0}</span>
-                            <span className="flex items-center gap-1">👤 {sol.author?.username || 'User'}</span>
-                            <span className="flex items-center gap-1">💬 {sol._count?.comments || 0}</span>
+                            <span className="flex items-center gap-1"><ThumbsUp className="w-3 h-3" /> {sol._count?.votes || 0}</span>
+                            <span className="flex items-center gap-1"><User className="w-3 h-3" /> {sol.author?.username || 'User'}</span>
+                            <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {sol._count?.comments || 0}</span>
                           </div>
                         </div>
                       ))
@@ -537,8 +537,8 @@ export default function ProblemDetailPage() {
                       </div>
                       <div className="flex gap-4 text-xs text-gray-600 dark:text-gray-400">
                         <span className="bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{sub.language}</span>
-                        <span className="flex items-center gap-1">⏱ {sub.executionTime} ms</span>
-                        <span className="flex items-center gap-1">💾 {(sub.memoryUsed / 1024).toFixed(1)} MB</span>
+                        <span className="flex items-center gap-1"><Timer className="w-3 h-3" /> {sub.executionTime} ms</span>
+                        <span className="flex items-center gap-1"><HardDrive className="w-3 h-3" /> {(sub.memoryUsed / 1024).toFixed(1)} MB</span>
                       </div>
                     </div>
                   ))
@@ -810,10 +810,10 @@ export default function ProblemDetailPage() {
                             </div>
                             <div className="flex gap-4 text-xs font-medium text-gray-500 dark:text-gray-400 mt-2 p-2 bg-white/50 dark:bg-black/20 rounded-md inline-flex">
                               <span className="flex items-center gap-1">
-                                ⏱ {result.executionTime.toFixed(1)} ms
+                                <Timer className="w-3 h-3" /> {result.executionTime.toFixed(1)} ms
                               </span>
                               <span className="flex items-center gap-1">
-                                💾 {(result.memoryUsed / 1024).toFixed(1)} MB
+                                <HardDrive className="w-3 h-3" /> {(result.memoryUsed / 1024).toFixed(1)} MB
                               </span>
                             </div>
                             {result.errorMessage && (

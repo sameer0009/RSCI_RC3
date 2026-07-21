@@ -132,7 +132,7 @@ export default function EditProblemPage() {
           </h1>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
               <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">
                 Basic Information
               </h2>
@@ -237,7 +237,7 @@ export default function EditProblemPage() {
               </div>
             </div>
 
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow p-6">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Test Cases</h2>
                 <button

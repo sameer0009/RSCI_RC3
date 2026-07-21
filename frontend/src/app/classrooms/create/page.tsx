@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
+import { School } from 'lucide-react';
 
 export default function CreateClassroomPage() {
   const { user } = useAuth();
@@ -62,9 +63,12 @@ export default function CreateClassroomPage() {
     <>
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-xl shadow-lg p-8">
+        <div className="max-w-md w-full bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-8">
           <div className="text-center mb-8">
-            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white">Create a Classroom</h2>
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4">
+              <School className="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">Create a Classroom</h2>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
               Set up a new class. A unique join code will be generated automatically.
             </p>
@@ -126,7 +130,7 @@ export default function CreateClassroomPage() {
             )}
 
             {error && (
-              <div className="text-red-500 text-sm bg-red-100 p-3 rounded">
+              <div className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/40 p-3 rounded-lg">
                 {error}
               </div>
             )}

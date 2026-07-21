@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
+import Link from 'next/link';
+import { Download, TrendingUp } from 'lucide-react';
 import {
   LineChart,
   Line,
@@ -90,18 +92,18 @@ function AdminAnalyticsContent() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8 flex justify-between items-center">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 Analytics Dashboard
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">Platform insights and trends</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">Platform insights and trends</p>
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <select
                 value={days}
                 onChange={(e) => setDays(parseInt(e.target.value))}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-card text-gray-900 dark:text-white"
+                className="px-4 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-dark-card text-sm text-gray-900 dark:text-white focus:ring-2 focus:ring-primary-500 focus:outline-none"
               >
                 <option value={7}>Last 7 days</option>
                 <option value={30}>Last 30 days</option>
@@ -109,27 +111,27 @@ function AdminAnalyticsContent() {
               </select>
               <button
                 onClick={handleExport}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 text-sm font-medium transition-colors"
               >
-                Export CSV
+                <Download className="w-4 h-4" /> Export CSV
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Submission Trend */}
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
                 Submission Trend
               </h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={submissionTrend}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="date" stroke="#9ca3af" />
-                  <YAxis stroke="#9ca3af" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} />
+                  <YAxis stroke="#9ca3af" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1f2937',
+                      backgroundColor: '#152c4f',
                       border: 'none',
                       borderRadius: '8px',
                       color: '#fff',
@@ -139,7 +141,7 @@ function AdminAnalyticsContent() {
                   <Line
                     type="monotone"
                     dataKey="total"
-                    stroke="#3b82f6"
+                    stroke="#2f5fa3"
                     name="Total"
                     strokeWidth={2}
                   />
@@ -155,11 +157,11 @@ function AdminAnalyticsContent() {
             </div>
 
             {/* Difficulty Distribution */}
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
                 Problem Difficulty Distribution
               </h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={difficultyDist}
@@ -180,7 +182,7 @@ function AdminAnalyticsContent() {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1f2937',
+                      backgroundColor: '#152c4f',
                       border: 'none',
                       borderRadius: '8px',
                       color: '#fff',
@@ -191,41 +193,41 @@ function AdminAnalyticsContent() {
             </div>
 
             {/* Language Statistics */}
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
                 Popular Languages
               </h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart data={languageStats}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="language" stroke="#9ca3af" />
-                  <YAxis stroke="#9ca3af" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="language" stroke="#9ca3af" fontSize={12} />
+                  <YAxis stroke="#9ca3af" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1f2937',
+                      backgroundColor: '#152c4f',
                       border: 'none',
                       borderRadius: '8px',
                       color: '#fff',
                     }}
                   />
-                  <Bar dataKey="count" fill="#8b5cf6" />
+                  <Bar dataKey="count" fill="#c9941f" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
 
             {/* Active Users */}
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4">
                 Daily Active Users
               </h3>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={280}>
                 <LineChart data={activeUsers}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                  <XAxis dataKey="date" stroke="#9ca3af" />
-                  <YAxis stroke="#9ca3af" />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis dataKey="date" stroke="#9ca3af" fontSize={12} />
+                  <YAxis stroke="#9ca3af" fontSize={12} />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#1f2937',
+                      backgroundColor: '#152c4f',
                       border: 'none',
                       borderRadius: '8px',
                       color: '#fff',
@@ -234,7 +236,7 @@ function AdminAnalyticsContent() {
                   <Line
                     type="monotone"
                     dataKey="activeUsers"
-                    stroke="#a855f7"
+                    stroke="#4f7fc0"
                     name="Active Users"
                     strokeWidth={2}
                   />
@@ -244,10 +246,13 @@ function AdminAnalyticsContent() {
           </div>
 
           {/* Top Solvers Table */}
-          <div className="mt-8 bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden border border-gray-200 dark:border-gray-700">
-            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Top Solvers (Last {days} Days)</h3>
-              <Link href="/admin/users" className="text-primary-600 hover:text-primary-700 text-sm font-medium">View All Users</Link>
+          <div className="mt-6 bg-white dark:bg-dark-card rounded-xl shadow-sm overflow-hidden border border-gray-100 dark:border-gray-800">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-gray-400" />
+                Top Solvers (Last {days} Days)
+              </h3>
+              <Link href="/admin/users" className="text-primary-600 dark:text-primary-400 hover:text-primary-700 text-sm font-medium">View All Users</Link>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -278,8 +283,6 @@ function AdminAnalyticsContent() {
     </>
   );
 }
-
-import Link from 'next/link';
 
 export default function AdminAnalyticsPage() {
   return (

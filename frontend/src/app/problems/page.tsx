@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
+import { Flame } from 'lucide-react';
 
 interface Problem {
   id: string;
@@ -78,12 +79,12 @@ export default function ProblemsPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {!dailyLoading && dailyChallenge && (
-            <div className="mb-8 p-6 bg-gradient-to-r from-primary-600 to-purple-600 rounded-2xl shadow-xl text-white relative overflow-hidden group">
-              <div className="absolute right-0 top-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl transform group-hover:scale-110 transition-transform duration-700"></div>
+            <div className="mb-8 p-6 bg-gradient-to-r from-primary-700 to-primary-900 rounded-2xl shadow-xl text-white relative overflow-hidden group">
+              <div className="absolute right-0 top-0 w-64 h-64 bg-gold-400 opacity-10 rounded-full blur-3xl transform group-hover:scale-110 transition-transform duration-700"></div>
               <div className="relative z-10 flex flex-col sm:flex-row justify-between items-center">
                 <div className="flex items-center gap-4 mb-4 sm:mb-0">
-                  <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-3xl shadow-inner">
-                    🔥
+                  <div className="w-16 h-16 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center shadow-inner">
+                    <Flame className="w-8 h-8 text-gold-300" />
                   </div>
                   <div>
                     <span className="text-white/80 text-sm font-bold uppercase tracking-wider block mb-1">
@@ -166,7 +167,7 @@ export default function ProblemsPage() {
           </div>
 
           {loading ? (
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>
@@ -193,7 +194,7 @@ export default function ProblemsPage() {
               Error loading problems. Please try again.
             </div>
           ) : (
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
               <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead className="bg-gray-50 dark:bg-gray-800">
                   <tr>

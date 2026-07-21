@@ -24,10 +24,20 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .bg-grid-white\/\[0\.05\] {
     background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
                       linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  }
+
+  /* Brand hero backdrop — navy depth with a faint gold glow, used on the
+     landing hero and auth screens instead of the old generic purple gradient. */
+  .brand-gradient {
+    background-color: #0e1e37;
+    background-image:
+      radial-gradient(60% 50% at 15% 0%, rgba(201, 148, 31, 0.12) 0%, transparent 60%),
+      radial-gradient(70% 60% at 100% 100%, rgba(47, 95, 163, 0.35) 0%, transparent 60%),
+      linear-gradient(135deg, #0a1526 0%, #0e1e37 45%, #152c4f 100%);
   }
 }
 
@@ -48,12 +58,12 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(59, 130, 246, 0.5);
+  background: rgba(47, 95, 163, 0.5);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(59, 130, 246, 0.7);
+  background: rgba(47, 95, 163, 0.75);
 }
 
 /* Smooth animations */

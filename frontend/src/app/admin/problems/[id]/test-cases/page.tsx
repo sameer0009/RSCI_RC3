@@ -394,8 +394,8 @@ export default function TestCaseManagementPage() {
 
         {/* Add Test Case Modal */}
         {showAddTestCase && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 Add Test Case
               </h2>
@@ -492,8 +492,8 @@ export default function TestCaseManagementPage() {
 
         {/* Add Group Modal */}
         {showAddGroup && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow-xl max-w-md w-full p-6">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-xl max-w-md w-full p-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
                 Add Test Case Group
               </h2>

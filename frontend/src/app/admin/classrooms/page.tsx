@@ -5,6 +5,7 @@ import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
+import { Plus, Pencil, Trash2, School, KeyRound } from 'lucide-react';
 
 interface Classroom {
   id: string;
@@ -63,24 +64,36 @@ function AdminClassroomsContent() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8 flex justify-between items-center">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 Classroom Management
               </h1>
-              <p className="text-gray-600 dark:text-gray-400">Manage virtual classrooms and instructors</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {classrooms.length} classroom{classrooms.length === 1 ? '' : 's'} across the platform
+              </p>
             </div>
             <Link
               href="/admin/classrooms/create"
-              className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-primary-600 text-white rounded-lg hover:bg-primary-700 font-medium text-sm transition-colors shrink-0"
             >
-              Create Classroom
+              <Plus className="w-4 h-4" /> Create Classroom
             </Link>
           </div>
 
-          <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
-            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-              <thead className="bg-gray-50 dark:bg-gray-800">
+          {classrooms.length === 0 ? (
+            <div className="text-center py-20 bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4">
+                <School className="w-7 h-7 text-primary-500" />
+              </div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No classrooms yet</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Create a classroom to get started.</p>
+            </div>
+          ) : (
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
+              <thead className="bg-gray-50 dark:bg-gray-800/60">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Class Name
@@ -99,17 +112,17 @@ function AdminClassroomsContent() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white dark:bg-dark-card divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                 {classrooms.map((classroom) => (
-                  <tr key={classroom.id}>
+                  <tr key={classroom.id} className="hover:bg-gray-50 dark:hover:bg-gray-800/40 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
                         {classroom.name}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded font-mono text-sm">
-                        {classroom.code}
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded font-mono text-xs text-gray-600 dark:text-gray-300">
+                        <KeyRound className="w-3 h-3" /> {classroom.code}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -120,25 +133,31 @@ function AdminClassroomsContent() {
                       <div>{classroom._count.members} students</div>
                       <div>{classroom._count.assignments} assignments</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
-                      <Link
-                        href={`/admin/classrooms/${classroom.id}`}
-                        className="text-primary-600 hover:text-primary-900"
-                      >
-                        Edit
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(classroom.id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        Delete
-                      </button>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <div className="flex items-center justify-end gap-1">
+                        <Link
+                          href={`/admin/classrooms/${classroom.id}`}
+                          title="Edit classroom"
+                          className="p-2 text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900/20 rounded-lg transition-colors"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(classroom.id)}
+                          title="Delete classroom"
+                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
+          )}
         </div>
       </div>
     </>

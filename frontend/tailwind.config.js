@@ -9,17 +9,32 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Navy blue, derived from the Riphah School of Computing & Innovation crest
         primary: {
-          50: '#eff6ff',
-          100: '#dbeafe',
-          200: '#bfdbfe',
-          300: '#93c5fd',
-          400: '#60a5fa',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-          800: '#1e40af',
-          900: '#1e3a8a',
+          50: '#eef4fb',
+          100: '#d9e6f4',
+          200: '#b3cce9',
+          300: '#82abd9',
+          400: '#4f7fc0',
+          500: '#2f5fa3',
+          600: '#1f4680',
+          700: '#193865',
+          800: '#152c4f',
+          900: '#0e1e37',
+          950: '#091326',
+        },
+        // Gold trim from the crest, used sparingly as the brand accent
+        gold: {
+          50: '#fdf9ec',
+          100: '#faf0cb',
+          200: '#f3dd92',
+          300: '#eac657',
+          400: '#e0af31',
+          500: '#c9941f',
+          600: '#a8741a',
+          700: '#86571a',
+          800: '#6f461b',
+          900: '#5e3b1c',
         },
         dark: {
           bg: '#0a0e1a',
@@ -39,8 +54,9 @@ module.exports = {
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
       },
       boxShadow: {
-        'glow': '0 0 20px rgba(59, 130, 246, 0.5)',
-        'glow-lg': '0 0 30px rgba(59, 130, 246, 0.6)',
+        'glow': '0 0 20px rgba(31, 70, 128, 0.45)',
+        'glow-lg': '0 0 30px rgba(31, 70, 128, 0.55)',
+        'gold-glow': '0 0 20px rgba(201, 148, 31, 0.4)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in-out',

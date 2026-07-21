@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 import { ContestStatus } from '@/types';
+import { Calendar, Clock, Users, Trophy } from 'lucide-react';
 
 interface Contest {
   id: string;
@@ -68,9 +69,9 @@ export default function ContestsPage() {
           </div>
 
           {isLoading ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {[...Array(3)].map((_, i) => (
-                <div key={i} className="animate-pulse bg-white dark:bg-dark-card rounded-lg shadow-sm p-6">
+                <div key={i} className="animate-pulse bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 p-6">
                   <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2"></div>
                   <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
@@ -78,13 +79,13 @@ export default function ContestsPage() {
               ))}
             </div>
           ) : data && data.length > 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-4">
               {data.map((contest) => (
                 <div
                   key={contest.id}
-                  className="bg-white dark:bg-dark-card rounded-lg shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                  className="bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all p-6 flex flex-col md:flex-row md:items-center justify-between gap-4"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
                       <Link href={`/contests/${contest.id}`} className="hover:text-primary-600 dark:hover:text-primary-400">
                         {contest.title}
@@ -93,22 +94,22 @@ export default function ContestsPage() {
                     <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
                       {contest.description}
                     </p>
-                    <div className="flex flex-wrap gap-4 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center gap-1">
-                        📅 {new Date(contest.startTime).toLocaleString()}
+                    <div className="flex flex-wrap gap-x-5 gap-y-2 text-sm text-gray-500 dark:text-gray-400">
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5" /> {new Date(contest.startTime).toLocaleString()}
                       </span>
-                      <span className="flex items-center gap-1">
-                        ⏱️ {contest.duration} mins
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5" /> {contest.duration} mins
                       </span>
-                      <span className="flex items-center gap-1">
-                        👥 {contest._count?.participants || 0} participants
+                      <span className="flex items-center gap-1.5">
+                        <Users className="w-3.5 h-3.5" /> {contest._count?.participants || 0} participants
                       </span>
                     </div>
                   </div>
                   <div className="flex-shrink-0">
                     <Link
                       href={`/contests/${contest.id}`}
-                      className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700"
+                      className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-semibold rounded-lg text-white bg-primary-600 hover:bg-primary-700 transition-colors"
                     >
                       {activeTab === 'Upcoming' ? 'Register' : activeTab === 'Ended' ? 'Virtual Participate' : 'Enter Contest'}
                     </Link>
@@ -117,8 +118,10 @@ export default function ContestsPage() {
               ))}
             </div>
           ) : (
-            <div className="text-center py-12 bg-white dark:bg-dark-card rounded-lg shadow-sm">
-              <span className="text-4xl mb-4 block">🏆</span>
+            <div className="text-center py-16 bg-white dark:bg-dark-card rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm">
+              <div className="mx-auto w-14 h-14 rounded-full bg-primary-50 dark:bg-primary-900/20 flex items-center justify-center mb-4">
+                <Trophy className="w-7 h-7 text-primary-500" />
+              </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
                 No {activeTab.toLowerCase()} contests found
               </h3>

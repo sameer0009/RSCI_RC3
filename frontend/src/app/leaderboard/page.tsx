@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import { useAuth } from '@/contexts/AuthContext';
 import api from '@/lib/api';
+import { Trophy } from 'lucide-react';
 
 interface LeaderboardUser {
   id: string;
@@ -36,29 +37,35 @@ export default function LeaderboardPage() {
   const users = data?.users || [];
   const totalPages = data?.totalPages || 1;
 
-  const getMedalIcon = (rank: number) => {
-    if (rank === 1) return '🥇';
-    if (rank === 2) return '🥈';
-    if (rank === 3) return '🥉';
-    return rank;
+  const medalStyle: Record<number, string> = {
+    1: 'bg-gold-100 text-gold-700 dark:bg-gold-900/30 dark:text-gold-400',
+    2: 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
+    3: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
   };
 
   return (
     <>
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-              🏆 Global Leaderboard
-            </h1>
-            <p className="text-gray-600 dark:text-gray-400">
-              Top performers ranked by problems solved and rating
-            </p>
+        {/* Header band */}
+        <div className="bg-primary-900 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:40px_40px]"></div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center gap-3">
+            <div className="w-11 h-11 rounded-lg bg-gold-500/15 border border-gold-400/30 flex items-center justify-center shrink-0">
+              <Trophy className="w-5 h-5 text-gold-300" />
+            </div>
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">Global Leaderboard</h1>
+              <p className="text-primary-200 text-sm mt-0.5">
+                Top performers ranked by problems solved and rating
+              </p>
+            </div>
           </div>
+        </div>
 
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {loading ? (
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+            <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-800">
@@ -92,7 +99,7 @@ export default function LeaderboardPage() {
             </div>
           ) : (
             <>
-              <div className="bg-white dark:bg-dark-card rounded-lg shadow overflow-hidden">
+              <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead className="bg-gray-50 dark:bg-gray-800">
@@ -128,16 +135,17 @@ export default function LeaderboardPage() {
                           }`}
                         >
                           <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="flex items-center">
-                              <span className="text-2xl mr-2">
-                                {getMedalIcon(leaderboardUser.rank)}
+                            {leaderboardUser.rank <= 3 ? (
+                              <span
+                                className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${medalStyle[leaderboardUser.rank]}`}
+                              >
+                                {leaderboardUser.rank}
                               </span>
-                              {leaderboardUser.rank > 3 && (
-                                <span className="text-sm font-medium text-gray-900 dark:text-white">
-                                  #{leaderboardUser.rank}
-                                </span>
-                              )}
-                            </div>
+                            ) : (
+                              <span className="text-sm font-medium text-gray-500 dark:text-gray-400 pl-2">
+                                #{leaderboardUser.rank}
+                              </span>
+                            )}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">

@@ -74,7 +74,7 @@ function CreateContestContent() {
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg py-8">
         <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-white dark:bg-dark-card rounded-xl shadow-lg overflow-hidden">
+          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
             <div className="p-8">
               <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Create New Competition</h1>
               <form onSubmit={handleSubmit} className="space-y-6">

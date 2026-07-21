@@ -1,11 +1,21 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import Link from 'next/link';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
+import {
+  Users,
+  FileText,
+  Trophy,
+  School,
+  BarChart3,
+  Medal,
+  Activity,
+  Award,
+  type LucideIcon,
+} from 'lucide-react';
 
 interface DashboardStats {
   overview: {
@@ -88,10 +98,13 @@ function AdminDashboardContent() {
   if (!stats) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+        <div className="text-center max-w-sm px-4">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
             Failed to load dashboard
           </h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {error instanceof Error ? error.message : 'Please try refreshing the page.'}
+          </p>
         </div>
       </div>
     );
@@ -101,189 +114,131 @@ function AdminDashboardContent() {
     <>
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                  📊 Admin Dashboard
-                </h1>
-                <p className="text-gray-600 dark:text-gray-400">
-                  Platform analytics and management
-                </p>
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-              <Link
-                href="/admin/users"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-purple-500 text-center"
-              >
-                <div className="text-3xl mb-2">👥</div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Users</h3>
-                <p className="text-xs text-gray-500 mt-1">Manage accounts</p>
-              </Link>
-
-              <Link
-                href="/admin/problems"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-blue-500 text-center"
-              >
-                <div className="text-3xl mb-2">📝</div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Problems</h3>
-                <p className="text-xs text-gray-500 mt-1">Manage bank</p>
-              </Link>
-
-              <Link
-                href="/admin/competitions"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-green-500 text-center"
-              >
-                <div className="text-3xl mb-2">🏆</div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Contests</h3>
-                <p className="text-xs text-gray-500 mt-1">Manage events</p>
-              </Link>
-
-              <Link
-                href="/admin/classrooms"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-orange-500 text-center"
-              >
-                <div className="text-3xl mb-2">🏫</div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Classes</h3>
-                <p className="text-xs text-gray-500 mt-1">Manage learning</p>
-              </Link>
-
-              <Link
-                href="/admin/analytics"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-pink-500 text-center"
-              >
-                <div className="text-3xl mb-2">📈</div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Analytics</h3>
-                <p className="text-xs text-gray-500 mt-1">View reports</p>
-              </Link>
-
-              <Link
-                href="/leaderboard"
-                className="p-4 bg-white dark:bg-dark-card rounded-lg shadow hover:shadow-lg transition-all border-t-4 border-yellow-500 text-center"
-              >
-                <div className="text-3xl mb-2">🏅</div>
-                <h3 className="font-semibold text-gray-900 dark:text-white text-sm">Rankings</h3>
-                <p className="text-xs text-gray-500 mt-1">Global board</p>
-              </Link>
-            </div>
+        {/* Header band */}
+        <div className="bg-primary-900 relative overflow-hidden">
+          <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:40px_40px]"></div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <p className="text-gold-300 text-xs font-semibold uppercase tracking-wider mb-1.5">
+              Admin Dashboard
+            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white">Platform overview</h1>
+            <p className="text-primary-200 text-sm mt-1">
+              Manage users, content, and monitor platform activity at a glance
+            </p>
           </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+          {/* Quick Actions */}
+          <section>
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+              Manage
+            </h2>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+              <QuickAction href="/admin/users" icon={Users} label="Users" hint="Accounts" accent="text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400" />
+              <QuickAction href="/admin/problems" icon={FileText} label="Problems" hint="Problem bank" accent="text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400" />
+              <QuickAction href="/admin/competitions" icon={Trophy} label="Contests" hint="Events" accent="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400" />
+              <QuickAction href="/admin/classrooms" icon={School} label="Classes" hint="Learning" accent="text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400" />
+              <QuickAction href="/admin/analytics" icon={BarChart3} label="Analytics" hint="Reports" accent="text-pink-600 bg-pink-50 dark:bg-pink-900/20 dark:text-pink-400" />
+              <QuickAction href="/leaderboard" icon={Medal} label="Rankings" hint="Global board" accent="text-gold-600 bg-gold-50 dark:bg-gold-900/20 dark:text-gold-400" />
+            </div>
+          </section>
 
           {/* Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Users</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stats.overview.totalUsers}
-                  </p>
-                </div>
-                <div className="text-4xl">👥</div>
-              </div>
-              <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                {stats.overview.activeUsers} active (7 days)
-              </p>
+          <section>
+            <h2 className="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+              Overview
+            </h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              <StatCard
+                icon={Users}
+                accent="text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400"
+                label="Total Users"
+                value={stats.overview.totalUsers}
+                note={`${stats.overview.activeUsers} active (7d)`}
+              />
+              <StatCard
+                icon={FileText}
+                accent="text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400"
+                label="Total Problems"
+                value={stats.overview.totalProblems}
+                note={stats.problemsByDifficulty.map((d) => `${d.difficulty} ${d.count}`).join(' · ')}
+              />
+              <StatCard
+                icon={Activity}
+                accent="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400"
+                label="Total Submissions"
+                value={stats.overview.totalSubmissions}
+                note={`${stats.overview.acceptanceRate}% acceptance rate`}
+              />
+              <StatCard
+                icon={Trophy}
+                accent="text-gold-600 bg-gold-50 dark:bg-gold-900/20 dark:text-gold-400"
+                label="Total Contests"
+                value={stats.overview.totalContests}
+                note={`${stats.overview.activeContests} currently active`}
+              />
             </div>
 
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Problems</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stats.overview.totalProblems}
-                  </p>
-                </div>
-                <div className="text-4xl">📝</div>
-              </div>
-              <div className="mt-2 flex gap-2">
-                {stats.problemsByDifficulty.map((item) => (
-                  <span key={item.difficulty} className="text-xs text-gray-600 dark:text-gray-400">
-                    {item.difficulty}: {item.count}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Submissions</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stats.overview.totalSubmissions}
-                  </p>
-                </div>
-                <div className="text-4xl">💻</div>
-              </div>
-              <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                {stats.overview.acceptanceRate}% acceptance rate
-              </p>
-            </div>
-
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Contests</p>
-                  <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                    {stats.overview.totalContests}
-                  </p>
-                </div>
-                <div className="text-4xl">🏆</div>
-              </div>
-            </div>
-
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow col-span-2">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                Platform Summary
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Active Contests</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.overview.activeContests}</p>
-                </div>
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Active Classes</p>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{stats.overview.activeClassrooms}</p>
-                </div>
-                <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg col-span-2">
-                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-2">User Roles Breakdown</p>
-                  <div className="flex flex-wrap gap-2">
-                    {stats.usersByRole.map(item => (
-                      <span key={item.role} className="px-2 py-1 bg-white dark:bg-gray-700 rounded text-xs font-medium text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-600">
-                        {item.role}: {item.count}
-                      </span>
-                    ))}
+            {/* Platform summary strip */}
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+                <div className="flex items-center gap-6">
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Active Contests</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">{stats.overview.activeContests}</p>
+                  </div>
+                  <div className="w-px h-8 bg-gray-200 dark:bg-gray-700" />
+                  <div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold">Active Classes</p>
+                    <p className="text-xl font-bold text-gray-900 dark:text-white mt-0.5">{stats.overview.activeClassrooms}</p>
                   </div>
                 </div>
               </div>
+              <div className="pt-4 border-t border-gray-100 dark:border-gray-800">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider font-semibold mb-2.5">
+                  User Roles
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {stats.usersByRole.map((item) => (
+                    <span
+                      key={item.role}
+                      className="px-2.5 py-1 bg-gray-50 dark:bg-gray-800 rounded-full text-xs font-medium text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700"
+                    >
+                      {item.role} · {item.count}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
+          </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Submissions */}
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Activity className="w-4 h-4 text-gray-400" />
                 Recent Submissions
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
+                {stats.recentSubmissions.length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">No submissions yet.</p>
+                )}
                 {stats.recentSubmissions.map((sub) => (
                   <div
                     key={sub.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg"
                   >
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {sub.username}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
                         {sub.problemTitle} • {sub.language}
                       </p>
                     </div>
                     <span
-                      className={`px-2 py-1 text-xs font-semibold rounded ${getVerdictColor(
+                      className={`ml-3 shrink-0 px-2 py-1 text-xs font-semibold rounded ${getVerdictColor(
                         sub.verdict
                       )}`}
                     >
@@ -295,40 +250,110 @@ function AdminDashboardContent() {
             </div>
 
             {/* Top Performers */}
-            <div className="bg-white dark:bg-dark-card p-6 rounded-lg shadow">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <div className="bg-white dark:bg-dark-card p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <Award className="w-4 h-4 text-gray-400" />
                 Top Performers
               </h3>
-              <div className="space-y-3">
+              <div className="space-y-2.5">
+                {stats.topPerformers.length === 0 && (
+                  <p className="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">No data yet.</p>
+                )}
                 {stats.topPerformers.map((user, index) => (
                   <div
                     key={user.username}
-                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg"
                   >
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '👤'}
+                    <div className="flex items-center gap-3 min-w-0">
+                      <span
+                        className={`w-7 h-7 shrink-0 rounded-full flex items-center justify-center text-xs font-bold ${
+                          index === 0
+                            ? 'bg-gold-100 text-gold-700 dark:bg-gold-900/30 dark:text-gold-400'
+                            : index === 1
+                            ? 'bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-300'
+                            : index === 2
+                            ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400'
+                            : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400'
+                        }`}
+                      >
+                        {index + 1}
                       </span>
-                      <div>
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
                           {user.username}
                         </p>
-                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {user.problemsSolved} problems solved
                         </p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 text-sm font-semibold bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400 rounded-full">
+                    <span className="ml-3 shrink-0 px-3 py-1 text-sm font-semibold bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400 rounded-full">
                       {user.rating}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
-          </div>
+          </section>
         </div>
       </div>
     </>
+  );
+}
+
+function QuickAction({
+  href,
+  icon: Icon,
+  label,
+  hint,
+  accent,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  hint: string;
+  accent: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex flex-col items-center text-center gap-2 p-4 bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 hover:shadow-md hover:-translate-y-0.5 transition-all"
+    >
+      <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${accent}`}>
+        <Icon className="w-5 h-5" />
+      </div>
+      <div>
+        <p className="font-semibold text-gray-900 dark:text-white text-sm leading-tight">{label}</p>
+        <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">{hint}</p>
+      </div>
+    </Link>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  accent,
+  label,
+  value,
+  note,
+}: {
+  icon: LucideIcon;
+  accent: string;
+  label: string;
+  value: number | string;
+  note?: string;
+}) {
+  return (
+    <div className="bg-white dark:bg-dark-card p-5 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+      <div className="flex items-center justify-between mb-3">
+        <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${accent}`}>
+          <Icon className="w-4 h-4" />
+        </div>
+      </div>
+      <p className="text-2xl font-bold text-gray-900 dark:text-white leading-none">{value}</p>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1.5">{label}</p>
+      {note && <p className="text-xs text-emerald-600 dark:text-emerald-400 mt-1 truncate">{note}</p>}
+    </div>
   );
 }
 

@@ -48,7 +48,7 @@ export default function SettingsPage() {
         <div className="min-h-screen bg-gray-50 dark:bg-dark-bg">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-pulse">
             <div className="h-8 bg-gray-200 dark:bg-gray-800 rounded w-1/4 mb-6"></div>
-            <div className="bg-white dark:bg-dark-card rounded-lg shadow-sm p-6 space-y-6">
+            <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 p-6 space-y-6">
               {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="flex justify-between items-center">
                   <div className="space-y-2">

@@ -6,8 +6,14 @@ import { AuthProvider } from '@/contexts/AuthContext';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'RSCI-RC3 - Coding Platform',
-  description: 'Advanced coding competition platform with real-time analytics and leaderboards',
+  title: 'RSCI Judge | Riphah School of Computing & Innovation',
+  description:
+    'The official coding practice, classroom, and contest platform of the Riphah School of Computing & Innovation.',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  },
 };
 
 import QueryProvider from '@/providers/QueryProvider';

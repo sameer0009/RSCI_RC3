@@ -8,7 +8,13 @@ export class ContestController {
       const limit = parseInt((req.query.limit as string) || '20', 10);
       const status = req.query.status as string;
 
-      const result = await contestService.getContests(page, limit, status);
+      const user = (req as any).user;
+      let createdBy: string | undefined = undefined;
+      if (user && user.role === 'CONTEST_MANAGER') {
+        createdBy = user.id;
+      }
+      
+      const result = await contestService.getContests(page, limit, status, createdBy);
 
       res.json({
         success: true,
@@ -167,7 +173,7 @@ export class ContestController {
     try {
       const payload = {
         ...req.body,
-        createdBy: req.user?.id
+        createdBy: (req.user?.role === 'ADMIN' && req.body.createdBy) ? req.body.createdBy : req.user?.id
       };
       const contest = await contestService.createContest(payload);
       res.status(201).json({ success: true, data: { contest } });
@@ -201,6 +207,20 @@ export class ContestController {
       res.status(400).json({
         success: false,
         error: { code: 'DELETE_CONTEST_FAILED', message: error.message },
+      });
+    }
+  };
+
+  bulkRegister = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const { participants } = req.body;
+      const result = await contestService.bulkRegister(id, participants);
+      res.status(200).json({ success: true, data: result });
+    } catch (error: any) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'BULK_REGISTER_FAILED', message: error.message },
       });
     }
   };

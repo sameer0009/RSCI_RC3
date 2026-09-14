@@ -25,7 +25,7 @@ export default function Navbar() {
   const userLinks =
     isAuthenticated && !isAdmin ? (
       <>
-        {user?.role !== 'INSTRUCTOR' && (
+        {user?.role !== 'INSTRUCTOR' && user?.role !== 'CONTEST_MANAGER' && (
           <>
             <Link href="/problems" className={linkClass}>
               Problems
@@ -35,6 +35,16 @@ export default function Navbar() {
             </Link>
             <Link href="/leaderboard" className={linkClass}>
               Leaderboard
+            </Link>
+          </>
+        )}
+        {user?.role === 'CONTEST_MANAGER' && (
+          <>
+            <Link href="/manager" className={linkClass}>
+              Dashboard
+            </Link>
+            <Link href="/contests" className={linkClass}>
+              Contests
             </Link>
           </>
         )}

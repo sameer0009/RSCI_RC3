@@ -27,12 +27,24 @@ function CreateContestContent() {
     duration: 120,
     isPublic: true,
     password: '',
+    createdBy: '',
   });
   const [selectedProblems, setSelectedProblems] = useState<string[]>([]);
+  const [organizers, setOrganizers] = useState<{ id: string; fullName: string; username: string }[]>([]);
 
   useEffect(() => {
     fetchProblems();
+    fetchOrganizers();
   }, []);
+
+  const fetchOrganizers = async () => {
+    try {
+      const { data } = await api.get('/admin/users?role=CONTEST_MANAGER');
+      setOrganizers(data.data.users);
+    } catch (error) {
+      console.error('Failed to fetch organizers:', error);
+    }
+  };
 
   const fetchProblems = async () => {
     try {
@@ -161,6 +173,22 @@ function CreateContestContent() {
                       onChange={(e) => setFormData({ ...formData, duration: parseInt(e.target.value) })}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Organizer (Optional)</label>
+                    <select
+                      value={formData.createdBy}
+                      onChange={(e) => setFormData({ ...formData, createdBy: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    >
+                      <option value="">-- None (Admin Owned) --</option>
+                      {organizers.map((org) => (
+                        <option key={org.id} value={org.id}>
+                          {org.fullName || org.username}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   <div>

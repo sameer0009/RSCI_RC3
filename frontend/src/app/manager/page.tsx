@@ -119,11 +119,11 @@ function AdminDashboardContent() {
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:40px_40px]"></div>
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <p className="text-gold-300 text-xs font-semibold uppercase tracking-wider mb-1.5">
-              Admin Dashboard
+              Contest Manager Dashboard
             </p>
             <h1 className="text-2xl sm:text-3xl font-bold text-white">Platform overview</h1>
             <p className="text-primary-200 text-sm mt-1">
-              Manage users, content, and monitor platform activity at a glance
+              Manage your contests and problem banks
             </p>
           </div>
         </div>
@@ -135,13 +135,8 @@ function AdminDashboardContent() {
               Manage
             </h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              <QuickAction href="/admin/users" icon={Users} label="Users" hint="Accounts" accent="text-purple-600 bg-purple-50 dark:bg-purple-900/20 dark:text-purple-400" />
-              <QuickAction href="/admin/organizers" icon={Users} label="Organizers" hint="Organizations" accent="text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400" />
-              <QuickAction href="/admin/problems" icon={FileText} label="Problems" hint="Problem bank" accent="text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400" />
-              <QuickAction href="/admin/competitions" icon={Trophy} label="Contests" hint="Events" accent="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400" />
-              <QuickAction href="/admin/classrooms" icon={School} label="Classes" hint="Learning" accent="text-orange-600 bg-orange-50 dark:bg-orange-900/20 dark:text-orange-400" />
-              <QuickAction href="/admin/analytics" icon={BarChart3} label="Analytics" hint="Reports" accent="text-pink-600 bg-pink-50 dark:bg-pink-900/20 dark:text-pink-400" />
-              <QuickAction href="/leaderboard" icon={Medal} label="Rankings" hint="Global board" accent="text-gold-600 bg-gold-50 dark:bg-gold-900/20 dark:text-gold-400" />
+              <QuickAction href="/manager/problems" icon={FileText} label="Problems" hint="Problem bank" accent="text-primary-600 bg-primary-50 dark:bg-primary-900/20 dark:text-primary-400" />
+              <QuickAction href="/manager/competitions" icon={Trophy} label="Contests" hint="Events" accent="text-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 dark:text-emerald-400" />
             </div>
           </section>
 
@@ -358,9 +353,9 @@ function StatCard({
   );
 }
 
-export default function AdminDashboardPage() {
+export default function ManagerDashboard() {
   return (
-    <ProtectedRoute requiredRole={['ADMIN']}>
+    <ProtectedRoute requiredRole={['CONTEST_MANAGER']}>
       <AdminDashboardContent />
     </ProtectedRoute>
   );

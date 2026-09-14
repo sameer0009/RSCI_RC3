@@ -1,6 +1,7 @@
 import prisma from '../config/database';
 import { ContestStatus } from '@prisma/client';
 import { RatingService } from './rating.service';
+import bcrypt from 'bcrypt';
 
 class ContestService {
   async createContest(data: any) {
@@ -83,10 +84,14 @@ class ContestService {
     });
   }
 
-  async getContests(page: number = 1, limit: number = 20, status?: string) {
-    const where: any = {};
-    if (status) {
-      where.status = status;
+  async getContests(page = 1, limit = 20, status?: string, createdBy?: string) {
+    const skip = (page - 1) * limit;
+    
+    const where: any = { isPublic: true };
+    if (status) where.status = status as ContestStatus;
+    if (createdBy) {
+      where.createdBy = createdBy;
+      delete where.isPublic; // If they are fetching their own contests, include private ones too
     }
 
     const [contests, total] = await Promise.all([
@@ -255,6 +260,48 @@ class ContestService {
         });
       }
     }
+  }
+
+  async bulkRegister(contestId: string, participants: any[]) {
+    const contest = await prisma.contest.findUnique({ where: { id: contestId } });
+    if (!contest) throw new Error('Contest not found');
+
+    const results = [];
+
+    for (const p of participants) {
+      if (!p.email || !p.password) continue;
+      try {
+        let user = await prisma.user.findUnique({ where: { email: p.email } });
+        if (!user) {
+          const passwordHash = await bcrypt.hash(p.password, 10);
+          const username = p.email.split('@')[0] + '_' + Math.floor(Math.random() * 10000);
+          user = await prisma.user.create({
+            data: {
+              email: p.email,
+              username,
+              passwordHash,
+              role: 'STUDENT',
+              isEmailVerified: true,
+            },
+          });
+        }
+
+        const existingParticipant = await prisma.contestParticipant.findFirst({
+          where: { contestId, userId: user.id },
+        });
+
+        if (!existingParticipant) {
+          await prisma.contestParticipant.create({
+            data: { contestId, userId: user.id },
+          });
+        }
+        results.push({ email: p.email, status: 'success' });
+      } catch (err: any) {
+        results.push({ email: p.email, status: 'error', error: err.message });
+      }
+    }
+
+    return results;
   }
 }
 

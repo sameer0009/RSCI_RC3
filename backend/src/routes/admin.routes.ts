@@ -8,7 +8,7 @@ const router = Router();
 router.use(authenticate);
 
 // Problem management routes
-const problemAuth = authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER');
+const problemAuth = authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER');
 router.post('/problems', problemAuth, adminController.createProblem);
 router.get('/problems', problemAuth, adminController.listProblems);
 router.get('/problems/:id', problemAuth, adminController.getProblem);

@@ -52,6 +52,27 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
   }
 };
 
+export const authenticateOptional = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    let token = req.cookies.accessToken;
+
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (token) {
+      const payload = authService.verifyAccessToken(token);
+      req.user = payload;
+    }
+  } catch (error) {
+    // Ignore verification errors for optional auth
+  }
+  next();
+};
+
 export const authorize = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     if (!req.user) {

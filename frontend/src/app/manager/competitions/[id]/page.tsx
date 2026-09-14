@@ -6,6 +6,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
 import ProblemModal from '@/components/ProblemModal';
+import { ArrowLeft } from 'lucide-react';
 
 interface Problem {
   id: string;
@@ -18,6 +19,9 @@ function EditContestContent() {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<'settings' | 'participants' | 'scoring'>('settings');
+  const [bulkData, setBulkData] = useState('');
+  const [bulkRegistering, setBulkRegistering] = useState(false);
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
   const [problems, setProblems] = useState<Problem[]>([]);
   const [formData, setFormData] = useState({
@@ -67,7 +71,7 @@ function EditContestContent() {
   const handleProblemCreated = async (newProblemId: string) => {
     // We only need to fetch the problems list, not the contest data again
     try {
-      const { data } = await api.get('/admin/problems');
+      const { data } = await api.get('/manager/problems');
       setProblems(data.data.problems);
       setSelectedProblems((prev) => [...prev, newProblemId]);
     } catch (error) {
@@ -87,7 +91,7 @@ function EditContestContent() {
       };
 
       await api.put(`/contests/${id}`, payload);
-      router.push('/admin/competitions');
+      router.push('/manager/competitions');
     } catch (error: any) {
       console.error('Failed to update contest:', error);
       alert(error.response?.data?.error?.message || 'Failed to update contest');
@@ -104,6 +108,31 @@ function EditContestContent() {
     }
   };
 
+  const handleBulkRegister = async () => {
+    if (!bulkData.trim()) return;
+    setBulkRegistering(true);
+    try {
+      const users = bulkData.split('\n').map(line => {
+        const [email, password] = line.split(',').map(s => s.trim());
+        return { email, password };
+      }).filter(u => u.email && u.password);
+      
+      if (users.length === 0) {
+        alert('Please enter valid email, password pairs');
+        return;
+      }
+      
+      const { data } = await api.post(`/contests/${id}/bulk-register`, { users });
+      alert(`Successfully registered ${data.data.registered} users.`);
+      setBulkData('');
+    } catch (error: any) {
+      console.error('Failed to bulk register:', error);
+      alert(error.response?.data?.error?.message || 'Failed to bulk register users');
+    } finally {
+      setBulkRegistering(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-bg">
@@ -115,19 +144,49 @@ function EditContestContent() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg py-8">
-        <div className="max-w-4xl mx-auto px-4">
-          <div className="bg-white dark:bg-dark-card rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
-            <div className="p-8">
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">Edit Competition</h1>
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-bg pb-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+          <div className="flex items-center gap-4 mb-6">
+            <button
+              onClick={() => router.back()}
+              className="p-2 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white bg-white dark:bg-dark-card rounded-lg border border-gray-200 dark:border-gray-800 shadow-sm transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Edit Competition</h1>
+          </div>
+          
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden mb-6">
+            <div className="flex border-b border-gray-200 dark:border-gray-700">
+              <button
+                className={`flex-1 py-3 text-sm font-medium ${activeTab === 'settings' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                onClick={() => setActiveTab('settings')}
+              >
+                Settings
+              </button>
+              <button
+                className={`flex-1 py-3 text-sm font-medium ${activeTab === 'participants' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                onClick={() => setActiveTab('participants')}
+              >
+                Participants
+              </button>
+              <button
+                className={`flex-1 py-3 text-sm font-medium ${activeTab === 'scoring' ? 'text-primary-600 border-b-2 border-primary-600' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'}`}
+                onClick={() => setActiveTab('scoring')}
+              >
+                Scoring
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white dark:bg-dark-card rounded-xl shadow-sm border border-gray-100 dark:border-gray-800">
+            <div className="p-6 sm:p-8">
+              {activeTab === 'settings' && (
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Same form fields as create page */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="col-span-2">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contest Title</label>
                     <input
-                      required
-                      type="text"
                       value={formData.title}
                       onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                       className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
@@ -267,6 +326,39 @@ function EditContestContent() {
                   </button>
                 </div>
               </form>
+              )}
+
+              {activeTab === 'participants' && (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Bulk Register Participants</h3>
+                  <p className="text-sm text-gray-500">
+                    Enter one participant per line in the format: <strong>email, password</strong>
+                  </p>
+                  <textarea
+                    rows={10}
+                    value={bulkData}
+                    onChange={(e) => setBulkData(e.target.value)}
+                    placeholder={`student1@example.com, password123\nstudent2@example.com, password456`}
+                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-mono text-sm"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleBulkRegister}
+                      disabled={bulkRegistering || !bulkData.trim()}
+                      className="px-6 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-semibold disabled:opacity-50"
+                    >
+                      {bulkRegistering ? 'Registering...' : 'Register Participants'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {activeTab === 'scoring' && (
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Live Scoring</h3>
+                  <p className="text-sm text-gray-500">Live scoring dashboard is coming soon.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

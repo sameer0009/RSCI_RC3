@@ -5,7 +5,9 @@ export class AnalyticsController {
   getDashboardStats = async (req: Request, res: Response) => {
     try {
       const { days = '7' } = req.query;
-      const stats = await analyticsService.getDashboardStats(parseInt(days as string));
+      // @ts-ignore - req.user is added by authenticate middleware
+      const managerId = req.user?.role === 'CONTEST_MANAGER' ? req.user.id : undefined;
+      const stats = await analyticsService.getDashboardStats(parseInt(days as string), managerId);
 
       res.json({
         success: true,

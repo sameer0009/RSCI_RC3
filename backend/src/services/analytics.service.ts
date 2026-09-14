@@ -1,8 +1,14 @@
 import prisma from '../config/database';
 
 export class AnalyticsService {
-  async getDashboardStats(days: number = 7) {
+  async getDashboardStats(days: number = 7, managerId?: string) {
     const startDate = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const contestFilter = managerId ? { createdBy: managerId } : undefined;
+    const problemFilter = managerId ? { createdBy: managerId } : undefined;
+    const submissionFilter = managerId ? { contest: { createdBy: managerId } } : undefined;
+    const userFilter = managerId ? { contestParticipants: { some: { contest: { createdBy: managerId } } } } : undefined;
+
     const [
       totalUsers,
       totalProblems,
@@ -16,23 +22,25 @@ export class AnalyticsService {
       activeClassrooms,
       usersByRole,
     ] = await Promise.all([
-      // Total users (All roles)
-      prisma.user.count(),
+      // Total users
+      prisma.user.count({ where: userFilter }),
 
       // Total problems
-      prisma.problem.count(),
+      prisma.problem.count({ where: problemFilter }),
 
       // Total submissions
-      prisma.submission.count(),
+      prisma.submission.count({ where: submissionFilter }),
 
       // Total contests
-      prisma.contest.count(),
+      prisma.contest.count({ where: contestFilter }),
 
       // Active users (submitted in last 7 days)
       prisma.user.count({
         where: {
+          ...userFilter,
           submissions: {
             some: {
+              ...submissionFilter,
               submittedAt: {
                 gte: startDate,
               },
@@ -44,6 +52,7 @@ export class AnalyticsService {
       // Recent submissions (last 10)
       prisma.submission.findMany({
         take: 10,
+        where: submissionFilter,
         orderBy: { submittedAt: 'desc' },
         include: {
           user: {
@@ -63,43 +72,47 @@ export class AnalyticsService {
       // Problems by difficulty
       prisma.problem.groupBy({
         by: ['difficulty'],
+        where: problemFilter,
         _count: true,
       }),
 
       // Submissions by verdict
       prisma.submission.groupBy({
         by: ['verdict'],
+        where: submissionFilter,
         _count: true,
       }),
 
       // Active contests
       prisma.contest.count({
         where: {
+          ...contestFilter,
           endTime: { gte: new Date() },
           startTime: { lte: new Date() },
         },
       }),
 
       // Active classrooms
-      prisma.classroom.count(),
+      managerId ? Promise.resolve(0) : prisma.classroom.count(),
 
       // Users by role
       prisma.user.groupBy({
         by: ['role'],
+        where: userFilter,
         _count: true,
       }),
     ]);
 
     // Calculate acceptance rate
     const acceptedSubmissions = await prisma.submission.count({
-      where: { verdict: 'Accepted' },
+      where: { ...submissionFilter, verdict: 'Accepted' },
     });
     const acceptanceRate =
       totalSubmissions > 0 ? ((acceptedSubmissions / totalSubmissions) * 100).toFixed(1) : '0.0';
 
     // Get top performers
     const topPerformers = await prisma.user.findMany({
-      where: { role: 'STUDENT' },
+      where: { ...userFilter, role: 'STUDENT' },
       select: {
         id: true,
         username: true,

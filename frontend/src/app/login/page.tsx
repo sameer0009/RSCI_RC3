@@ -31,8 +31,14 @@ function LoginContent() {
     setLoading(true);
 
     try {
-      await login(formData.email, formData.password);
-      router.push('/problems');
+      const loggedInUser = await login(formData.email, formData.password);
+      if (loggedInUser?.role === 'CONTEST_MANAGER') {
+        router.push('/manager');
+      } else if (loggedInUser?.role === 'ADMIN') {
+        router.push('/admin');
+      } else {
+        router.push('/problems');
+      }
     } catch (err: any) {
       setError(err.response?.data?.error?.message || 'Login failed');
     } finally {

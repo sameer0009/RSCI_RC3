@@ -10,10 +10,13 @@ class AdminController {
    */
   createProblem = async (req: Request, res: Response) => {
     try {
-      const userId = (req as any).user.id;
+      const user = (req as any).user;
+      const userId = user.id;
+      const isManager = user.role === 'CONTEST_MANAGER';
       const problem = await adminService.createProblem({
         ...req.body,
         createdBy: userId,
+        isGlobal: isManager ? false : (req.body.isGlobal ?? true),
       });
 
       res.status(201).json({

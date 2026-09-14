@@ -23,6 +23,7 @@ export default function Home() {
   if (isAuthenticated && user) {
     if (isAdmin) return <RoleWelcome role="admin" />;
     if (isInstructor) return <RoleWelcome role="instructor" />;
+    if (user.role === 'CONTEST_MANAGER') return <RoleWelcome role="manager" />;
     return <StudentDashboard />;
   }
 
@@ -157,9 +158,20 @@ function StatBlock({ value, label }: { value: string; label: string }) {
 /* the marketing page.                                                       */
 /* -------------------------------------------------------------------------- */
 
-function RoleWelcome({ role }: { role: 'admin' | 'instructor' }) {
+function RoleWelcome({ role }: { role: 'admin' | 'instructor' | 'manager' }) {
   const { user } = useAuth();
   const isAdminRole = role === 'admin';
+  const isManagerRole = role === 'manager';
+
+  const title = isAdminRole ? 'Administrator' : isManagerRole ? 'Contest Manager' : 'Instructor';
+  const desc = isAdminRole 
+    ? 'Manage users, problems, contests, and classrooms from your admin dashboard.'
+    : isManagerRole 
+      ? "Manage your organization's contests and problem sets from your manager dashboard."
+      : 'Manage your classrooms, review student progress, and set problems from your instructor workspace.';
+  const href = isAdminRole ? '/admin' : isManagerRole ? '/manager' : '/classrooms';
+  const btnText = isAdminRole ? 'Admin Dashboard' : isManagerRole ? 'Manager Dashboard' : 'My Classrooms';
+  const icon = isAdminRole ? <Shield className="w-5 h-5" /> : isManagerRole ? <Trophy className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />;
 
   return (
     <>
@@ -170,33 +182,33 @@ function RoleWelcome({ role }: { role: 'admin' | 'instructor' }) {
             <Image src="/logo.png" alt="RSCI logo" fill sizes="64px" className="object-contain p-2" />
           </div>
           <p className="text-sm font-semibold uppercase tracking-wider text-primary-600 dark:text-primary-400 mb-2">
-            {isAdminRole ? 'Administrator' : 'Instructor'}
+            {title}
           </p>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3">
             Welcome back, {user?.fullName || user?.username}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 max-w-xl mx-auto mb-10">
-            {isAdminRole
-              ? 'Manage users, problems, contests, and classrooms from your admin dashboard.'
-              : 'Manage your classrooms, review student progress, and set problems from your instructor workspace.'}
+            {desc}
           </p>
 
           <div className="flex justify-center flex-wrap gap-4 mb-14">
             <Link
-              href={isAdminRole ? '/admin' : '/classrooms'}
+              href={href}
               className="inline-flex items-center gap-2 px-6 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 font-semibold transition-all shadow-sm hover:shadow-md"
             >
-              {isAdminRole ? <Shield className="w-5 h-5" /> : <BookOpen className="w-5 h-5" />}
-              Go to {isAdminRole ? 'Admin Dashboard' : 'My Classrooms'}
+              {icon}
+              Go to {btnText}
               <ArrowRight className="w-4 h-4" />
             </Link>
-            <Link
-              href="/problems"
-              className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-dark-card text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold transition-all"
-            >
-              <Code2 className="w-5 h-5" />
-              Browse Problems
-            </Link>
+            {!isManagerRole && (
+              <Link
+                href="/problems"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-white dark:bg-dark-card text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 font-semibold transition-all"
+              >
+                <Code2 className="w-5 h-5" />
+                Browse Problems
+              </Link>
+            )}
           </div>
 
           <div className="grid sm:grid-cols-3 gap-4 text-left">
@@ -205,6 +217,11 @@ function RoleWelcome({ role }: { role: 'admin' | 'instructor' }) {
                 <QuickLinkCard href="/admin/users" title="Users" description="Manage accounts & roles" icon={<GraduationCap className="w-5 h-5" />} />
                 <QuickLinkCard href="/admin/competitions" title="Contests" description="Create & schedule events" icon={<Trophy className="w-5 h-5" />} />
                 <QuickLinkCard href="/admin/analytics" title="Analytics" description="Platform-wide reports" icon={<BarChart3 className="w-5 h-5" />} />
+              </>
+            ) : isManagerRole ? (
+              <>
+                <QuickLinkCard href="/manager/competitions" title="Contests" description="Manage your organization's events" icon={<Trophy className="w-5 h-5" />} />
+                <QuickLinkCard href="/manager" title="Analytics" description="View organization insights" icon={<BarChart3 className="w-5 h-5" />} />
               </>
             ) : (
               <>

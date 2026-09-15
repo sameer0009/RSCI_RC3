@@ -1,3 +1,4 @@
+import { contestScore } from '../utils/contest-score';
 import prisma from '../config/database';
 import judgeService from './judge.service';
 import enhancedJudgeService from './enhancedJudge.service';
@@ -13,12 +14,21 @@ interface CreateSubmissionData {
 }
 
 import { io } from '../index';
-import { addSubmissionJob } from '../queues/submission.queue';
+import { addSubmissionJob, submissionQueue } from '../queues/submission.queue';
 
 export class SubmissionService {
   async createSubmission(data: CreateSubmissionData): Promise<Submission> {
-    // 1. Contest participant check
+    const problem = await prisma.problem.findUnique({ where: { id: data.problemId }, include: { _count: { select: { testCases: true } } } });
+    if (!problem || problem._count.testCases === 0) throw new Error('Problem is not ready for submissions');
+    if (Buffer.byteLength(data.code, 'utf8') > problem.maxSourceSize) throw new Error('Source code exceeds the problem size limit');
+    if (problem.allowedLanguages.length && !problem.allowedLanguages.includes(String(data.language))) throw new Error('Language is not allowed for this problem');
+    // Contest membership, time, and problem association must all hold.
+
     if (data.contestId) {
+      const contest = await prisma.contest.findUnique({ where: { id: data.contestId }, include: { problems: { select: { id: true } } } });
+      const now = new Date();
+      if (!contest || now < contest.startTime || now >= contest.endTime) throw new Error('Contest is not accepting submissions');
+      if (!contest.problems.some(p => p.id === data.problemId)) throw new Error('Problem does not belong to this contest');
       const participant = await prisma.contestParticipant.findUnique({
         where: {
           contestId_userId: {
@@ -41,135 +51,43 @@ export class SubmissionService {
     });
 
     // Add to evaluation queue
-    await addSubmissionJob(submission.id).catch((error) => {
-      console.error('Queue error:', error);
+    await addSubmissionJob(submission.id).catch(async (error) => {
+      await prisma.submission.delete({ where: { id: submission.id } });
+      throw new Error('Grading is unavailable. Please try again shortly.');
     });
 
     return submission;
   }
 
   async evaluateSubmission(submissionId: string): Promise<void> {
+    const submission = await prisma.submission.findUnique({ where: { id: submissionId } });
+    if (!submission) throw new Error('Submission not found');
+    // Retried jobs must not regrade a result already committed to the database.
+    if (!submission.evaluatedAt) await enhancedJudgeService.evaluateSubmission(submissionId, submission.code, submission.language, submission.problemId);
+    const result = await this.getSubmission(submissionId);
+    if (!result) return;
+    if (result.contestId) await this.handleContestSubmission(result);
+    await problemService.updateProblemStats(result.problemId);
+    const leaderboardService = require('./leaderboard.service').default;
+    await leaderboardService.updateUserStats(result.userId);
+    io.to(submissionId).emit('submissionUpdate', result);
+    // Notification delivery cannot turn accepted code into a runtime error.
     try {
-      let submission = await prisma.submission.findUnique({
-        where: { id: submissionId },
-      });
-
-      if (!submission) {
-        throw new Error('Submission not found');
-      }
-
-      // Use enhanced judge service for point-based evaluation
-      await enhancedJudgeService.evaluateSubmission(
-        submissionId,
-        submission.code,
-        submission.language,
-        submission.problemId
-      );
-
-      // Fetch and sanitize the updated submission to emit it to the client
-      const sanitizedSubmission = await this.getSubmission(submissionId);
-
-      if (sanitizedSubmission) {
-        // Emit Socket.IO event to the submission's room
-        io.to(submissionId).emit('submissionUpdate', sanitizedSubmission);
-
-        // Notify user
-        const notificationService = require('./notification.service').default;
-        await notificationService.createNotification(
-          sanitizedSubmission.userId,
-          'SUBMISSION',
-          'Submission Evaluated',
-          `Your submission has been evaluated with verdict: ${sanitizedSubmission.verdict}`,
-          `/problems/${sanitizedSubmission.problemId}`
-        );
-      }
-
-      if (sanitizedSubmission) {
-        // Update problem stats
-        await problemService.updateProblemStats(sanitizedSubmission.problemId);
-
-        // Update user stats
-        const leaderboardService = require('./leaderboard.service').default;
-        await leaderboardService.updateUserStats(sanitizedSubmission.userId);
-
-        // CONTEST HANDLING
-        if (sanitizedSubmission.contestId && sanitizedSubmission.verdict === 'Accepted') {
-          await this.handleContestSubmission(sanitizedSubmission);
-        }
-      }
-    } catch (error) {
-      console.error('Evaluation failed:', error);
-      const submission = await prisma.submission.update({
-        where: { id: submissionId },
-        data: {
-          verdict: 'RuntimeError',
-          evaluatedAt: new Date(),
-        },
-      });
-      // Emit Socket.IO event even on error
-      io.to(submissionId).emit('submissionUpdate', submission);
-    }
+      const notificationService = require('./notification.service').default;
+      await notificationService.createNotification(result.userId, 'SUBMISSION', 'Submission Evaluated', `Your submission has been evaluated with verdict: ${result.verdict}`, `/problems/${result.problem.slug}`);
+    } catch (error) { console.error('Submission notification failed', error); }
   }
 
   private async handleContestSubmission(submission: Submission) {
-    const contest = await prisma.contest.findUnique({
-      where: { id: submission.contestId! },
-    });
-
-    if (!contest || contest.status !== 'Active') return;
-
-    // Calculate time penalty (minutes since start)
-    const minutesSinceStart = Math.floor(
-      (submission.submittedAt.getTime() - contest.startTime.getTime()) / 60000
-    );
-
-    // Count previous wrong attempts for this problem in this contest
-    const previousAttempts = await prisma.submission.count({
-      where: {
-        contestId: submission.contestId,
-        userId: submission.userId,
-        problemId: submission.problemId,
-        submittedAt: { lt: submission.submittedAt },
-        verdict: { notIn: ['Accepted', 'Pending', 'CompilationError'] },
-      },
-    });
-
-    const penalty = minutesSinceStart + previousAttempts * 20;
-
-    // Check if user already has an AC for this problem
-    const existingAC = await prisma.submission.findFirst({
-      where: {
-        contestId: submission.contestId,
-        userId: submission.userId,
-        problemId: submission.problemId,
-        submittedAt: { lt: submission.submittedAt },
-        verdict: 'Accepted',
-      },
-    });
-
-    if (existingAC) return; // Only count first AC
-
-    // Get problem points
-    const problem = await prisma.problem.findUnique({
-      where: { id: submission.problemId },
-    });
-
-    const points = (problem as any)?.points || 100;
-
-    // Update contest participant
-    await prisma.contestParticipant.update({
-      where: {
-        contestId_userId: {
-          contestId: submission.contestId!,
-          userId: submission.userId,
-        },
-      },
-      data: {
-        totalPoints: { increment: points },
-        penalty: { increment: penalty },
-        problemsSolved: { increment: 1 },
-        lastSubmissionTime: submission.submittedAt,
-      },
+    await prisma.$transaction(async tx => {
+      const contestId = submission.contestId!;
+      // Lock this participant row so simultaneous jobs cannot overwrite newer totals.
+      await tx.contestParticipant.update({ where: { contestId_userId: { contestId, userId: submission.userId } }, data: { penalty: { increment: 0 } } });
+      const contest = await tx.contest.findUnique({ where: { id: contestId }, include: { problems: { select: { id: true, points: true } } } });
+      if (!contest) return;
+      const submissions = await tx.submission.findMany({ where: { contestId, userId: submission.userId, submittedAt: { gte: contest.startTime, lt: contest.endTime } } });
+      const score = contestScore(submissions, contest.startTime, new Map(contest.problems.map(p => [p.id, p.points])));
+      await tx.contestParticipant.update({ where: { contestId_userId: { contestId, userId: submission.userId } }, data: score });
     });
   }
 
@@ -196,6 +114,10 @@ export class SubmissionService {
 
     if (!submission) return null;
 
+    if (submission.verdict === 'Pending') {
+      const job = await submissionQueue.getJob(id);
+      if (job && await job.getState() === 'failed') return { ...submission, code: submission.code, testCaseResults: [], verdict: 'JudgeError', error: 'Grading service failed after retries. Please contact your instructor or try again.' };
+    }
     // Query public test case IDs for this problem
     const publicTestCases = await prisma.testCase.findMany({
       where: {
@@ -216,8 +138,6 @@ export class SubmissionService {
 
     return {
       ...submission,
-      totalTestCases: publicTestCaseIds.size,
-      testCasesPassed: publicResults.filter(r => r.verdict === 'Accepted').length,
       testCaseResults: publicResults,
     };
   }
@@ -292,8 +212,6 @@ export class SubmissionService {
       );
       return {
         ...sub,
-        totalTestCases: publicTestCaseIds.size,
-        testCasesPassed: publicResults.filter(r => r.verdict === 'Accepted').length,
         testCaseResults: publicResults,
       };
     });

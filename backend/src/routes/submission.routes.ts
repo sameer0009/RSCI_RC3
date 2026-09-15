@@ -1,3 +1,4 @@
+import { readableProblem } from '../middleware/access.middleware';
 import { Router } from 'express';
 import submissionController from '../controllers/submission.controller';
 import { authenticate } from '../middleware/auth.middleware';
@@ -37,7 +38,7 @@ const router = Router();
  *       201:
  *         description: Submission created
  */
-router.post('/', authenticate, submitCodeValidation, validate, submissionController.submitCode);
+router.post('/', authenticate, submitCodeValidation, validate, readableProblem('body'), submissionController.submitCode);
 
 /**
  * @swagger
@@ -95,7 +96,7 @@ router.get('/:id', authenticate, submissionController.getSubmission);
  *       200:
  *         description: Sample test results
  */
-router.post('/sample-tests', authenticate, submissionController.runSampleTests);
+router.post('/sample-tests', authenticate, submitCodeValidation, validate, readableProblem('body'), submissionController.runSampleTests);
 
 /**
  * @swagger

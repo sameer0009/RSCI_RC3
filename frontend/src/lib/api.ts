@@ -1,59 +1,22 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
-
-export const api = axios.create({
-  baseURL: `${API_URL}/api`,
-  withCredentials: true,
-  headers: {
-    'Content-Type': 'application/json',
-  },
+export const API_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, '').replace(/\/$/, '');
+export const api = axios.create({ baseURL: `${API_URL}/api`, withCredentials: true, timeout: 30000, headers: { 'Content-Type': 'application/json' } });
+let refresh: Promise<unknown> | null = null;
+api.interceptors.response.use(response => response, async error => {
+  const original = error.config;
+  if (original && error.response?.status === 401 && !original._retry && !/\/auth\/(login|refresh|logout)/.test(original.url || '')) {
+    original._retry = true;
+    try {
+      // One refresh per browser tab prevents concurrent rotation from invalidating a session.
+      if (!refresh) refresh = axios.post(`${API_URL}/api/auth/refresh`, {}, { withCredentials: true, timeout: 10000 }).finally(() => { refresh = null; });
+      await refresh;
+      return api(original);
+    } catch (refreshError) {
+      if (typeof window !== 'undefined') window.dispatchEvent(new Event('auth:expired'));
+      return Promise.reject(refreshError);
+    }
+  }
+  return Promise.reject(error);
 });
-
-// Request interceptor to add token
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('accessToken');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
-);
-
-// Response interceptor to handle token refresh
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config;
-
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        const { data } = await axios.post(
-          `${API_URL}/api/auth/refresh`,
-          {},
-          { withCredentials: true }
-        );
-
-        if (data.success && data.data.tokens.accessToken) {
-          localStorage.setItem('accessToken', data.data.tokens.accessToken);
-          originalRequest.headers.Authorization = `Bearer ${data.data.tokens.accessToken}`;
-          return api(originalRequest);
-        }
-      } catch (refreshError) {
-        localStorage.removeItem('accessToken');
-        window.location.href = '/login';
-        return Promise.reject(refreshError);
-      }
-    }
-
-    return Promise.reject(error);
-  }
-);
-
 export default api;

@@ -1,3 +1,4 @@
+import { signingSecret } from '../config/secrets';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import prisma from '../config/database';
@@ -28,12 +29,16 @@ interface AuthTokens {
 }
 
 export class AuthService {
-  private readonly JWT_SECRET: string = process.env.JWT_SECRET || 'your-secret-key';
+  private readonly JWT_SECRET: string = signingSecret('JWT_SECRET');
   private readonly JWT_REFRESH_SECRET: string =
-    process.env.JWT_REFRESH_SECRET || 'your-refresh-secret';
+    signingSecret('JWT_REFRESH_SECRET');
   private readonly JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
   private readonly JWT_REFRESH_EXPIRES_IN = process.env.JWT_REFRESH_EXPIRES_IN || '7d';
   private readonly SALT_ROUNDS = 10;
+
+  constructor() {
+    if (this.JWT_SECRET === this.JWT_REFRESH_SECRET) throw new Error('Access and refresh signing secrets must be different');
+  }
 
   async register(
     data: RegisterData
@@ -125,11 +130,11 @@ export class AuthService {
 
     const refreshToken = jwt.sign(payload, this.JWT_REFRESH_SECRET, {
       expiresIn: this.JWT_REFRESH_EXPIRES_IN as string,
+      jwtid: crypto.randomUUID(),
     } as jwt.SignOptions);
 
     // Persist refresh token (one active per user for simplicity, or multi-device support)
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + 7); // Matches 7d
+    const expiresAt = new Date((jwt.decode(refreshToken) as jwt.JwtPayload).exp! * 1000);
 
     await prisma.authToken.create({
       data: {
@@ -145,7 +150,7 @@ export class AuthService {
 
   verifyAccessToken(token: string): TokenPayload {
     try {
-      return jwt.verify(token, this.JWT_SECRET) as TokenPayload;
+      return jwt.verify(token, this.JWT_SECRET, { algorithms: ['HS256'] }) as TokenPayload;
     } catch (error) {
       throw new Error('Invalid or expired token');
     }
@@ -153,7 +158,7 @@ export class AuthService {
 
   verifyRefreshToken(token: string): TokenPayload {
     try {
-      return jwt.verify(token, this.JWT_REFRESH_SECRET) as TokenPayload;
+      return jwt.verify(token, this.JWT_REFRESH_SECRET, { algorithms: ['HS256'] }) as TokenPayload;
     } catch (error) {
       throw new Error('Invalid or expired refresh token');
     }

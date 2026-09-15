@@ -26,7 +26,11 @@ export class NotificationController {
   markAsRead = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      await notificationService.markAsRead(id);
+      const result = await notificationService.markAsRead(id, (req as any).user.id);
+      if (result.count === 0) {
+        res.status(404).json({ success: false, error: { code: 'NOTIFICATION_NOT_FOUND', message: 'Notification not found' } });
+        return;
+      }
 
       res.json({
         success: true,

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 import ProblemModal from '@/components/ProblemModal';
 
@@ -15,6 +16,7 @@ interface Problem {
 }
 
 function CreateContestContent() {
+  const { isAdmin } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [isProblemModalOpen, setIsProblemModalOpen] = useState(false);
@@ -34,12 +36,12 @@ function CreateContestContent() {
 
   useEffect(() => {
     fetchProblems();
-    fetchOrganizers();
-  }, []);
+    if (isAdmin) fetchOrganizers();
+  }, [isAdmin]);
 
   const fetchOrganizers = async () => {
     try {
-      const { data } = await api.get('/manager/users?role=CONTEST_MANAGER');
+      const { data } = await api.get('/admin/users?role=CONTEST_MANAGER');
       setOrganizers(data.data.users);
     } catch (error) {
       console.error('Failed to fetch organizers:', error);
@@ -48,7 +50,7 @@ function CreateContestContent() {
 
   const fetchProblems = async () => {
     try {
-      const { data } = await api.get('/manager/problems');
+      const { data } = await api.get('/admin/problems');
       setProblems(data.data.problems);
     } catch (error) {
       console.error('Failed to fetch problems:', error);
@@ -175,7 +177,7 @@ function CreateContestContent() {
                     />
                   </div>
 
-                  <div>
+                  {isAdmin && <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Assign Organizer (Optional)</label>
                     <select
                       value={formData.createdBy}
@@ -189,7 +191,7 @@ function CreateContestContent() {
                         </option>
                       ))}
                     </select>
-                  </div>
+                  </div>}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Visibility</label>

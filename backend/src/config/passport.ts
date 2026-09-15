@@ -1,3 +1,4 @@
+import axios from 'axios';
 import passport from 'passport';
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as GitHubStrategy } from 'passport-github2';
@@ -13,26 +14,12 @@ passport.use(
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        const email = profile.emails?.[0].value;
+        const email = (profile as any)._json?.email_verified === true ? profile.emails?.[0].value : undefined;
         if (!email) return done(new Error('No email found from Google'));
 
         let user = await prisma.user.findUnique({ where: { email } });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              username: `google_${profile.id}`,
-              email,
-              passwordHash: '', // Social users don't have passwords
-              provider: 'google',
-              providerId: profile.id,
-              fullName: profile.displayName,
-              isEmailVerified: true, // Google verifies emails
-              role: Role.STUDENT,
-              notificationSetting: { create: {} },
-            },
-          });
-        }
+        if (!user) return done(new Error('Contact an admin to provision your account'));
 
         return done(null, user);
       } catch (error) {
@@ -51,25 +38,13 @@ passport.use(
     },
     async (accessToken: string, refreshToken: string, profile: any, done: any) => {
       try {
-        const email = profile.emails?.[0].value || `${profile.username}@github.com`;
+        const { data: emails } = await axios.get('https://api.github.com/user/emails', { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/vnd.github+json' }, timeout: 10000 });
+        const email = emails.find((item: any) => item.primary && item.verified)?.email;
+        if (!email) return done(new Error('A verified primary email is required'));
 
         let user = await prisma.user.findUnique({ where: { email } });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              username: profile.username || `github_${profile.id}`,
-              email,
-              passwordHash: '',
-              provider: 'github',
-              providerId: profile.id.toString(),
-              fullName: profile.displayName || profile.username,
-              isEmailVerified: true,
-              role: Role.STUDENT,
-              notificationSetting: { create: {} },
-            },
-          });
-        }
+        if (!user) return done(new Error('Contact an admin to provision your account'));
 
         return done(null, user);
       } catch (error) {

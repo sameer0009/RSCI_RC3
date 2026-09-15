@@ -282,6 +282,8 @@ class ClassroomService {
       throw new Error('You are not a member of this classroom');
     }
 
+    if (new Date() > assignment.dueDate) throw new Error('The assignment deadline has passed');
+
     // Check if already submitted
     const existingSubmission = await prisma.assignmentSubmission.findUnique({
       where: {

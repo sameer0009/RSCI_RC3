@@ -69,6 +69,7 @@ export class ProblemController {
 
       if (req.user?.id) {
         filters.userId = req.user.id;
+        filters.role = req.user.role;
       }
 
       const result = await problemService.getProblems(

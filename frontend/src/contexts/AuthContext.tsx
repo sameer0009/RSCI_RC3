@@ -2,7 +2,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import api from '@/lib/api';
-import { User, AuthTokens } from '@/types';
+import { useQueryClient } from '@tanstack/react-query';
+import { User } from '@/types';
 
 interface AuthContextType {
   user: User | null;
@@ -20,21 +21,20 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    localStorage.removeItem('accessToken');
+    const expired = () => { setUser(null); queryClient.clear(); };
+    window.addEventListener('auth:expired', expired);
     checkAuth();
+    return () => window.removeEventListener('auth:expired', expired);
   }, []);
 
   const checkAuth = async () => {
     try {
-      const token = localStorage.getItem('accessToken');
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
       const { data } = await api.get('/auth/me');
       if (data.success) {
         setUser(data.data.user);
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await api.post('/auth/login', { email, password });
 
     if (data.success) {
-      localStorage.setItem('accessToken', data.data.tokens.accessToken);
+      queryClient.clear();
       setUser(data.data.user);
       return data.data.user;
     }
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data } = await api.post('/auth/register', { username, email, password });
 
     if (data.success) {
-      localStorage.setItem('accessToken', data.data.tokens.accessToken);
+      queryClient.clear();
       setUser(data.data.user);
     }
   };
@@ -72,6 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Continue with logout even if API call fails
     } finally {
       localStorage.removeItem('accessToken');
+      queryClient.clear();
       setUser(null);
     }
   };

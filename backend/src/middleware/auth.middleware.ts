@@ -1,3 +1,4 @@
+import prisma from '../config/database';
 import { Request, Response, NextFunction } from 'express';
 import authService from '../services/auth.service';
 
@@ -15,7 +16,7 @@ declare global {
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Get token from cookie or Authorization header
-    let token = req.cookies.accessToken;
+    let token = req.cookies?.accessToken;
 
     if (!token) {
       const authHeader = req.headers.authorization;
@@ -38,7 +39,9 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
     const payload = authService.verifyAccessToken(token);
 
     // Attach user to request
-    req.user = payload;
+    const user = await prisma.user.findUnique({ where: { id: payload.id }, select: { id: true, email: true, role: true } });
+      if (!user) throw new Error('User no longer exists');
+      req.user = user;
 
     next();
   } catch (error: any) {
@@ -54,7 +57,7 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
 export const authenticateOptional = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let token = req.cookies.accessToken;
+    let token = req.cookies?.accessToken;
 
     if (!token) {
       const authHeader = req.headers.authorization;
@@ -65,7 +68,9 @@ export const authenticateOptional = async (req: Request, res: Response, next: Ne
 
     if (token) {
       const payload = authService.verifyAccessToken(token);
-      req.user = payload;
+      const user = await prisma.user.findUnique({ where: { id: payload.id }, select: { id: true, email: true, role: true } });
+      if (!user) throw new Error('User no longer exists');
+      req.user = user;
     }
   } catch (error) {
     // Ignore verification errors for optional auth
@@ -102,7 +107,7 @@ export const authorize = (...roles: string[]) => {
 // Optional authentication - doesn't fail if no token
 export const optionalAuth = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    let token = req.cookies.accessToken;
+    let token = req.cookies?.accessToken;
 
     if (!token) {
       const authHeader = req.headers.authorization;
@@ -113,7 +118,9 @@ export const optionalAuth = async (req: Request, res: Response, next: NextFuncti
 
     if (token) {
       const payload = authService.verifyAccessToken(token);
-      req.user = payload;
+      const user = await prisma.user.findUnique({ where: { id: payload.id }, select: { id: true, email: true, role: true } });
+      if (!user) throw new Error('User no longer exists');
+      req.user = user;
     }
 
     next();

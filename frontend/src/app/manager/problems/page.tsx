@@ -35,14 +35,14 @@ function AdminProblemsContent() {
       if (search) params.append('search', search);
       if (difficulty) params.append('difficulty', difficulty);
 
-      const { data } = await api.get(`/manager/problems?${params.toString()}`);
+      const { data } = await api.get(`/admin/problems?${params.toString()}`);
       return data.data.problems as Problem[];
     },
     refetchInterval: 15000, // Poll every 15 seconds
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => api.delete(`/manager/problems/${id}`),
+    mutationFn: (id: string) => api.delete(`/admin/problems/${id}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['adminProblems'] });
       queryClient.invalidateQueries({ queryKey: ['adminDashboardStats'] });
@@ -261,7 +261,7 @@ function AdminProblemsContent() {
 
 export default function AdminProblemsPage() {
   return (
-    <ProtectedRoute requiredRole={['ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER']}>
+    <ProtectedRoute requiredRole={['ADMIN', 'CONTEST_MANAGER']}>
       <AdminProblemsContent />
     </ProtectedRoute>
   );

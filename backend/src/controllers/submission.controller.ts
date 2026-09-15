@@ -120,7 +120,7 @@ export class SubmissionController {
 
       const submission = await submissionService.getSubmission(id);
 
-      if (!submission) {
+      if (!submission || (submission.userId !== req.user?.id && req.user?.role !== 'ADMIN')) {
         return res.status(404).json({
           success: false,
           error: {
@@ -148,6 +148,7 @@ export class SubmissionController {
   getUserSubmissions = async (req: Request, res: Response) => {
     try {
       const { userId } = req.params;
+      if (userId !== req.user?.id && req.user?.role !== 'ADMIN') return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'You can only view your own submissions' } });
       const { page = '1', limit = '20' } = req.query;
 
       const result = await submissionService.getUserSubmissions(

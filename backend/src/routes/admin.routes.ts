@@ -1,3 +1,5 @@
+import { fields, problemFields } from '../middleware/input.middleware';
+import { ownsResource } from '../middleware/access.middleware';
 import { Router } from 'express';
 import adminController from '../controllers/admin.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
@@ -9,12 +11,12 @@ router.use(authenticate);
 
 // Problem management routes
 const problemAuth = authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER');
-router.post('/problems', problemAuth, adminController.createProblem);
+router.post('/problems', problemAuth, fields(problemFields), adminController.createProblem);
 router.get('/problems', problemAuth, adminController.listProblems);
-router.get('/problems/:id', problemAuth, adminController.getProblem);
-router.put('/problems/:id', problemAuth, adminController.updateProblem);
-router.delete('/problems/:id', problemAuth, adminController.deleteProblem);
-router.post('/problems/:id/testcases/bulk', problemAuth, adminController.bulkUploadTestCases);
+router.get('/problems/:id', problemAuth, ownsResource('problem'), adminController.getProblem);
+router.put('/problems/:id', problemAuth, ownsResource('problem'), fields(problemFields), adminController.updateProblem);
+router.delete('/problems/:id', problemAuth, ownsResource('problem'), adminController.deleteProblem);
+router.post('/problems/:id/testcases/bulk', problemAuth, ownsResource('problem'), adminController.bulkUploadTestCases);
 
 // User management routes
 const userAuth = authorize('ADMIN');

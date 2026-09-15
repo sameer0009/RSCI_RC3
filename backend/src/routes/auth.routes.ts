@@ -1,3 +1,5 @@
+import crypto from 'crypto';
+import rateLimit from 'express-rate-limit';
 import { Router } from 'express';
 import passport from 'passport';
 import authController from '../controllers/auth.controller';
@@ -11,6 +13,19 @@ import { authenticate } from '../middleware/auth.middleware';
 import { validate } from '../middleware/validation.middleware';
 
 const router = Router();
+const loginLimiter = rateLimit({ windowMs: 15 * 60 * 1000, limit: 20, standardHeaders: true, legacyHeaders: false, message: { success: false, error: { message: 'Too many attempts. Please try again in 15 minutes.' } } });
+router.use(['/login', '/forgot-password', '/reset-password'], loginLimiter);
+const oauthStart = (provider: string, scope: string[]) => (req: any, res: any, next: any) => {
+  const state = crypto.randomBytes(32).toString('hex');
+  res.cookie('oauthState', state, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', maxAge: 10 * 60 * 1000, path: '/api/auth' });
+  passport.authenticate(provider, { scope, state, session: false })(req, res, next);
+};
+const oauthState = (req: any, res: any, next: any) => {
+  const expected = req.cookies?.oauthState;
+  res.clearCookie('oauthState', { path: '/api/auth' });
+  if (typeof expected !== 'string' || typeof req.query.state !== 'string' || expected.length !== req.query.state.length || !crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(req.query.state))) return res.status(403).json({ success: false, error: { message: 'Invalid OAuth state' } });
+  next();
+};
 
 /**
  * @swagger
@@ -154,17 +169,19 @@ router.post('/forgot-password', forgotPasswordValidation, validate, authControll
 router.post('/reset-password', resetPasswordValidation, validate, authController.resetPassword);
 
 // OAuth Routes
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google', oauthStart('google', ['profile', 'email']));
 router.get(
   '/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login', session: false }),
+  oauthState,
+  passport.authenticate('google', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_failed`, session: false }),
   authController.oauthCallback
 );
 
-router.get('/github', passport.authenticate('github', { scope: ['user:email'] }));
+router.get('/github', oauthStart('github', ['user:email']));
 router.get(
   '/github/callback',
-  passport.authenticate('github', { failureRedirect: '/login', session: false }),
+  oauthState,
+  passport.authenticate('github', { failureRedirect: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=oauth_failed`, session: false }),
   authController.oauthCallback
 );
 

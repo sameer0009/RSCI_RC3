@@ -48,7 +48,7 @@ export class ContestController {
 
       // Hide problems if not active or ended, unless user is admin
       const isAdmin = req.user?.role === 'ADMIN';
-      if (!isAdmin && contest.status === 'Upcoming') {
+      if (!isAdmin && contest.createdBy !== req.user?.id && (new Date() < contest.startTime || !contest.isPublic)) {
         contest.problems = [];
       }
 
@@ -188,7 +188,7 @@ export class ContestController {
   updateContest = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      const contest = await contestService.updateContest(id, req.body);
+      const contest = await contestService.updateContest(id, { ...req.body, createdBy: req.user?.role === 'ADMIN' ? req.body.createdBy : undefined });
       res.json({ success: true, data: { contest } });
     } catch (error: any) {
       res.status(400).json({

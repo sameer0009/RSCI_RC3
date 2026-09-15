@@ -224,10 +224,10 @@ export default function ProblemDetailPage() {
 
   const pollSubmissionResult = async (submissionId: string) => {
     // Upgraded to WebSockets for real-time execution feedback
-    const socket = io('http://localhost:5000');
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, ''), { withCredentials: true });
     let hasReturned = false;
 
-    socket.emit('subscribeToSubmission', submissionId);
+    socket.on('connect', () => socket.emit('subscribeToSubmission', submissionId));
 
     socket.on('submissionUpdate', (submission) => {
       if (submission.verdict !== 'Pending') {
@@ -258,7 +258,10 @@ export default function ProblemDetailPage() {
         attempts++;
         setTimeout(poll, 2000); // Slower fallback
       } catch (error) {
-        console.error('Polling fallback error', error);
+        hasReturned = true;
+        setSubmitting(false);
+        setSubmissionResult({ verdict: 'Error', error: 'Could not retrieve the result. Check submission history and try again.' });
+        socket.disconnect();
       }
     };
     setTimeout(poll, 2000);
@@ -373,7 +376,7 @@ export default function ProblemDetailPage() {
                     </span>
                   ))}
                   <span className="px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-400 font-medium rounded-full">
-                    Acceptance: {(problem.acceptanceRate || 0).toFixed(1)}%
+                    Acceptance: {((problem.acceptanceRate || 0) * 100).toFixed(1)}%
                   </span>
                   {userSubmissions.length > 0 && (
                     <span className="px-3 py-1 text-xs bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-400 font-semibold rounded-full flex items-center gap-1 shadow-sm">
@@ -878,7 +881,7 @@ export default function ProblemDetailPage() {
                                 </span>
                                 {submissionResult.verdict === 'Accepted' && (
                                   <span className="text-green-500 font-semibold text-xs mt-2 bg-green-50 dark:bg-green-900/10 py-1 px-2 rounded-full border border-green-100 dark:border-green-900/30">
-                                    Beats {Math.floor(Math.random() * 20 + 80)}%
+                                    Measured execution time
                                   </span>
                                 )}
                               </div>
@@ -893,7 +896,7 @@ export default function ProblemDetailPage() {
                                 </span>
                                 {submissionResult.verdict === 'Accepted' && (
                                   <span className="text-green-500 font-semibold text-xs mt-2 bg-green-50 dark:bg-green-900/10 py-1 px-2 rounded-full border border-green-100 dark:border-green-900/30">
-                                    Beats {Math.floor(Math.random() * 30 + 70)}%
+                                    Measured memory usage
                                   </span>
                                 )}
                               </div>

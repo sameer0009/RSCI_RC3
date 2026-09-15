@@ -1,3 +1,5 @@
+import { fields } from '../middleware/input.middleware';
+import { classroomAccess, problemSelection } from '../middleware/access.middleware';
 import { Router } from 'express';
 import classroomController from '../controllers/classroom.controller';
 import { authenticate, authorize } from '../middleware/auth.middleware';
@@ -11,24 +13,24 @@ router.use(authenticate);
 // Specific routes first
 router.get(
   '/assignments/:assignmentId',
-  classroomController.getAssignmentDetails
+  classroomAccess(true, false), classroomController.getAssignmentDetails
 );
 
 router.post(
   '/assignments/:assignmentId/submit',
-  classroomController.submitAssignment
+  classroomAccess(true, false), classroomController.submitAssignment
 );
 
 router.get(
   '/assignments/:assignmentId/progress',
   authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
-  classroomController.getAssignmentProgress
+  classroomAccess(true, true), classroomController.getAssignmentProgress
 );
 
 router.put(
   '/assignments/:assignmentId',
   authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
-  classroomController.updateAssignment
+  problemSelection, fields(['title', 'description', 'dueDate', 'problemIds']), classroomController.updateAssignment
 );
 
 router.delete(
@@ -42,9 +44,9 @@ router.post('/join', classroomController.joinClassroom);
 router.get('/', classroomController.getClassrooms);
 
 // Classroom specific routes
-router.get('/:id', classroomController.getClassroomDetails);
-router.get('/:id/leaderboard', classroomController.getLeaderboard);
-router.get('/:id/analytics', authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'), classroomController.getInstructorAnalytics);
+router.get('/:id', classroomAccess(false, false), classroomController.getClassroomDetails);
+router.get('/:id/leaderboard', classroomAccess(false, false), classroomController.getLeaderboard);
+router.get('/:id/analytics', authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'), classroomAccess(false, true), classroomController.getInstructorAnalytics);
 
 // Instructor routes
 router.post(
@@ -52,7 +54,7 @@ router.post(
   authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
   createClassroomValidation,
   validate,
-  classroomController.createClassroom
+  fields(['name', 'description', 'instructorId']), classroomController.createClassroom
 );
 
 router.post(
@@ -60,13 +62,13 @@ router.post(
   authorize('INSTRUCTOR', 'CONTEST_MANAGER', 'ADMIN'),
   createAssignmentValidation,
   validate,
-  classroomController.createAssignment
+  problemSelection, fields(['title', 'description', 'dueDate', 'problemIds']), classroomController.createAssignment
 );
 
 router.put(
   '/:id',
   authorize('ADMIN'),
-  classroomController.updateClassroom
+  fields(['name', 'description', 'instructorId']), classroomController.updateClassroom
 );
 
 router.delete(

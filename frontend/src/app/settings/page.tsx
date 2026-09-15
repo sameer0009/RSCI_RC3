@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Navbar from '@/components/Navbar';
 import api from '@/lib/api';
@@ -8,13 +8,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 
 export default function SettingsPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  if (!isAuthenticated && typeof window !== 'undefined') {
-    router.push('/login');
-  }
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) router.replace('/login');
+  }, [authLoading, isAuthenticated, router]);
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ['notificationSettings'],
@@ -41,7 +41,7 @@ export default function SettingsPage() {
     updateSettingsMutation.mutate(newSettings);
   };
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return (
       <>
         <Navbar />

@@ -38,6 +38,7 @@ interface UpdateProblemDto {
 }
 
 interface ProblemFilters {
+  createdBy?: string;
   page?: number;
   limit?: number;
   difficulty?: Difficulty;
@@ -132,9 +133,6 @@ class AdminService {
 
     // Separate testCases from main problem data
     const { testCases, ...data } = rawData;
-    console.log('--- ADMIN SERVICE updateProblem ---');
-    console.log('rawData testCases:', testCases);
-    console.log('rawData data:', data);
 
     // Update slug if title changed
     let slug = existing.slug;
@@ -232,7 +230,7 @@ class AdminService {
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = { ...(filters.createdBy ? { createdBy: filters.createdBy } : {}) };
 
     if (filters.difficulty) {
       where.difficulty = filters.difficulty;

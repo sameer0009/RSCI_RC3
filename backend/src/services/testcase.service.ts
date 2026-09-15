@@ -15,7 +15,8 @@ export class TestCaseService {
     const testCase = await prisma.testCase.create({
       data: {
         ...data,
-        points: data.points || 10,
+        visibility: (data as any).visibility || (data.isPublic ? 'SAMPLE' : 'HIDDEN'),
+        points: data.points ?? 10,
       },
     });
 
@@ -23,10 +24,17 @@ export class TestCaseService {
   }
 
   async createMultipleTestCases(testCases: CreateTestCaseData[]): Promise<TestCase[]> {
+    for (const tc of testCases) {
+      if ((tc as any).groupId) {
+        const group = await prisma.testCaseGroup.findUnique({ where: { id: (tc as any).groupId } });
+        if (!group || group.problemId !== tc.problemId) throw new Error('Group does not belong to this problem');
+      }
+    }
     const created = await prisma.testCase.createMany({
       data: testCases.map((tc) => ({
         ...tc,
-        points: tc.points || 10,
+        visibility: (tc as any).visibility || (tc.isPublic ? 'SAMPLE' : 'HIDDEN'),
+        points: tc.points ?? 10,
       })),
     });
 
@@ -64,9 +72,15 @@ export class TestCaseService {
   }
 
   async updateTestCase(id: string, data: Partial<CreateTestCaseData>): Promise<TestCase> {
+    const existing = await prisma.testCase.findUnique({ where: { id } });
+    if (!existing) throw new Error('Test case not found');
+    if ((data as any).groupId) {
+      const group = await prisma.testCaseGroup.findUnique({ where: { id: (data as any).groupId } });
+      if (!group || group.problemId !== existing.problemId) throw new Error('Group does not belong to this problem');
+    }
     const testCase = await prisma.testCase.update({
       where: { id },
-      data,
+      data: { ...data, ...(data.isPublic === undefined ? {} : { visibility: (data as any).visibility || (data.isPublic ? 'SAMPLE' : 'HIDDEN') }) },
     });
 
     return testCase;

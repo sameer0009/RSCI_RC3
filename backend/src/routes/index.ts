@@ -1,3 +1,4 @@
+import { paginationBounds } from '../middleware/input.middleware';
 import { Router } from 'express';
 import authRoutes from './auth.routes';
 import problemRoutes from './problem.routes';
@@ -14,6 +15,7 @@ import commentRoutes from './comment.routes';
 import voteRoutes from './vote.routes';
 
 const router = Router();
+router.use(paginationBounds);
 
 // Mount routes
 router.use('/auth', authRoutes);

@@ -44,6 +44,7 @@ class AdminController {
     try {
       const { page, limit, difficulty, search } = req.query;
       const result = await adminService.listProblems({
+        createdBy: req.user?.role === 'ADMIN' ? undefined : req.user?.id,
         page: page ? parseInt(page as string) : undefined,
         limit: limit ? parseInt(limit as string) : undefined,
         difficulty: difficulty as any,

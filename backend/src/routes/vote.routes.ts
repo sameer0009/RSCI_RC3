@@ -1,3 +1,4 @@
+import { communityAccess } from '../middleware/access.middleware';
 import { Router } from 'express';
 import voteController from '../controllers/vote.controller';
 import { authenticate } from '../middleware/auth.middleware';
@@ -6,6 +7,6 @@ import { voteValidation } from '../utils/validation';
 
 const router = Router();
 
-router.post('/', authenticate, voteValidation, validate, voteController.toggleVote);
+router.post('/', authenticate, voteValidation, validate, communityAccess('solution', 'body', 'solutionId'), voteController.toggleVote);
 
 export default router;

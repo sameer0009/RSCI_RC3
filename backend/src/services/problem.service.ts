@@ -1,3 +1,4 @@
+import { visibleProblems } from '../utils/problem-access';
 import prisma from '../config/database';
 import { Difficulty, Problem, TestCase } from '@prisma/client';
 
@@ -34,6 +35,7 @@ interface ProblemFilters {
   search?: string;
   userId?: string;
   isGlobal?: boolean;
+  role?: string;
 }
 
 export class ProblemService {
@@ -76,7 +78,7 @@ export class ProblemService {
   ): Promise<{ problems: Problem[]; total: number; pages: number }> {
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: any = { AND: [visibleProblems(filters.userId ? { id: filters.userId, role: filters.role || 'STUDENT' } : undefined)] };
 
     if (filters.difficulty) {
       where.difficulty = filters.difficulty;
@@ -159,7 +161,7 @@ export class ProblemService {
       where: { id },
       include: {
         testCases: {
-          where: includePrivateTests ? {} : { isPublic: true },
+          where: includePrivateTests ? {} : { OR: [{ isPublic: true }, { visibility: 'SAMPLE' }] },
           orderBy: { orderIndex: 'asc' },
         },
         creator: {
@@ -182,7 +184,7 @@ export class ProblemService {
       where: { slug },
       include: {
         testCases: {
-          where: includePrivateTests ? {} : { isPublic: true },
+          where: includePrivateTests ? {} : { OR: [{ isPublic: true }, { visibility: 'SAMPLE' }] },
           orderBy: { orderIndex: 'asc' },
         },
         creator: {

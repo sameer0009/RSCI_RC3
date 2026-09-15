@@ -1,3 +1,4 @@
+import { contestScore } from '../utils/contest-score';
 import prisma from '../config/database';
 
 interface ParticipantResult {
@@ -17,54 +18,29 @@ export class RatingService {
    * Updates ratings for all users in a contest according to their final ranking
    */
   public static async updateContestRatings(contestId: string): Promise<void> {
-    try {
-      const participants = await prisma.contestParticipant.findMany({
-        where: { contestId },
-        include: { user: true },
-        orderBy: { rank: 'asc' },
+    await prisma.$transaction(async tx => {
+      // Serialize finalization and commit every user's rating in one transaction.
+      await tx.contest.update({ where: { id: contestId }, data: { status: 'Ended' } });
+      const contest = await tx.contest.findUnique({ where: { id: contestId }, include: { problems: { select: { id: true, points: true } } } });
+      if (!contest || contest.endTime > new Date()) return;
+      const participants = await tx.contestParticipant.findMany({ where: { contestId }, include: { user: true } });
+      if (participants.some(p => p.newRating !== null)) return;
+      const submissions = await tx.submission.findMany({ where: { contestId, submittedAt: { gte: contest.startTime, lt: contest.endTime } } });
+      if (submissions.some(s => s.verdict === 'Pending')) return;
+      const points = new Map(contest.problems.map(p => [p.id, p.points]));
+      const board = participants.map(p => ({ ...p, ...contestScore(submissions.filter(s => s.userId === p.userId), contest.startTime, points) })).sort((a, b) => b.problemsSolved - a.problemsSolved || a.penalty - b.penalty);
+      let rank = 0;
+      const ranked = board.map((p, i) => {
+        if (!i || p.problemsSolved !== board[i - 1].problemsSolved || p.penalty !== board[i - 1].penalty) rank = i + 1;
+        return { userId: p.userId, rank, oldRating: p.user.rating || 1200 };
       });
-
-      if (participants.length < 2) return; // Need at least 2 people to measure Elo
-
-      const results: ParticipantResult[] = participants.map((p) => ({
-        userId: p.userId,
-        rank: p.rank,
-        oldRating: p.user.rating || 1200, // Default rating
-      }));
-
-      // Calculate new ratings
-      const newRatings = this.calculateNewRatings(results);
-
-      // Perform updates
-      const updatePromises = participants.map((participant) => {
-        const newRatingData = newRatings.find((r) => r.userId === participant.userId);
-        if (!newRatingData) return Promise.resolve();
-
-        const userUpdate = prisma.user.update({
-          where: { id: participant.userId },
-          data: {
-            rating: Math.floor(newRatingData.newRating),
-          },
-        });
-
-        const participantUpdate = prisma.contestParticipant.update({
-          where: { id: participant.id },
-          data: {
-            oldRating: newRatingData.oldRating,
-            newRating: Math.floor(newRatingData.newRating),
-          },
-        });
-
-        return Promise.all([userUpdate, participantUpdate]);
-      });
-
-      await Promise.all(updatePromises);
-
-      console.log(`Successfully updated ratings for contest ${contestId}`);
-    } catch (error) {
-      console.error('Error updating contest ratings:', error);
-      throw error;
-    }
+      const ratings = this.calculateNewRatings(ranked);
+      for (const participant of board) {
+        const result = ratings.find(r => r.userId === participant.userId)!;
+        await tx.user.update({ where: { id: participant.userId }, data: { rating: Math.floor(result.newRating) } });
+        await tx.contestParticipant.update({ where: { id: participant.id }, data: { rank: result.rank, oldRating: result.oldRating, newRating: Math.floor(result.newRating), totalPoints: participant.totalPoints, problemsSolved: participant.problemsSolved, penalty: participant.penalty, lastSubmissionTime: participant.lastSubmissionTime } });
+      }
+    }, { timeout: 30000 });
   }
 
   /**

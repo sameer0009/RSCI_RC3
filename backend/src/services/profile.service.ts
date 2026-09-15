@@ -24,7 +24,6 @@ class ProfileService {
       select: {
         id: true,
         username: true,
-        email: true,
         fullName: true,
         bio: true,
         profilePicture: true,
@@ -51,10 +50,12 @@ class ProfileService {
     const recentSubmissions = await prisma.submission.findMany({
       where: {
         userId: user.id,
+        problem: { isGlobal: true, status: 'PUBLISHED' },
       },
       take: 10,
       orderBy: { submittedAt: 'desc' },
-      include: {
+      select: {
+        id: true, verdict: true, language: true, submittedAt: true, executionTime: true, memoryUsed: true,
         problem: {
           select: {
             title: true,
@@ -170,7 +171,6 @@ class ProfileService {
       select: {
         id: true,
         username: true,
-        email: true,
         fullName: true,
         bio: true,
         profilePicture: true,

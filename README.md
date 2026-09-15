@@ -1,8 +1,8 @@
-# 🚀 RSCI-RC3: Production-Ready Coding Platform
+# RSCI-RC3: Coding Practice and Academic Contests
 
-RSCI-RC3 is a high-performance, industry-level competitive coding platform built for scale. It combines the seamless user experience of LeetCode with advanced academic management, asynchronous communication, and hardened competitive mechanics.
+RSCI-RC3 is a coding practice and academic contest platform. It includes classrooms, problem authoring, queued grading, and contest leaderboards. Production readiness requires the deployment and integration checks described in `docs/PRODUCT_AUDIT.md`.
 
-[![Production Ready](https://img.shields.io/badge/Status-Production--Ready-brightgreen.svg)]()
+
 [![Stack](https://img.shields.io/badge/Stack-Next.js%20%7C%20Node.js%20%7C%20Prisma%20%7C%20Redis-blue.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-yellow.svg)]()
 
@@ -33,7 +33,7 @@ RSCI-RC3 is a high-performance, industry-level competitive coding platform built
 
 ### Frontend
 
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router, TypeScript)
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router, TypeScript)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Editor**: [Monaco Editor](https://microsoft.github.io/monaco-editor/)
 
@@ -45,6 +45,26 @@ RSCI-RC3 is a high-performance, industry-level competitive coding platform built
 - **Judge**: [Judge0](https://judge0.com/) API Integration
 
 ---
+
+## Security update setup
+
+Install from the repository root: `npm ci`, then `npm run prisma:generate`.
+Run `npm test`, `npm run build`, and `npm run lint`. Browser contract tests use
+`npm run test:e2e` after a production build and a Playwright browser installation.
+If Chrome is already installed, use `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`.
+These browser tests mock API responses; they do not certify live grading or email delivery.
+
+Set independent random `JWT_SECRET` and `JWT_REFRESH_SECRET` values (at least 32
+characters) before production startup. Missing/placeholder secrets now fail startup
+in production. Use `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
+to generate each secret. Keep the frontend and API on the same site for cookie authentication.
+
+Docker builds now use the root workspace lockfile. Initialize a new database explicitly
+with the reviewed Prisma schema before starting the backend; startup no longer runs
+`db push` automatically. Existing databases should be backed up and migrated through a
+reviewed migration process. There are currently no checked-in SQL migrations.
+
+See `docs/PRODUCT_AUDIT.md` for changes, known limitations, and verification evidence.
 
 ## 🚀 Getting Started
 

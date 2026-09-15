@@ -1,3 +1,4 @@
+import { fields, problemFields } from '../middleware/input.middleware';
 import { Router } from 'express';
 import profileController from '../controllers/profile.controller';
 import { authenticate } from '../middleware/auth.middleware';
@@ -9,7 +10,7 @@ const router = Router();
 router.get('/:username/profile', profileController.getProfile);
 
 // Protected routes (require authentication)
-router.put('/profile', authenticate, profileController.updateProfile);
+router.put('/profile', authenticate, fields(['fullName','bio','location']), profileController.updateProfile);
 router.post(
   '/profile/picture',
   authenticate,
@@ -17,6 +18,6 @@ router.post(
   profileController.uploadProfilePicture
 );
 router.delete('/profile/picture', authenticate, profileController.deleteProfilePicture);
-router.put('/profile/social', authenticate, profileController.updateSocialLinks);
+router.put('/profile/social', authenticate, fields(['linkedinUrl','githubUrl','twitterUrl','websiteUrl']), profileController.updateSocialLinks);
 
 export default router;

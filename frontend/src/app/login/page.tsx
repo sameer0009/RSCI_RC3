@@ -18,11 +18,7 @@ function LoginContent() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const token = searchParams.get('token');
-    if (token) {
-      localStorage.setItem('accessToken', token);
-      window.location.href = '/problems';
-    }
+    if (searchParams.get('error')) setError('Social sign-in failed. Use your assigned account or contact an administrator.');
   }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,7 +88,7 @@ function LoginContent() {
 
             <form className="space-y-5" onSubmit={handleSubmit}>
               {error && (
-                <div className="rounded-lg bg-red-500/15 border border-red-500/40 p-4 animate-slide-up">
+                <div role="alert" className="rounded-lg bg-red-500/15 border border-red-500/40 p-4 animate-slide-up">
                   <p className="text-sm text-red-200">{error}</p>
                 </div>
               )}
@@ -175,6 +171,7 @@ function LoginContent() {
                 </p>
               </div>
             </form>
+            <Link href="/forgot-password" className="mt-5 block text-center text-gold-300 underline underline-offset-4">Forgot your password?</Link>
           </div>
         </div>
       </div>

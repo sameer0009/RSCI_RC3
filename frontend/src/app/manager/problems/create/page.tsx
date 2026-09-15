@@ -21,7 +21,7 @@ export default function CreateProblemPage() {
         .map((t) => t.trim())
         .filter((t) => t);
 
-      await api.post('/manager/problems', {
+      await api.post('/admin/problems', {
         ...formData,
         topics: topicsArray,
         testCases: testCases.filter(

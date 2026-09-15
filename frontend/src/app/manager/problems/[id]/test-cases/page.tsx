@@ -34,6 +34,7 @@ export default function TestCaseManagementPage() {
   const [problem, setProblem] = useState<any>(null);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [groups, setGroups] = useState<TestCaseGroup[]>([]);
+  const [errorMessage, setErrorMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [showAddTestCase, setShowAddTestCase] = useState(false);
   const [showAddGroup, setShowAddGroup] = useState(false);
@@ -63,16 +64,16 @@ export default function TestCaseManagementPage() {
   const fetchProblemData = async () => {
     try {
       const [problemRes, testCasesRes, groupsRes] = await Promise.all([
-        api.get(`/problems/${problemId}`),
-        api.get(`/testcases/problem/${problemId}`),
+        api.get(`/admin/problems/${problemId}`),
+        api.get(`/problems/${problemId}/testcases`),
         api.get(`/problems/${problemId}/groups`),
       ]);
 
-      setProblem(problemRes.data.data.problem);
+      setProblem(problemRes.data.data);
       setTestCases(testCasesRes.data.data.testCases || []);
       setGroups(groupsRes.data.data.groups || []);
     } catch (error) {
-      console.error('Failed to fetch data:', error);
+      setErrorMessage('Failed to fetch data. Please retry.');
     } finally {
       setLoading(false);
     }
@@ -80,11 +81,7 @@ export default function TestCaseManagementPage() {
 
   const handleAddTestCase = async () => {
     try {
-      await api.post('/testcases', {
-        problemId,
-        ...newTestCase,
-        orderIndex: testCases.length + 1,
-      });
+      await api.post(`/problems/${problemId}/testcases`, { testCases: [{ ...newTestCase, isPublic: newTestCase.visibility === 'SAMPLE', groupId: newTestCase.groupId || null, orderIndex: testCases.length + 1 }] });
 
       setShowAddTestCase(false);
       setNewTestCase({
@@ -99,17 +96,18 @@ export default function TestCaseManagementPage() {
       });
       fetchProblemData();
     } catch (error) {
-      console.error('Failed to add test case:', error);
+      setErrorMessage('Failed to add test case. Please retry.');
     }
   };
 
   const handleUpdateTestCase = async (testCase: TestCase) => {
     try {
-      await api.put(`/testcases/${testCase.id}`, testCase);
+      const { id, input, expectedOutput, visibility, points, orderIndex, description, groupId, timeLimit, memoryLimit } = testCase;
+      await api.put(`/problems/testcases/${id}`, { input, expectedOutput, visibility, points, orderIndex, description, groupId: groupId || null, timeLimit, memoryLimit, isPublic: visibility === 'SAMPLE' });
       setEditingTestCase(null);
       fetchProblemData();
     } catch (error) {
-      console.error('Failed to update test case:', error);
+      setErrorMessage('Failed to update test case. Please retry.');
     }
   };
 
@@ -117,10 +115,10 @@ export default function TestCaseManagementPage() {
     if (!confirm('Are you sure you want to delete this test case?')) return;
 
     try {
-      await api.delete(`/testcases/${id}`);
+      await api.delete(`/problems/testcases/${id}`);
       fetchProblemData();
     } catch (error) {
-      console.error('Failed to delete test case:', error);
+      setErrorMessage('Failed to delete test case. Please retry.');
     }
   };
 
@@ -135,7 +133,7 @@ export default function TestCaseManagementPage() {
       setNewGroup({ name: '', description: '', points: 0 });
       fetchProblemData();
     } catch (error) {
-      console.error('Failed to add group:', error);
+      setErrorMessage('Failed to add group. Please retry.');
     }
   };
 
@@ -151,6 +149,8 @@ export default function TestCaseManagementPage() {
     };
     return colors[visibility as keyof typeof colors] || colors.HIDDEN;
   };
+
+  if (errorMessage) return <div role="alert" className="p-8"><p>{errorMessage}</p><button onClick={() => { setErrorMessage(''); fetchProblemData(); }} className="mt-4 underline">Retry</button></div>;
 
   if (loading) {
     return (

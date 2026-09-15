@@ -13,7 +13,7 @@ export class AuthController {
         username,
         email,
         password,
-        role: role as any,
+        role: 'STUDENT',
       });
 
       const verificationToken = await authService.createVerificationToken(user.id);
@@ -158,7 +158,6 @@ export class AuthController {
             resetUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`,
           },
         });
-        console.log(`Password reset token for ${email}: ${token}`);
       }
 
       // Always return success for security
@@ -278,7 +277,7 @@ export class AuthController {
       this.setAuthCookies(res, tokens);
 
       // Redirect to frontend dashboard or home with token
-      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?token=${tokens.accessToken}`);
+      res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/problems`);
     } catch (error: any) {
       console.error('OAuth callback error:', error);
       res.redirect(

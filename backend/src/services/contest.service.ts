@@ -1,3 +1,4 @@
+import { contestScore } from '../utils/contest-score';
 import prisma from '../config/database';
 import { ContestStatus } from '@prisma/client';
 import { RatingService } from './rating.service';
@@ -11,6 +12,8 @@ class ContestService {
       contestData.duration = parseInt(contestData.duration, 10);
     }
 
+    if (!Number.isFinite(new Date(contestData.startTime).getTime()) || !Number.isFinite(new Date(contestData.endTime).getTime()) || new Date(contestData.endTime) <= new Date(contestData.startTime)) throw new Error('End time must be after start time');
+    if (contestData.password) contestData.password = await bcrypt.hash(contestData.password, 10);
     return prisma.contest.create({
       data: {
         ...contestData,
@@ -28,6 +31,13 @@ class ContestService {
       contestData.duration = parseInt(contestData.duration, 10);
     }
 
+    const existing = await prisma.contest.findUnique({ where: { id } });
+    if (!existing) throw new Error('Contest not found');
+    const start = new Date(contestData.startTime ?? existing.startTime);
+    const end = new Date(contestData.endTime ?? existing.endTime);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime()) || end <= start) throw new Error('End time must be after start time');
+    if (contestData.password) contestData.password = await bcrypt.hash(contestData.password, 10);
+    else delete contestData.password;
     return prisma.contest.update({
       where: { id },
       data: {
@@ -71,7 +81,7 @@ class ContestService {
     if (contest.endTime < new Date() || contest.status === 'Ended') throw new Error('Contest already ended');
 
     if (!contest.isPublic) {
-      if (!password || password !== contest.password) {
+      if (!password || !contest.password || !(contest.password.startsWith('$2') ? await bcrypt.compare(password, contest.password) : password === contest.password)) {
         throw new Error('Incorrect password for private contest');
       }
     }
@@ -125,20 +135,22 @@ class ContestService {
   }
 
   async getLeaderboard(contestId: string) {
-    // Hide updates in last N minutes logic can be implemented by checking freeze time
-    const contest = await prisma.contest.findUnique({ where: { id: contestId } });
+    const contest = await prisma.contest.findUnique({ where: { id: contestId }, include: { problems: { select: { id: true, points: true } } } });
     if (!contest) throw new Error('Contest not found');
-
-    const participants = await prisma.contestParticipant.findMany({
-      where: { contestId },
-      include: { user: { select: { username: true, rating: true, id: true } } },
-      orderBy: [
-        { problemsSolved: 'desc' },
-        { penalty: 'asc' },
-      ],
+    const now = new Date();
+    const freeze = new Date(Math.max(contest.startTime.getTime(), contest.endTime.getTime() - Math.max(0, contest.frozenDuration) * 60000));
+    const cutoff = now < contest.endTime && now >= freeze ? freeze : now < contest.endTime ? now : contest.endTime;
+    const [participants, submissions] = await Promise.all([
+      prisma.contestParticipant.findMany({ where: { contestId }, include: { user: { select: { username: true, rating: true, id: true } } } }),
+      prisma.submission.findMany({ where: { contestId, submittedAt: { gte: contest.startTime, lt: cutoff } }, select: { id: true, userId: true, problemId: true, verdict: true, submittedAt: true } }),
+    ]);
+    const points = new Map(contest.problems.map(p => [p.id, p.points]));
+    const board = participants.map(p => ({ ...p, ...contestScore(submissions.filter(s => s.userId === p.userId), contest.startTime, points) })).sort((a, b) => b.problemsSolved - a.problemsSolved || a.penalty - b.penalty || a.userId.localeCompare(b.userId));
+    let rank = 0;
+    return board.map((entry, index) => {
+      if (!index || entry.problemsSolved !== board[index - 1].problemsSolved || entry.penalty !== board[index - 1].penalty) rank = index + 1;
+      return { ...entry, rank };
     });
-
-    return participants;
   }
 
   async getContestProblems(contestId: string, userId: string, isAdmin: boolean) {
@@ -149,7 +161,7 @@ class ContestService {
 
     if (!contest) throw new Error('Contest not found');
 
-    if (!isAdmin && contest.status === 'Upcoming') {
+    if (!isAdmin && new Date() < contest.startTime) {
       throw new Error('Contest has not started yet');
     }
 
@@ -188,7 +200,9 @@ class ContestService {
     // In a full implementation, we'd store the virtual start time for this user.
     // For now, we'll return the metadata.
     return {
-      ...originalContest,
+      id: originalContest.id,
+      title: originalContest.title,
+      duration: originalContest.duration,
       isVirtual: true,
       virtualStartTime: new Date(),
       virtualEndTime: new Date(Date.now() + originalContest.duration * 60000),
@@ -260,6 +274,9 @@ class ContestService {
         });
       }
     }
+    // Revisit ended contests after delayed grading finishes; finalization is idempotent.
+    const unfinalized = await prisma.contest.findMany({ where: { status: 'Ended', participants: { some: { newRating: null } } }, select: { id: true }, take: 100 });
+    for (const contest of unfinalized) await RatingService.updateContestRatings(contest.id);
   }
 
   async bulkRegister(contestId: string, participants: any[]) {

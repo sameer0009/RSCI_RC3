@@ -65,8 +65,11 @@ export class JudgeService {
           stdin: input,
           cpu_time_limit: timeLimit / 1000, // Convert to seconds
           memory_limit: memoryLimit,
+          enable_network: false,
+          wall_time_limit: Math.max(5, timeLimit / 1000 * 3),
         },
         {
+          timeout: 30000,
           headers: {
             'Content-Type': 'application/json',
             ...(this.apiKey

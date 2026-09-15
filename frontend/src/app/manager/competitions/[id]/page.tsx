@@ -71,7 +71,7 @@ function EditContestContent() {
   const handleProblemCreated = async (newProblemId: string) => {
     // We only need to fetch the problems list, not the contest data again
     try {
-      const { data } = await api.get('/manager/problems');
+      const { data } = await api.get('/admin/problems');
       setProblems(data.data.problems);
       setSelectedProblems((prev) => [...prev, newProblemId]);
     } catch (error) {

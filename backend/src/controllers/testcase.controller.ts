@@ -1,3 +1,4 @@
+import prisma from '../config/database';
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
 import testCaseService from '../services/testcase.service';
@@ -62,7 +63,8 @@ export class TestCaseController {
   getTestCases = async (req: Request, res: Response) => {
     try {
       const { id: problemId } = req.params;
-      const isAdmin = req.user?.role === 'ADMIN';
+      const owner = req.user ? await prisma.problem.findUnique({ where: { id: problemId }, select: { createdBy: true } }) : null;
+      const isAdmin = req.user?.role === 'ADMIN' || (!!req.user && owner?.createdBy === req.user.id);
 
       const testCases = await testCaseService.getTestCasesByProblemId(problemId, isAdmin);
 

@@ -18,7 +18,7 @@ export default function EditProblemPage() {
   const { data: problemData, isLoading } = useQuery({
     queryKey: ['adminProblem', id],
     queryFn: async () => {
-      const { data } = await api.get(`/manager/problems/${id}`);
+      const { data } = await api.get(`/admin/problems/${id}`);
       return data.data;
     },
     enabled: !!id,
@@ -33,7 +33,7 @@ export default function EditProblemPage() {
         .map((t) => t.trim())
         .filter((t) => t);
 
-      await api.put(`/manager/problems/${id}`, {
+      await api.put(`/admin/problems/${id}`, {
         ...formData,
         topics: topicsArray,
         testCases: testCases
@@ -63,7 +63,7 @@ export default function EditProblemPage() {
   }
 
   return (
-    <ProtectedRoute requiredRole={['ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER']}>
+    <ProtectedRoute requiredRole={['ADMIN', 'CONTEST_MANAGER']}>
       <Navbar />
       <div className="min-h-screen bg-gray-50 dark:bg-dark-bg py-8">
         <div className="max-w-4xl mx-auto px-4">

@@ -23,14 +23,15 @@ class FileStorageService {
         .jpeg({ quality: 85 })
         .toFile(filepath);
 
-      // Delete original uploaded file
-      await fs.unlink(file.path);
+
 
       // Return relative URL path
       return `/uploads/profiles/${filename}`;
     } catch (error) {
       console.error('Error uploading profile picture:', error);
       throw new Error('Failed to upload profile picture');
+    } finally {
+      await fs.unlink(file.path).catch(() => undefined);
     }
   }
 

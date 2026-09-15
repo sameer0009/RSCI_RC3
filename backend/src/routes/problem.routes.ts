@@ -1,3 +1,5 @@
+import { fields, problemFields } from '../middleware/input.middleware';
+import { ownsResource, readableProblem } from '../middleware/access.middleware';
 import { Router } from 'express';
 import problemController from '../controllers/problem.controller';
 import testCaseController from '../controllers/testcase.controller';
@@ -65,7 +67,7 @@ router.get('/topics', problemController.getTopics);
  *       200:
  *         description: Problem details
  */
-router.get('/:id', optionalAuth, problemController.getProblemById);
+router.get('/:id', optionalAuth, readableProblem('id'), problemController.getProblemById);
 
 /**
  * @swagger
@@ -82,7 +84,7 @@ router.get('/:id', optionalAuth, problemController.getProblemById);
  *       200:
  *         description: Problem details
  */
-router.get('/slug/:slug', optionalAuth, problemController.getProblemBySlug);
+router.get('/slug/:slug', optionalAuth, readableProblem('slug'), problemController.getProblemBySlug);
 
 /**
  * @swagger
@@ -104,62 +106,62 @@ router.get('/slug/:slug', optionalAuth, problemController.getProblemBySlug);
 router.get('/:problemId/submissions', authenticate, submissionController.getUserSubmissionsForProblem);
 
 // Test case routes
-router.get('/:id/testcases', optionalAuth, testCaseController.getTestCases);
+router.get('/:id/testcases', optionalAuth, readableProblem(), testCaseController.getTestCases);
 
 // Test case group routes
-router.get('/:id/groups', authenticate, problemController.getTestCaseGroups);
-router.post('/:id/groups', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'), problemController.createTestCaseGroup);
+router.get('/:id/groups', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'), ownsResource('problem'), problemController.getTestCaseGroups);
+router.post('/:id/groups', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'), ownsResource('problem'), problemController.createTestCaseGroup);
 router.put(
   '/groups/:groupId',
   authenticate,
-  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
-  problemController.updateTestCaseGroup
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'),
+  ownsResource('testCaseGroup', 'groupId'), problemController.updateTestCaseGroup
 );
 router.delete(
   '/groups/:groupId',
   authenticate,
-  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
-  problemController.deleteTestCaseGroup
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'),
+  ownsResource('testCaseGroup', 'groupId'), problemController.deleteTestCaseGroup
 );
 
 // Admin, Instructor, Problem Setter routes
 router.post(
   '/',
   authenticate,
-  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'),
   createProblemValidation,
   validate,
-  problemController.createProblem
+  fields(problemFields), problemController.createProblem
 );
 
 router.put(
   '/:id',
   authenticate,
-  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'),
   updateProblemValidation,
   validate,
-  problemController.updateProblem
+  ownsResource('problem', 'id'), fields(problemFields), problemController.updateProblem
 );
 
-router.delete('/:id', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'), problemController.deleteProblem);
+router.delete('/:id', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'), ownsResource('problem', 'id'), problemController.deleteProblem);
 
 // Test case management
 router.post(
   '/:id/testcases',
   authenticate,
-  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'),
   uploadTestCasesValidation,
   validate,
-  testCaseController.uploadTestCases
+  ownsResource('problem', 'id'), testCaseController.uploadTestCases
 );
 
-router.put('/testcases/:id', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'), testCaseController.updateTestCase);
+router.put('/testcases/:id', authenticate, authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'), ownsResource('testCase', 'id'), fields(['input','expectedOutput','isPublic','visibility','points','orderIndex','timeLimit','memoryLimit','description','groupId']), testCaseController.updateTestCase);
 
 router.delete(
   '/testcases/:id',
   authenticate,
-  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER'),
-  testCaseController.deleteTestCase
+  authorize('ADMIN', 'INSTRUCTOR', 'PROBLEM_SETTER', 'CONTEST_MANAGER'),
+  ownsResource('testCase', 'id'), testCaseController.deleteTestCase
 );
 
 export default router;

@@ -46,9 +46,9 @@ class NotificationService {
     });
   }
 
-  async markAsRead(notificationId: string) {
-    return prisma.notification.update({
-      where: { id: notificationId },
+  async markAsRead(notificationId: string, userId: string) {
+    return prisma.notification.updateMany({
+      where: { id: notificationId, userId },
       data: { isRead: true },
     });
   }

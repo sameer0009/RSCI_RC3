@@ -4,7 +4,7 @@ import fs from 'fs';
 import path from 'path';
 
 class EmailService {
-  private transporter: nodemailer.Transporter;
+  private transporter: ReturnType<typeof nodemailer.createTransport>;
 
   constructor() {
     this.transporter = nodemailer.createTransport({

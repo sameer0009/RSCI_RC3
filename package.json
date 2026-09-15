@@ -1,18 +1,31 @@
 {
-  "name": "antigravity",
-  "productName": "Antigravity",
-  "version": "2.0.0",
-  "description": "Antigravity - Agentic Desktop Application",
-  "homepage": "https://antigravity.google",
-  "author": {
-    "name": "Google",
-    "email": "antigravity-support@google.com"
+  "name": "online-coding-platform",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "frontend",
+    "backend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "test": "npm test -w backend -- --runInBand && npm test -w frontend -- --runInBand",
+    "lint": "npm run lint -w frontend",
+    "prisma:generate": "npm run prisma:generate -w backend",
+    "test:e2e": "npm exec -w frontend -- playwright test"
   },
-  "main": "dist/main.js",
-  "dependencies": {
-    "chrome-devtools-mcp": "^0.23.0",
-    "electron-log": "^5.4.3",
-    "electron-updater": "^6.8.3",
-    "shell-env": "^4.0.3"
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "overrides": {
+    "next": {
+      "postcss": "^8.5.23"
+    },
+    "express": {
+      "qs": "^6.16.0"
+    },
+    "monaco-editor": {
+      "dompurify": "^3.4.13"
+    }
   }
 }

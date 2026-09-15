@@ -98,8 +98,11 @@ export class EnhancedJudgeService {
           stdin: input,
           cpu_time_limit: timeLimit / 1000,
           memory_limit: memoryLimit,
+          enable_network: false,
+          wall_time_limit: Math.max(5, timeLimit / 1000 * 3),
         },
         {
+          timeout: 30000,
           headers: {
             'Content-Type': 'application/json',
             ...(this.apiKey
@@ -131,234 +134,59 @@ export class EnhancedJudgeService {
     language: string | number,
     problemId: string
   ): Promise<SubmissionResult> {
-    // Fetch problem with test cases and groups
-    const problem = await prisma.problem.findUnique({
-      where: { id: problemId },
-      include: {
-        testCases: {
-          include: {
-            group: true,
-          },
-          orderBy: { orderIndex: 'asc' },
-        },
-        testCaseGroups: {
-          orderBy: { orderIndex: 'asc' },
-        },
-      },
-    });
-
-    if (!problem) {
-      throw new Error('Problem not found');
-    }
-
-    const testCaseResults: TestCaseResult[] = [];
-    const groupScores = new Map<
-      string,
-      { score: number; maxScore: number; passed: number; total: number }
-    >();
-
-    let totalScore = 0;
-    let maxScore = 0;
-    let testCasesPassed = 0;
-    let maxExecutionTime = 0;
-    let maxMemoryUsed = 0;
+    const problem = await prisma.problem.findUnique({ where: { id: problemId }, include: { testCases: { include: { group: true }, orderBy: { orderIndex: 'asc' } }, testCaseGroups: { orderBy: { orderIndex: 'asc' } } } });
+    if (!problem) throw new Error('Problem not found');
+    const tests = problem.testCases.filter(test => test.visibility !== 'STRESS');
+    if (!tests.length) throw new Error('No scoring test cases configured');
+    if (problem.problemType !== 'STANDARD' || problem.validationStrategy === 'CUSTOM_CHECKER') throw new Error('This judging mode is not supported');
+    const results: TestCaseResult[] = [];
     let overallVerdict = 'Accepted';
-    let compilationError = false;
-
-    // Initialize group scores
-    for (const group of problem.testCaseGroups) {
-      groupScores.set(group.id, {
-        score: 0,
-        maxScore: group.points,
-        passed: 0,
-        total: 0,
-      });
+    for (const test of tests) {
+      // Infrastructure errors propagate to BullMQ and are retried, never blamed on the student.
+      const execution = await this.executeCode(code, language, test.input, test.timeLimit ?? problem.timeLimit, (test.memoryLimit ?? problem.memoryLimit) * 1024);
+      let verdict = this.getVerdictFromStatus(execution.status.id);
+      if (verdict === 'Pending' || execution.status.id === 13) throw new Error('Judge has not returned a final result');
+      if (verdict === 'Accepted' && !this.compareOutput(execution.stdout, test.expectedOutput, problem.validationStrategy, problem.floatingPointEpsilon)) verdict = 'WrongAnswer';
+      if (overallVerdict === 'Accepted' && verdict !== 'Accepted') overallVerdict = verdict;
+      results.push({ testCaseId: test.id, verdict, executionTime: Math.round(Number(execution.time) * 1000) || 0, memoryUsed: Math.round(Number(execution.memory)) || 0, points: verdict === 'Accepted' ? test.points : 0, maxPoints: test.points, visibility: test.visibility,
+        output: test.isPublic || test.visibility === 'SAMPLE' ? execution.stdout || '' : undefined,
+        errorMessage: test.isPublic || test.visibility === 'SAMPLE' ? execution.stderr || execution.compile_output || undefined : undefined });
+      if (verdict === 'CompilationError') break;
     }
-
-    // Execute test cases
-    for (const testCase of problem.testCases) {
-      const timeLimit = testCase.timeLimit || problem.timeLimit;
-      const memoryLimit = testCase.memoryLimit || problem.memoryLimit;
-
-      try {
-        const result = await this.executeCode(
-          code,
-          language,
-          testCase.input,
-          timeLimit,
-          memoryLimit * 1024 // Convert KB to bytes
-        );
-
-        let verdict = this.getVerdictFromStatus(result.status.id);
-        const executionTime = parseFloat(result.time) * 1000; // Convert to ms
-        const memoryUsed = result.memory;
-
-        maxExecutionTime = Math.max(maxExecutionTime, executionTime);
-        maxMemoryUsed = Math.max(maxMemoryUsed, memoryUsed);
-
-        // Check if compilation error
-        if (verdict === 'CompilationError') {
-          compilationError = true;
-          overallVerdict = 'CompilationError';
-        }
-
-        // Determine points earned
-        let pointsEarned = 0;
-        const maxPoints = testCase.points;
-
-        if (verdict === 'Accepted') {
-          const isCorrect = this.compareOutput(
-            result.stdout,
-            testCase.expectedOutput,
-            problem.validationStrategy,
-            problem.floatingPointEpsilon
-          );
-
-          if (isCorrect) {
-            pointsEarned = maxPoints;
-            testCasesPassed++;
-          } else {
-            overallVerdict = 'WrongAnswer';
-            verdict = 'WrongAnswer';
-          }
-        } else {
-          if (overallVerdict === 'Accepted') {
-            overallVerdict = verdict;
-          }
-        }
-
-        totalScore += pointsEarned;
-        maxScore += maxPoints;
-
-        // Update group scores
-        if (testCase.groupId) {
-          const groupScore = groupScores.get(testCase.groupId);
-          if (groupScore) {
-            groupScore.score += pointsEarned;
-            groupScore.maxScore += maxPoints;
-            groupScore.total++;
-            if (pointsEarned === maxPoints) {
-              groupScore.passed++;
-            }
-          }
-        }
-
-        // Store test case result
-        const testCaseResult: TestCaseResult = {
-          testCaseId: testCase.id,
-          verdict,
-          executionTime,
-          memoryUsed,
-          points: pointsEarned,
-          maxPoints,
-          groupName: testCase.group?.name,
-          visibility: testCase.visibility,
-        };
-
-        // Include output for sample test cases
-        if (testCase.visibility === 'SAMPLE' || testCase.isPublic) {
-          testCaseResult.output = result.stdout || '';
-          testCaseResult.errorMessage = result.stderr || result.compile_output || undefined;
-        }
-
-        testCaseResults.push(testCaseResult);
-
-        // Save to database
-        await prisma.testCaseResult.create({
-          data: {
-            submission: { connect: { id: submissionId } },
-            testCase: { connect: { id: testCase.id } },
-            verdict: verdict as any,
-            executionTime: Math.round(Number(executionTime) || 0),
-            memoryUsed: Math.round(Number(memoryUsed) || 0),
-            output: (testCase.visibility === 'SAMPLE' || testCase.isPublic) ? (result.stdout || '') : null,
-            errorMessage: result.stderr || result.compile_output || null,
-            points: Number(pointsEarned) || 0,
-          },
-        });
-
-        // Stop on compilation error
-        if (compilationError) {
-          break;
-        }
-      } catch (error: any) {
-        console.error(`Test case ${testCase.id} execution error:`, error.message);
-
-        testCaseResults.push({
-          testCaseId: testCase.id,
-          verdict: 'RuntimeError',
-          executionTime: 0,
-          memoryUsed: 0,
-          points: 0,
-          maxPoints: testCase.points,
-          errorMessage: error.message,
-          groupName: testCase.group?.name,
-          visibility: testCase.visibility,
-        });
-
-        // Save failure to database
-        await prisma.testCaseResult.create({
-          data: {
-            submission: { connect: { id: submissionId } },
-            testCase: { connect: { id: testCase.id } },
-            verdict: 'RuntimeError',
-            executionTime: 0,
-            memoryUsed: 0,
-            errorMessage: error.message,
-            points: 0,
-          },
-        });
-
-        maxScore += testCase.points;
-        overallVerdict = 'RuntimeError';
-      }
-    }
-
-    // Calculate final score percentage
-    const scorePercentage = maxScore > 0 ? (totalScore / maxScore) * 100 : 0;
-
-    // Build group results
+    const passed = new Set(results.filter(r => r.verdict === 'Accepted').map(r => r.testCaseId));
+    let earned = 0, maximum = 0;
     const groupResults: GroupResult[] = [];
-    for (const group of problem.testCaseGroups) {
-      const groupScore = groupScores.get(group.id);
-      if (groupScore) {
-        groupResults.push({
-          groupName: group.name,
-          score: groupScore.score,
-          maxScore: groupScore.maxScore,
-          passed: groupScore.passed,
-          total: groupScore.total,
-        });
-      }
-    }
-
-    // Update submission
-    await prisma.submission.update({
-      where: { id: submissionId },
-      data: {
-        verdict: overallVerdict as any,
-        score: scorePercentage,
-        maxScore: 100,
-        points: totalScore,
-        executionTime: Math.round(Number(maxExecutionTime) || 0),
-        memoryUsed: Math.round(Number(maxMemoryUsed) || 0),
-        testCasesPassed,
-        totalTestCases: problem.testCases.length,
-        evaluatedAt: new Date(),
-      },
-    });
-
-    return {
-      verdict: overallVerdict,
-      score: scorePercentage,
-      maxScore: 100,
-      testCasesPassed,
-      totalTestCases: problem.testCases.length,
-      executionTime: Math.round(maxExecutionTime),
-      memoryUsed: Math.round(maxMemoryUsed),
-      testCaseResults,
-      groupResults,
+    const groupsPassed = new Map<string, boolean>();
+    const visiting = new Set<string>();
+    const groupPassed = (id: string): boolean => {
+      if (groupsPassed.has(id)) return groupsPassed.get(id)!;
+      if (visiting.has(id)) throw new Error('Cyclic test group dependency');
+      const group = problem.testCaseGroups.find(g => g.id === id);
+      if (!group) throw new Error('Missing test group dependency');
+      visiting.add(id);
+      const members = tests.filter(t => t.groupId === id);
+      const success = members.length > 0 && members.every(t => passed.has(t.id)) && (!group.dependsOnGroup || groupPassed(group.dependsOnGroup));
+      visiting.delete(id); groupsPassed.set(id, success); return success;
     };
+    for (const group of problem.testCaseGroups) {
+      const members = tests.filter(t => t.groupId === group.id);
+      if (!members.length) continue;
+      const weight = group.points > 0 ? group.points : members.reduce((sum, t) => sum + t.points, 0);
+      const score = groupPassed(group.id) ? weight : 0;
+      maximum += weight; earned += score;
+      groupResults.push({ groupName: group.name, score, maxScore: weight, passed: members.filter(t => passed.has(t.id)).length, total: members.length });
+    }
+    for (const test of tests.filter(t => !t.groupId)) { maximum += test.points; if (passed.has(test.id)) earned += test.points; }
+    if (!problem.enablePartialScoring && overallVerdict !== 'Accepted') earned = 0;
+    const score = maximum > 0 ? earned / maximum * 100 : overallVerdict === 'Accepted' ? 100 : 0;
+    const executionTime = Math.max(0, ...results.map(r => r.executionTime));
+    const memoryUsed = Math.max(0, ...results.map(r => r.memoryUsed));
+    await prisma.$transaction(async tx => {
+      await tx.testCaseResult.deleteMany({ where: { submissionId } });
+      await tx.testCaseResult.createMany({ data: results.map(r => ({ submissionId, testCaseId: r.testCaseId, verdict: r.verdict as any, executionTime: r.executionTime, memoryUsed: r.memoryUsed, output: r.output, errorMessage: r.errorMessage, points: r.points })) });
+      await tx.submission.update({ where: { id: submissionId }, data: { verdict: overallVerdict as any, score, maxScore: 100, points: Math.round(earned), executionTime, memoryUsed, testCasesPassed: passed.size, totalTestCases: tests.length, evaluatedAt: new Date() } });
+    });
+    return { verdict: overallVerdict, score, maxScore: 100, testCasesPassed: passed.size, totalTestCases: tests.length, executionTime, memoryUsed, testCaseResults: results, groupResults };
   }
 
   compareOutput(
@@ -376,13 +204,13 @@ export class EnhancedJudgeService {
 
       case 'IGNORE_WHITESPACE':
       case 'TOKEN_BASED':
-        return this.normalizeOutput(actual) === this.normalizeOutput(expected);
+        return actual.trim().split(/\s+/).join(' ') === expected.trim().split(/\s+/).join(' ');
 
       case 'FLOATING_POINT':
-        return this.compareFloatingPoint(actual, expected, epsilon || 1e-6);
+        return this.compareFloatingPoint(actual, expected, epsilon ?? 1e-6);
 
       default:
-        return this.normalizeOutput(actual) === this.normalizeOutput(expected);
+        throw new Error(`Unsupported validation strategy: ${strategy}`);
     }
   }
 
@@ -396,6 +224,7 @@ export class EnhancedJudgeService {
   }
 
   private compareFloatingPoint(actual: string, expected: string, epsilon: number): boolean {
+    if (!Number.isFinite(epsilon) || epsilon < 0) return false;
     const actualTokens = actual.trim().split(/\s+/);
     const expectedTokens = expected.trim().split(/\s+/);
 
@@ -404,10 +233,10 @@ export class EnhancedJudgeService {
     }
 
     for (let i = 0; i < actualTokens.length; i++) {
-      const actualNum = parseFloat(actualTokens[i]);
-      const expectedNum = parseFloat(expectedTokens[i]);
+      const actualNum = Number(actualTokens[i]);
+      const expectedNum = Number(expectedTokens[i]);
 
-      if (isNaN(actualNum) || isNaN(expectedNum)) {
+      if (!Number.isFinite(actualNum) || !Number.isFinite(expectedNum)) {
         if (actualTokens[i] !== expectedTokens[i]) {
           return false;
         }

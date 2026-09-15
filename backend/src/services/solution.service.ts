@@ -4,7 +4,7 @@ import { Solution } from '@prisma/client';
 export class SolutionService {
   async createSolution(data: { problemId: string; authorId: string; title: string; content: string; language: string }): Promise<Solution> {
     return prisma.solution.create({
-      data,
+      data: { problemId: data.problemId, authorId: data.authorId, title: data.title, content: data.content, language: data.language },
     });
   }
 
@@ -45,7 +45,7 @@ export class SolutionService {
     if (!solution || solution.authorId !== authorId) throw new Error('Unauthorized or not found');
     return prisma.solution.update({
       where: { id },
-      data,
+      data: { title: data.title, content: data.content, language: data.language },
     });
   }
 

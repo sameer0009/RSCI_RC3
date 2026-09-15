@@ -99,10 +99,10 @@ export const updateProblemValidation: ValidationChain[] = [
 export const uploadTestCasesValidation: ValidationChain[] = [
   body('testCases').isArray({ min: 1 }).withMessage('At least one test case is required'),
 
-  body('testCases.*.input').notEmpty().withMessage('Test case input is required'),
+  body('testCases.*.input').isString().withMessage('Test case input is required'),
 
   body('testCases.*.expectedOutput')
-    .notEmpty()
+    .isString()
     .withMessage('Test case expected output is required'),
 
   body('testCases.*.isPublic').isBoolean().withMessage('isPublic must be a boolean'),
@@ -136,14 +136,15 @@ export const resetPasswordValidation: ValidationChain[] = [
 
 export const submitCodeValidation: ValidationChain[] = [
   body('problemId').isUUID().withMessage('Invalid problem ID'),
-  body('languageId').notEmpty().withMessage('Language ID is required'),
-  body('sourceCode').notEmpty().withMessage('Source code is required'),
+  body('contestId').optional().isUUID().withMessage('Invalid contest ID'),
+  body('languageId').isIn([50, 51, 54, 60, 62, 63, 68, 71, 73, 74, 'c', 'cpp', 'csharp', 'go', 'java', 'javascript', 'php', 'python', 'rust', 'typescript']).withMessage('Unsupported language'),
+  body('sourceCode').isString().bail().isLength({ min: 1, max: 65536 }).withMessage('Source code must contain 1 to 65536 characters'),
 ];
 
 export const runCodeValidation: ValidationChain[] = [
-  body('languageId').notEmpty().withMessage('Language ID is required'),
-  body('sourceCode').notEmpty().withMessage('Source code is required'),
-  body('stdin').optional().isString().withMessage('Standard input must be a string'),
+  body('languageId').isIn([50, 51, 54, 60, 62, 63, 68, 71, 73, 74, 'c', 'cpp', 'csharp', 'go', 'java', 'javascript', 'php', 'python', 'rust', 'typescript']).withMessage('Unsupported language'),
+  body('sourceCode').isString().bail().isLength({ min: 1, max: 65536 }).withMessage('Source code must contain 1 to 65536 characters'),
+  body('stdin').optional().isString().bail().isLength({ max: 1048576 }).withMessage('Standard input must be at most 1 MiB'),
 ];
 
 export const createClassroomValidation: ValidationChain[] = [

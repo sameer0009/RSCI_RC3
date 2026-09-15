@@ -1,30 +1,27 @@
-# Build stage
 FROM node:20-alpine AS builder
-
 WORKDIR /app
-
-COPY package*.json ./
-RUN npm install --legacy-peer-deps
-
-COPY . .
-RUN npx prisma generate
-RUN npm run build
-
-# Production stage
-FROM node:20-alpine
-
-WORKDIR /app
-
 RUN apk add --no-cache openssl libc6-compat
+COPY package.json package-lock.json ./
+COPY backend/package.json ./backend/package.json
+COPY frontend/package.json ./frontend/package.json
+RUN npm ci --workspace backend --include-workspace-root=false
+COPY backend ./backend
+WORKDIR /app/backend
+RUN npm run prisma:generate && npm run build
 
-COPY package*.json ./
-COPY prisma ./prisma
-RUN npm install --omit=dev --legacy-peer-deps
-RUN npx prisma generate
-
-COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/src/templates ./src/templates
-
+FROM node:20-alpine AS runner
+WORKDIR /app
+RUN apk add --no-cache openssl libc6-compat
+ENV NODE_ENV=production
+COPY package.json package-lock.json ./
+COPY backend/package.json ./backend/package.json
+COPY frontend/package.json ./frontend/package.json
+COPY backend/prisma ./backend/prisma
+RUN npm ci --omit=dev --workspace backend --include-workspace-root=false
+WORKDIR /app/backend
+RUN npm run prisma:generate
+COPY --from=builder /app/backend/dist ./dist
+RUN mkdir -p uploads && chown -R node:node uploads
+USER node
 EXPOSE 5000
-
-CMD ["sh", "-c", "npx prisma db push && npm start"]
+CMD ["npm", "start"]

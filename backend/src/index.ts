@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -14,6 +15,7 @@ import { connectRedis } from './config/redis';
 import './workers/email.worker'; // Import to start the worker
 import './workers/submission.worker'; // Start the submission worker
 import './workers/contest.worker'; // Start the contest worker
+import { configureSockets } from './realtime/socket';
 import { csrfProtection } from './middleware/security.middleware';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swagger';
@@ -24,7 +26,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   },
 });
@@ -48,7 +50,7 @@ app.use(
 );
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000',
     credentials: true,
   })
 );
@@ -79,28 +81,7 @@ const submissionLimiter = rateLimit({
 app.use('/api/', generalLimiter);
 app.use('/api/submissions', submissionLimiter);
 
-// Socket.io basics
-io.on('connection', (socket) => {
-  console.log('🔌 New socket connection:', socket.id);
-
-  socket.on('join', (rooms) => {
-    if (Array.isArray(rooms)) {
-      rooms.forEach((room) => socket.join(room));
-    } else {
-      socket.join(rooms);
-    }
-    console.log(`👤 Socket ${socket.id} joined rooms:`, rooms);
-  });
-
-  socket.on('subscribeToSubmission', (submissionId) => {
-    socket.join(submissionId);
-    console.log(`👤 Socket ${socket.id} subscribed to submission:`, submissionId);
-  });
-
-  socket.on('disconnect', () => {
-    console.log('🔌 Socket disconnected:', socket.id);
-  });
-});
+configureSockets(io);
 
 // Export io for services to use
 export { io };
@@ -129,7 +110,7 @@ app.use(errorHandler);
 async function startServer() {
   try {
     // Test database connection
-    await testDatabaseConnection();
+    if (!await testDatabaseConnection()) throw new Error('Database is unavailable');
 
     // Connect to Redis
     await connectRedis();

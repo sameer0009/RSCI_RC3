@@ -283,10 +283,10 @@ export default function ProblemDetailPage() {
 
   const pollSubmissionResult = async (submissionId: string) => {
     // Upgraded to WebSockets for real-time execution feedback
-    const socket = io('http://localhost:5000');
+    const socket = io(process.env.NEXT_PUBLIC_SOCKET_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, ''), { withCredentials: true });
     let hasReturned = false;
 
-    socket.emit('subscribeToSubmission', submissionId);
+    socket.on('connect', () => socket.emit('subscribeToSubmission', submissionId));
 
     socket.on('submissionUpdate', (submission) => {
       if (submission.verdict !== 'Pending') {
@@ -315,7 +315,10 @@ export default function ProblemDetailPage() {
         attempts++;
         setTimeout(poll, 2000); // Slower fallback
       } catch (error) {
-        console.error('Polling fallback error', error);
+        hasReturned = true;
+        setSubmitting(false);
+        setSubmissionResult({ verdict: 'Error', error: 'Could not retrieve the result. Check submission history and try again.' });
+        socket.disconnect();
       }
     };
     setTimeout(poll, 2000);

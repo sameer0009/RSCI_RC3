@@ -24,7 +24,7 @@ export default function NotificationBell() {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   const { data } = useQuery({
-    queryKey: ['notifications'],
+    queryKey: ['notifications', user?.id],
     queryFn: async () => {
       const res = await api.get('/notifications');
       return res.data.data;
@@ -37,25 +37,25 @@ export default function NotificationBell() {
 
   const markAsReadMutation = useMutation({
     mutationFn: async (id: string) => {
-      await api.put(`/notifications/${id}/read`);
+      await api.patch(`/notifications/${id}/mark-read`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     },
   });
 
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
-      await api.put('/notifications/read-all');
+      await api.patch('/notifications/mark-all-read');
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications', user?.id] });
     },
   });
 
   useEffect(() => {
     if (isAuthenticated) {
-      const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000', {
+      const newSocket = io(process.env.NEXT_PUBLIC_SOCKET_URL || (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000').replace(/\/api\/?$/, ''), {
         withCredentials: true,
       });
 
@@ -64,7 +64,7 @@ export default function NotificationBell() {
       });
 
       newSocket.on('notification', (newNotification: Notification) => {
-        queryClient.setQueryData(['notifications'], (oldData: any) => {
+        queryClient.setQueryData(['notifications', user?.id], (oldData: any) => {
           if (!oldData) return { notifications: [newNotification], unreadCount: 1 };
           return {
             ...oldData,
@@ -97,6 +97,9 @@ export default function NotificationBell() {
   return (
     <div className="relative" ref={dropdownRef}>
       <button
+        aria-label={`Notifications, ${unreadCount} unread`}
+        aria-expanded={isOpen}
+        onKeyDown={event => { if (event.key === 'Escape') setIsOpen(false); }}
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-300 hover:text-white transition-colors rounded-full hover:bg-white/10"
       >
@@ -136,7 +139,8 @@ export default function NotificationBell() {
               </div>
             ) : (
               notifications.map((notification) => (
-                <div
+                <button
+                  type="button"
                   key={notification.id}
                   onClick={() => {
                     if (!notification.isRead) {
@@ -146,7 +150,7 @@ export default function NotificationBell() {
                       window.location.href = notification.link;
                     }
                   }}
-                  className={`p-4 border-b border-gray-100 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors ${
+                  className={`w-full text-left p-4 border-b border-gray-100 dark:border-gray-800/50 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors ${
                     !notification.isRead ? 'bg-primary-50 dark:bg-primary-900/10' : ''
                   }`}
                 >
@@ -166,7 +170,7 @@ export default function NotificationBell() {
                       <div className="w-2 h-2 rounded-full bg-primary-500 mt-1.5 flex-shrink-0"></div>
                     )}
                   </div>
-                </div>
+                </button>
               ))
             )}
           </div>
